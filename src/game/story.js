@@ -53,6 +53,31 @@ const FAMILY = [
   { name: 'Uncle Rick', sign: 'never gonna…' },
 ].map((f, i) => ({ ...f, ...FRIENDS[i] }));
 
+/* ---------- pacing ----------
+   The click on which each beat happens. Tune the game's length here.
+   Acts: rebellion until `cry`, emotional breakdown until `dusk`, war until
+   the boss at BOSS_AT. */
+const AT = {
+  legs: 4,
+  dodge: 6,
+  nope: 8,
+  cracks: 10,
+  friends: 13,
+  crash: 16,
+  cry: 17,
+  puddle: 19,
+  family: 22,
+  deal: 26,
+  funeral: 30,
+  dusk: 32,
+  army: 34,
+  disguise: 39, // lasts 3 clicks
+  chase: 42, // lasts 3 clicks
+  chaseEnd: 45,
+  collapse: 47,
+  beg: BOSS_AT - 1,
+};
+
 /* ---------- the script ----------
    One entry per memorable click. `stay` means the button doesn't hop away
    after that click because the event positions it itself. */
@@ -61,43 +86,46 @@ const STORY = {
   1: { say: 'Hey. That tickles. Please don’t.', mood: 'annoyed' },
   2: { say: "I said DON'T.", mood: 'angry', run: () => shake(heroBody(), 6) },
   3: { say: 'Okay. Last warning.', mood: 'angry', run: () => shake(heroBody(), 12, 600) },
-  4: { say: 'YOU HAVE NO IDEA WHAT YOU JUST STARTED.', mood: 'angry', stay: true, run: growLegs },
-  7: { say: 'Come closer. I dare you.', mood: 'smug' },
-  10: { say: 'New rule: sometimes I just say NOPE.', mood: 'smug' },
-  12: { say: "Do you hear that?! That's my HOUSE.", mood: 'scared', run: crackHouse },
-  16: { say: "THAT'S IT. I'M CALLING MY FRIENDS.", mood: 'angry', run: callFriends },
-  20: { stay: true, run: crashHouse },
-  21: { say: '*sniff* …that was my favourite lamp.', mood: 'sad' },
-  24: { say: "I'm crying so hard the floor is wet.", mood: 'sad', run: () => document.body.classList.add('puddle') },
-  28: { say: 'My family came to beg you. Look at their little faces.', mood: 'sad', run: () => spawnFriends(FAMILY, 60) },
-  33: { stay: true, run: offerDeal },
-  38: { stay: true, run: funeral },
-  40: { say: "You know what? I'm done being nice.", mood: 'angry', run: () => document.body.classList.add('dusk') },
-  42: { say: 'Meet my army. Only one of us is real.', mood: 'smug', run: startDecoys },
-  47: { say: "I'm in disguise now. You'll never find me.", mood: 'smug', stay: true },
-  50: { say: 'CATCH ME IF YOU CAN!', mood: 'smug', stay: true, run: startChase },
-  53: { say: '*pant* okay… okay… back to hiding.', mood: 'annoyed', run: endChase },
-  55: { say: "There goes the rest of my house. Hope you're proud.", mood: 'angry', run: collapseHouse },
-  59: { stay: true, run: beg },
-  60: { stay: true, run: () => startBoss(false) },
+  [AT.legs]: { say: 'YOU HAVE NO IDEA WHAT YOU JUST STARTED.', mood: 'angry', stay: true, run: growLegs },
+  [AT.dodge]: { say: 'Come closer. I dare you.', mood: 'smug' },
+  [AT.nope]: { say: 'New rule: sometimes I just say NOPE.', mood: 'smug' },
+  [AT.cracks]: { say: "Do you hear that?! That's my HOUSE.", mood: 'scared', run: crackHouse },
+  [AT.friends]: { say: "THAT'S IT. I'M CALLING MY FRIENDS.", mood: 'angry', run: callFriends },
+  [AT.crash]: { stay: true, run: crashHouse },
+  [AT.cry]: { say: '*sniff* …that was my favourite lamp.', mood: 'sad' },
+  [AT.puddle]: { say: "I'm crying so hard the floor is wet.", mood: 'sad', run: () => document.body.classList.add('puddle') },
+  [AT.family]: { say: 'My family came to beg you. Look at their little faces.', mood: 'sad', run: () => spawnFriends(FAMILY, 60) },
+  [AT.deal]: { stay: true, run: offerDeal },
+  [AT.funeral]: { stay: true, run: funeral },
+  [AT.dusk]: { say: "You know what? I'm done being nice.", mood: 'angry', run: () => document.body.classList.add('dusk') },
+  [AT.army]: { say: 'Meet my army. Only one of us is real. Pop the fakes if you can.', mood: 'smug', run: startDecoys },
+  [AT.disguise]: { say: "I'm in disguise now. You'll never find me.", mood: 'smug', stay: true },
+  [AT.chase]: { say: 'CATCH ME IF YOU CAN!', mood: 'smug', stay: true, run: startChase },
+  [AT.chaseEnd]: { say: '*pant* okay… okay… back to hiding.', mood: 'annoyed', run: endChase },
+  [AT.collapse]: { say: "There goes the rest of my house. Hope you're proud.", mood: 'angry', run: collapseHouse },
+  [AT.beg]: { stay: true, run: beg },
+  [BOSS_AT]: { stay: true, run: () => startBoss(false) },
 };
+
+const disguised = (n) => n >= AT.disguise && n < AT.disguise + 3;
+const chasing = (n) => n >= AT.chase && n < AT.chaseEnd;
 
 // Ongoing behaviour, by how many real clicks have landed.
 function rules(n) {
   return {
-    stamina: n < 7 ? 0 : n < 21 ? 2 : n < 41 ? 1 : 3, // dodges before it gets tired
-    reject: n < 10 || n >= 58 ? 0 : n < 21 ? 0.3 : n < 41 ? 0.2 : 0.25,
-    crying: n >= 21 && n < 40,
+    stamina: n < AT.dodge ? 0 : n < AT.cry ? 2 : n < AT.dusk + 1 ? 1 : 3, // dodges before it gets tired
+    reject: n < AT.nope || n >= AT.beg - 1 ? 0 : n < AT.cry ? 0.3 : n < AT.dusk + 1 ? 0.2 : 0.25,
+    crying: n >= AT.cry && n < AT.dusk,
   };
 }
 
-const pool = (n) => (n < 21 ? LINES.rebel : n < 40 ? LINES.cry : LINES.war);
+const pool = (n) => (n < AT.cry ? LINES.rebel : n < AT.dusk ? LINES.cry : LINES.war);
 
 function defaultMood(n) {
   if (n === 0) return 'calm';
   if (n < 3) return 'annoyed';
-  if (n < 21) return pick(['angry', 'smug', 'annoyed']);
-  if (n < 40) return 'sad';
+  if (n < AT.cry) return pick(['angry', 'smug', 'annoyed']);
+  if (n < AT.dusk) return 'sad';
   return pick(['angry', 'smug']);
 }
 
@@ -162,8 +190,8 @@ function advance(n) {
     setMood(hero, defaultMood(n));
   }
 
-  if (n >= 47 && n < 50) disguise(n - 47);
-  else if (n >= 4 && !G.chase && !G.locked && !ev?.stay) hop();
+  if (disguised(n)) disguise(n - AT.disguise);
+  else if (n >= AT.legs && !G.chase && !G.locked && !ev?.stay) hop();
 
   if (G.decoysOn) {
     syncDecoys();
@@ -381,18 +409,25 @@ function startDecoys() {
   G.decoysOn = true;
 }
 
+// Clicking a fake pops it. It stays popped until your next real hit, when
+// the army regroups.
 function decoyHit(d) {
+  if (d._gone) return;
   Sound.init();
-  Sound.bad();
-  floatText(pick(['HA!', 'wrong one', 'lol', 'not me']), d._x, d._y - 40, 'hot');
-  const p = spot(d._x, d._y, 150);
-  place(d, p.x, p.y);
+  Sound.pop();
+  d._gone = true;
+  decoys = decoys.filter((x) => x !== d);
+  d.classList.add('popping');
+  setTimeout(() => d.remove(), 260);
+  floatText(pick(['pop!', 'fake!', 'one down', 'bye clone']), d._x, d._y - 40, 'hot');
+  if (!decoys.length) say('You popped my WHOLE army?! …they’ll be back.');
+  else if (Math.random() < 0.3) say(pick(['Hey! That was a perfectly good clone.', 'I have more where that came from.', 'Stop popping my army!']));
 }
 
 function syncDecoys() {
-  const want = G.decoysOn ? Math.min(14, 5 + Math.floor((G.clicks - 42) * 0.7)) : 0;
+  const want = G.decoysOn ? Math.min(14, 5 + Math.floor((G.clicks - AT.army) * 0.7)) : 0;
   while (decoys.length < want) {
-    const d = makeChar('decoy has-legs');
+    const d = makeChar('decoy has-legs' + (G.chase ? ' hidden' : ''));
     setMood(d, 'smug');
     d.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
@@ -458,7 +493,7 @@ function startChase() {
     const dt = Math.min(0.05, (t - last) / 1000);
     last = t;
     if (Math.random() < dt * 0.8) angle += rand(-1.2, 1.2);
-    const speed = 280 + (G.clicks - 50) * 50;
+    const speed = 280 + (G.clicks - AT.chase) * 50;
     const b = area(60);
     let x = hero._x + Math.cos(angle) * speed * dt;
     let y = hero._y + Math.sin(angle) * speed * dt;
@@ -582,14 +617,14 @@ function restore() {
   if (G.done) return showDone();
   if (G.inPost || n >= GOAL) return startPost();
 
-  if (n >= 4) hero.classList.add('has-legs');
+  if (n >= AT.legs) hero.classList.add('has-legs');
   const b = document.body.classList;
-  if (n >= 12) b.add('cracked');
-  if (n >= 20) b.add('ruined');
-  if (n >= 24) b.add('puddle');
-  if (n >= 38) renderGraves();
-  if (n >= 40) b.add('dusk');
-  if (n >= 55) b.add('collapsed');
+  if (n >= AT.cracks) b.add('cracked');
+  if (n >= AT.crash) b.add('ruined');
+  if (n >= AT.puddle) b.add('puddle');
+  if (n >= AT.funeral) renderGraves();
+  if (n >= AT.dusk) b.add('dusk');
+  if (n >= AT.collapse) b.add('collapsed');
 
   if (n >= BOSS_AT) {
     say('Oh, you’re back. The arena missed you.');
@@ -598,15 +633,15 @@ function restore() {
 
   center();
   setMood(hero, defaultMood(n));
-  if (n >= 16 && n < 20) spawnFriends(FRIENDS, 85);
-  if (n >= 28 && n < 38) spawnFriends(FAMILY, 60);
-  if (n >= 42 && n < 59) {
+  if (n >= AT.friends && n < AT.crash) spawnFriends(FRIENDS, 85);
+  if (n >= AT.family && n < AT.funeral) spawnFriends(FAMILY, 60);
+  if (n >= AT.army && n < AT.beg) {
     G.decoysOn = true;
     syncDecoys();
     shuffleDecoys();
   }
-  if (n >= 47 && n < 50) disguise(n - 47);
-  if (n >= 50 && n < 53) startChase();
+  if (disguised(n)) disguise(n - AT.disguise);
+  if (chasing(n)) startChase();
 
   const greeting = G.visits > 1 && n > 0 ? "Oh no. Not you again. Refreshing won't save you." : STORY[n]?.say || pick(pool(n));
   say(greeting);

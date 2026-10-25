@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { startGame } from '@/game/story';
+import { GOAL } from '@/game/core';
 
 // Furniture in the button's home. x/y place it, tilt is how it sits once the
 // house is ruined, fall is how it lands when the house collapses.
@@ -57,7 +58,7 @@ export default function Game() {
       <header id="hud">
         <span className="brand">please don&apos;t.</span>
         <div className="mid">
-          <span id="counter">0 / 75</span>
+          <span id="counter">0 / {GOAL}</span>
           <div id="bossbar" hidden />
         </div>
         <div className="tools">

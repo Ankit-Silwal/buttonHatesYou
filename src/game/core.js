@@ -2,8 +2,9 @@
 // Nothing here touches the browser at import time, so it is safe to import
 // from a component that Next.js also renders on the server.
 
-export const GOAL = 75;
-export const BOSS_AT = 60;
+export const BOSS_AT = 50;
+export const BOSS_HITS = 15;
+export const GOAL = BOSS_AT + BOSS_HITS;
 export const POST_GOAL = 20;
 export const RICKROLL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 const SAVE_KEY = 'pleaseDont.v1';

@@ -1,7 +1,7 @@
 import { Sound } from './sound';
 import {
   G, dom, hooks, scope, wait, rand, pick, clamp, h,
-  BOSS_AT, FRIENDS, save, makeChar, place, setMood,
+  BOSS_AT, BOSS_HITS, GOAL, FRIENDS, save, makeChar, place, setMood,
   say, floatText, shake, flash, confetti, updateHud,
 } from './core';
 
@@ -16,23 +16,24 @@ const PHASES = [
   { name: 'The Last Three', taunt: 'Three tasks. Infinite chaos. Zero mercy.', run: (round, done) => [simon, defuse, mash][round](done) },
 ];
 
-const HIT_LINES = {
-  61: "THAT'S NOT EVEN MY FINAL FORM.",
-  62: 'Lucky. Pure luck.',
-  63: 'Fine. Balloons are for babies anyway.',
-  64: 'How did you even get up here?!',
-  65: 'STOP CLIMBING ON ME.',
-  66: 'My platforms! My beautiful platforms!',
-  67: 'Ow. Bonk. Rude.',
-  68: "You're whacking my head like it's a GAME.",
-  69: "It IS a game?? Nobody told me.",
-  70: 'How did you know that was me?!',
-  71: "Cheater. You're definitely cheating.",
-  72: 'Okay. Okay. Final. Form. For real.',
-  73: 'Power restored?! Who taught you electricity?!',
-  74: 'You disarmed it?? That was my best bomb.',
-  75: 'NOOOOOOOOOOOOOOO—',
-};
+// What it says after each hit, in order.
+const HIT_LINES = [
+  "THAT'S NOT EVEN MY FINAL FORM.",
+  'Lucky. Pure luck.',
+  'Fine. Balloons are for babies anyway.',
+  'How did you even get up here?!',
+  'STOP CLIMBING ON ME.',
+  'My platforms! My beautiful platforms!',
+  'Ow. Bonk. Rude.',
+  "You're whacking my head like it's a GAME.",
+  "It IS a game?? Nobody told me.",
+  'How did you know that was me?!',
+  "Cheater. You're definitely cheating.",
+  'Okay. Okay. Final. Form. For real.',
+  'Power restored?! Who taught you electricity?!',
+  'You disarmed it?? That was my best bomb.',
+  'NOOOOOOOOOOOOOOO—',
+];
 
 let stopPhase = null;
 let busy = false;
@@ -47,7 +48,7 @@ function start() {
   busy = false;
   dom.arena.hidden = false;
   dom.bossbar.hidden = false;
-  dom.bossbar.innerHTML = '<i></i>'.repeat(15);
+  dom.bossbar.innerHTML = '<i></i>'.repeat(BOSS_HITS);
   document.activeElement?.blur();
   updateHud();
   next(true);
@@ -60,7 +61,7 @@ function stop() {
 
 async function next(fresh = false) {
   const hits = G.clicks - BOSS_AT;
-  if (hits >= 15) return win();
+  if (hits >= BOSS_HITS) return win();
   const p = Math.floor(hits / 3);
   const round = hits % 3;
   clearArena();
@@ -87,7 +88,7 @@ function hit() {
   Sound.hit();
   shake(dom.app, 12, 500);
   flash('#ffd9c9');
-  say(HIT_LINES[G.clicks]);
+  say(HIT_LINES[G.clicks - BOSS_AT - 1]);
   scope.later(() => {
     busy = false;
     next();
@@ -124,7 +125,7 @@ async function win() {
   document.body.classList.remove('boss', 'rave', 'glitchy');
   dom.arena.hidden = true;
   dom.overlay.className = 'soft';
-  dom.overlay.innerHTML = `<div class="card win"><div class="emoji">🎉</div><h2>YOU WON!</h2><p class="big">75 / 75 clicks</p><p>The button is finally defeated.</p><p class="twist"></p></div>`;
+  dom.overlay.innerHTML = `<div class="card win"><div class="emoji">🎉</div><h2>YOU WON!</h2><p class="big">${GOAL} / ${GOAL} clicks</p><p>The button is finally defeated.</p><p class="twist"></p></div>`;
   dom.overlay.hidden = false;
   say('');
   await wait(3500);
@@ -638,7 +639,7 @@ function shells(round, done) {
    Phase 5 — The Last Three
    ========================================================= */
 
-// 73: restore power — repeat the light pattern.
+// Hit 13: restore power — repeat the light pattern.
 function simon(done) {
   document.body.classList.add('glitchy');
   say('RESTORE POWER: watch the lights, then repeat the pattern.');
@@ -712,7 +713,7 @@ function simon(done) {
   };
 }
 
-// 74: disarm the self-destruct — tap 1 to 9 in order while they drift.
+// Hit 14: disarm the self-destruct — tap 1 to 9 in order while they drift.
 function defuse(done) {
   say('SELF-DESTRUCT ARMED! Tap 1 → 9 in order before time runs out!');
   const LIMIT = 25;
@@ -799,7 +800,7 @@ function defuse(done) {
   return () => (alive = false);
 }
 
-// 75: the final blow — smash it before it regenerates.
+// Hit 15: the final blow — smash it before it regenerates.
 function mash(done) {
   document.body.classList.add('rave');
   say('FINAL BLOW! Smash it 25 times before it regenerates!');
