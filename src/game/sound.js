@@ -65,6 +65,7 @@ export const Sound = (() => {
     nope: () => tone(150, 0.18, 'square', 0.35, 110),
     bad: () => tone(220, 0.25, 'sawtooth', 0.3, 120),
     crack: () => noise(0.35, 0.7, 900),
+    thud: () => { noise(0.12, 0.6, 500); tone(110, 0.1, 'sine', 0.5, 70); },
     crash: () => { noise(0.8, 0.9, 500); tone(90, 0.6, 'sawtooth', 0.35, 40); },
     boom: () => { tone(70, 0.7, 'sine', 1, 35); noise(0.5, 0.5, 300); },
     sob: () => { tone(520, 0.25, 'sine', 0.5, 380); tone(480, 0.3, 'sine', 0.4, 340, 0.3); },

@@ -7,14 +7,14 @@ import { GOAL } from '@/game/core';
 // Furniture in the button's home. x/y place it, tilt is how it sits once the
 // house is ruined, fall is how it lands when the house collapses.
 const DECOR = [
-  { e: '🖼️', x: '10%', y: '20%', tilt: -14, fall: -80, d: 0.1 },
-  { e: '🕰️', x: '82%', y: '18%', tilt: 10, fall: 120, d: 0 },
-  { e: '', x: '58%', y: '34%', tilt: -8, fall: 6, d: 0.2, cls: 'shelf' },
-  { e: '🕯️', x: '60%', y: 'calc(34% - 42px)', tilt: 24, fall: -140, d: 0.05 },
-  { e: '📚', x: '68%', y: 'calc(34% - 44px)', tilt: -30, fall: 200, d: 0.12 },
-  { e: '🪴', x: '6%', y: 'calc(80% - 64px)', tilt: -6, fall: -30, d: 0.3, cls: 'big' },
-  { e: '🧸', x: '30%', y: 'calc(80% - 44px)', tilt: -20, fall: 95, d: 0.18 },
-  { e: '🛋️', x: '76%', y: 'calc(80% - 66px)', tilt: 5, fall: 15, d: 0.4, cls: 'big' },
+  { e: '🖼️', name: 'painting', x: '10%', y: '20%', tilt: -14, fall: -80, d: 0.1 },
+  { e: '🕰️', name: 'clock', x: '82%', y: '18%', tilt: 10, fall: 120, d: 0 },
+  { e: '', name: 'shelf', x: '58%', y: '34%', tilt: -8, fall: 6, d: 0.2, cls: 'shelf' },
+  { e: '🕯️', name: 'candle', x: '60%', y: 'calc(34% - 42px)', tilt: 24, fall: -140, d: 0.05 },
+  { e: '📚', name: 'books', x: '68%', y: 'calc(34% - 44px)', tilt: -30, fall: 200, d: 0.12 },
+  { e: '🪴', name: 'plant', x: '6%', y: 'calc(80% - 64px)', tilt: -6, fall: -30, d: 0.3, cls: 'big' },
+  { e: '🧸', name: 'teddy', x: '30%', y: 'calc(80% - 44px)', tilt: -20, fall: 95, d: 0.18 },
+  { e: '🛋️', name: 'couch', x: '76%', y: 'calc(80% - 66px)', tilt: 5, fall: 15, d: 0.4, cls: 'big' },
 ];
 
 const CRACKS = [
@@ -40,6 +40,7 @@ export default function Game() {
             <span
               key={i}
               className={`decor ${d.cls ?? ''}`}
+              data-name={d.name}
               style={{ '--x': d.x, '--y': d.y, '--tilt': `${d.tilt}deg`, '--fall': `${d.fall}deg`, '--d': `${d.d}s` }}
             >
               {d.e}
@@ -48,6 +49,7 @@ export default function Game() {
           <svg id="cracks" viewBox="0 0 100 100" preserveAspectRatio="none">
             {CRACKS.map((d) => <path key={d} d={d} />)}
           </svg>
+          <div id="dents" />
           <div id="graves" />
           <div id="puddle" />
         </div>

@@ -36,6 +36,14 @@ const LINES = {
     "You're running out of clicks, champ.",
   ],
   reject: ['NOPE.', 'Denied.', 'Not today.', 'Nah.', 'Rejected. Try again in never.'],
+  miss: [
+    'Why are you breaking my house?!',
+    "HEY! That's my wall!",
+    'Stop punching my house!',
+    'Missed me. Hit my WALL.',
+    'Do you know how much drywall costs?',
+    'My landlord is going to kill me.',
+  ],
   idle: ['Hello? Are you ignoring me?', '…did you leave? Please have left.', 'Peace and quiet. Finally. Wait, are you still there?'],
 };
 
@@ -287,6 +295,62 @@ function dismissFriends() {
     setTimeout(() => el.remove(), 700);
   });
   followersList = [];
+}
+
+/* ---------- missing the button ----------
+   Clicking empty space dents the wall where you clicked and knocks nearby
+   furniture crooked. The button takes it personally. */
+let lastMissLine = 0;
+let lastMissSound = 0;
+
+function dentPath() {
+  let d = '';
+  const rays = 4 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < rays; i++) {
+    const a = (i / rays) * Math.PI * 2 + rand(-0.4, 0.4);
+    const mid = rand(5, 9);
+    const end = rand(11, 19);
+    const kink = a + rand(-0.5, 0.5);
+    d += `M0 0 L${(Math.cos(a) * mid).toFixed(1)} ${(Math.sin(a) * mid).toFixed(1)} L${(Math.cos(kink) * end).toFixed(1)} ${(Math.sin(kink) * end).toFixed(1)} `;
+  }
+  return d;
+}
+
+function onMiss(e) {
+  if (G.mode !== 'story' || G.locked || e.button > 0) return;
+  if (e.target.closest('.char, button, input, #hud, #overlay')) return;
+  const now = Date.now();
+
+  const dent = h('div', 'dent', `<svg viewBox="-20 -20 40 40"><path d="${dentPath()}"/></svg>`);
+  dent.style.left = e.clientX + 'px';
+  dent.style.top = e.clientY + 'px';
+  dent.style.setProperty('--r', rand(0, 360) + 'deg');
+  dom.dents.append(dent);
+  while (dom.dents.children.length > 40) dom.dents.firstChild.remove();
+
+  // Knock any furniture close to the click a bit more crooked each time.
+  let knocked = null;
+  document.querySelectorAll('.decor').forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) > 70) return;
+    el._knocks = (el._knocks || 0) + 1;
+    el._dir ||= Math.random() < 0.5 ? -1 : 1;
+    el.style.rotate = Math.min(35, el._knocks * 7) * el._dir + 'deg';
+    el.animate([{ translate: '0 0' }, { translate: '' + rand(-6, 6) + 'px -8px' }, { translate: '0 0' }], { duration: 300 });
+    knocked = el.dataset.name;
+  });
+
+  if (now - lastMissSound > 180) {
+    lastMissSound = now;
+    Sound.thud();
+  }
+  shake(dom.room, 3, 160);
+
+  if (now - lastMissLine > 3000) {
+    lastMissLine = now;
+    say(knocked ? pick([`Not my ${knocked}!`, `Leave my ${knocked} alone!`, `That ${knocked} was a GIFT.`]) : pick(LINES.miss));
+    if (!G.chase && G.disguise < 0) setMood(hero, 'angry');
+  }
 }
 
 /* ---------- story events ---------- */
@@ -721,6 +785,8 @@ export function startGame(root) {
     again: $('#again', root),
     skip: $('#skip', root),
     skipAll: $('#skipAll', root),
+    room: $('#room', root),
+    dents: $('#dents', root),
     fx: h('div', 'fx'),
   });
   root.append(dom.fx);
@@ -758,6 +824,7 @@ export function startGame(root) {
   });
 
   scope.on(window, 'pointerdown', () => Sound.init());
+  scope.on(window, 'pointerdown', onMiss);
   scope.on(window, 'pointermove', onPointerMove);
 
   // Tears while it's sad.
@@ -818,6 +885,7 @@ export function startGame(root) {
     dom.world.innerHTML = '';
     dom.arena.innerHTML = '';
     dom.graves.innerHTML = '';
+    dom.dents.innerHTML = '';
     dom.fx.remove();
     dom.world.hidden = false;
     dom.arena.hidden = true;

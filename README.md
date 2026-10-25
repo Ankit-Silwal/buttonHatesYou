@@ -30,6 +30,8 @@ Stuck? There are two skips, and both make you type a silly phrase (no pasting):
 
 You will be called a loser either way.
 
+Missing the button hurts too: every click on empty space cracks the wall and knocks the furniture crooked, and the button will ask why you are breaking its house.
+
 Progress is saved in localStorage, and every boss hit is a checkpoint.
 
 ## Code
