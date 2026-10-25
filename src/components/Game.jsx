@@ -45,7 +45,7 @@ export default function Game() {
             </span>
           ))}
           <svg id="cracks" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {CRACKS.map((d) => <path key={d} pathLength="100" d={d} />)}
+            {CRACKS.map((d) => <path key={d} d={d} />)}
           </svg>
           <div id="graves" />
           <div id="puddle" />
