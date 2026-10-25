@@ -29,6 +29,7 @@ const fresh = () => ({
   done: false,
   muted: false,
   visits: 0,
+  skips: 0,
   // runtime only
   mode: 'story', // story | boss | post | done
   locked: false,
@@ -114,8 +115,8 @@ export const wait = (ms) => new Promise((r) => scope.later(r, ms));
 /* ---------- saving ---------- */
 export function save() {
   try {
-    const { clicks, post, popped, inPost, done, muted, visits } = G;
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ clicks, post, popped, inPost, done, muted, visits }));
+    const { clicks, post, popped, inPost, done, muted, visits, skips } = G;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ clicks, post, popped, inPost, done, muted, visits, skips }));
   } catch {}
 }
 

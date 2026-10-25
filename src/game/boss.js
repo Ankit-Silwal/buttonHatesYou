@@ -35,13 +35,37 @@ const HIT_LINES = [
   'NOOOOOOOOOOOOOOO—',
 ];
 
+// To skip a level you have to type one of these. Exactly.
+const SKIP_PHRASES = [
+  'i eat cereal with a fork',
+  'leetcode sucks',
+  'hulalala',
+  'i lost to a button',
+  'the button is my king',
+  'please mr button let me pass',
+  'my mouse deserves better',
+  'i cannot pop balloons',
+  'i am a professional loser',
+  'kid games are too hard for me',
+  'my pet rock is smarter than me',
+];
+
+const LOSER_LINES = [
+  "LOSER. Can't even play kid games.",
+  'Wow. Skipped a KID game. Incredible.',
+  'My baby cousin beat that level. Loser.',
+  'Skipping? In THIS economy?',
+];
+
 let stopPhase = null;
 let busy = false;
+let skipOpen = false;
 
 function clearArena() {
   stopPhase?.();
   stopPhase = null;
   dom.arena.innerHTML = '';
+  dom.skip.hidden = true;
 }
 
 function start() {
@@ -50,13 +74,87 @@ function start() {
   dom.bossbar.hidden = false;
   dom.bossbar.innerHTML = '<i></i>'.repeat(BOSS_HITS);
   document.activeElement?.blur();
+  scope.on(dom.skip, 'click', openSkip);
   updateHud();
   next(true);
 }
 
 function stop() {
   clearArena();
+  closeSkip();
   document.body.classList.remove('glitchy', 'rave');
+}
+
+/* ---------- skipping a level ---------- */
+const normalize = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+
+function closeSkip() {
+  if (!skipOpen) return;
+  skipOpen = false;
+  dom.overlay.hidden = true;
+  dom.overlay.innerHTML = '';
+  dom.overlay.className = '';
+}
+
+function openSkip() {
+  if (!stopPhase || busy || skipOpen) return;
+  skipOpen = true;
+  const phrase = pick(SKIP_PHRASES);
+  // A solid backdrop: a blurred one lets the animated arena draw over the card.
+  dom.overlay.className = 'skipping';
+  dom.overlay.innerHTML = `<div class="card skip-card">
+    <h2>Skip this level? 🍼</h2>
+    <p>Fine. But first, type this exactly:</p>
+    <p class="phrase"></p>
+    <input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type it, no pasting…">
+    <p class="hint"></p>
+    <div class="row"><button class="pill" data-a="go">Skip</button><button class="pill ghost" data-a="no">I'll play</button></div>
+  </div>`;
+  dom.overlay.hidden = false;
+  const card = dom.overlay.querySelector('.card');
+  const input = card.querySelector('input');
+  const hint = card.querySelector('.hint');
+  card.querySelector('.phrase').textContent = `“${phrase}”`;
+  input.focus();
+
+  const attempt = () => {
+    if (busy || !stopPhase) return closeSkip(); // the level ended while typing
+    if (normalize(input.value) === phrase) {
+      closeSkip();
+      skipLevel();
+      return;
+    }
+    Sound.nope();
+    shake(card, 6);
+    hint.textContent = pick(["That's not what it says.", 'Typing is hard too, huh?', 'Read it again. Slowly.', 'Close! Not really.']);
+  };
+
+  // Keep keys away from the game behind (the climb listens for arrows/space).
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') attempt();
+    if (e.key === 'Escape') closeSkip();
+  });
+  input.addEventListener('keyup', (e) => e.stopPropagation());
+  input.addEventListener('paste', (e) => {
+    e.preventDefault();
+    Sound.nope();
+    hint.textContent = 'No pasting. Type it like you mean it.';
+  });
+  card.querySelector('[data-a=go]').addEventListener('click', attempt);
+  card.querySelector('[data-a=no]').addEventListener('click', () => {
+    closeSkip();
+    say('Respect. Now get back in there.');
+  });
+}
+
+function skipLevel() {
+  G.skips++;
+  Sound.bad();
+  const msg = h('div', 'loser', "<b>LOSER</b><span>can't even play kid games</span>");
+  dom.fx.append(msg);
+  msg.addEventListener('animationend', () => msg.remove());
+  hit(pick(LOSER_LINES));
 }
 
 async function next(fresh = false) {
@@ -75,10 +173,11 @@ async function next(fresh = false) {
   } else {
     await wait(300);
   }
-  stopPhase = PHASES[p].run(round, hit);
+  stopPhase = PHASES[p].run(round, () => hit());
+  dom.skip.hidden = false;
 }
 
-function hit() {
+function hit(line) {
   if (busy) return;
   busy = true;
   clearArena();
@@ -88,7 +187,8 @@ function hit() {
   Sound.hit();
   shake(dom.app, 12, 500);
   flash('#ffd9c9');
-  say(HIT_LINES[G.clicks - BOSS_AT - 1]);
+  say(line || HIT_LINES[G.clicks - BOSS_AT - 1]);
+  closeSkip();
   scope.later(() => {
     busy = false;
     next();
@@ -125,7 +225,9 @@ async function win() {
   document.body.classList.remove('boss', 'rave', 'glitchy');
   dom.arena.hidden = true;
   dom.overlay.className = 'soft';
-  dom.overlay.innerHTML = `<div class="card win"><div class="emoji">🎉</div><h2>YOU WON!</h2><p class="big">${GOAL} / ${GOAL} clicks</p><p>The button is finally defeated.</p><p class="twist"></p></div>`;
+  dom.overlay.innerHTML = `<div class="card win"><div class="emoji">🎉</div><h2>YOU WON!</h2><p class="big">${GOAL} / ${GOAL} clicks</p><p>The button is finally defeated.</p>${
+    G.skips ? `<p class="skips">(You skipped ${G.skips} level${G.skips > 1 ? 's' : ''}. Loser.)</p>` : ''
+  }<p class="twist"></p></div>`;
   dom.overlay.hidden = false;
   say('');
   await wait(3500);

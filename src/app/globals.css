@@ -456,6 +456,7 @@ body.puddle #puddle { height: 6vh; }
 #overlay.soft { background: rgba(74, 52, 40, 0.25); backdrop-filter: blur(3px); }
 #overlay.dim { background: rgba(74, 52, 40, 0.45); }
 #overlay.black { background: #000; }
+#overlay.skipping { background: rgba(23, 13, 28, 0.88); }
 
 .card {
   width: min(100%, 380px);
@@ -473,6 +474,49 @@ body.puddle #puddle { height: 6vh; }
 .card.win .emoji { font-size: 54px; }
 .card.win .big { font-size: 22px; font-weight: 700; color: var(--ink); }
 .card.win .twist { color: var(--btn-dark); font-weight: 600; min-height: 1.4em; }
+.card.win .skips { font-size: 13px; }
+
+.skip-card .phrase {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+}
+.skip-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--ink-soft);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  text-align: center;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.skip-card input:focus { border-color: var(--mustard); }
+.skip-card .hint { min-height: 1.4em; color: var(--btn); font-weight: 600; }
+
+.loser {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%) rotate(-6deg);
+  color: var(--btn);
+  text-align: center;
+  text-shadow: 3px 0 #2fd6ff, -3px 0 #ff2fa0;
+  animation: loser 2.2s ease-out forwards;
+}
+.loser b { font-size: clamp(56px, 14vw, 120px); line-height: 1; letter-spacing: 0.04em; }
+.loser span { font-size: clamp(18px, 4vw, 28px); font-weight: 600; color: var(--ink); text-shadow: none; }
 
 .pill {
   padding: 10px 20px;
@@ -732,6 +776,12 @@ canvas.climb { position: absolute; inset: 0; width: 100%; height: 100%; }
 @keyframes rip { to { transform: rotate(-8deg) scale(0.85); opacity: 0; } }
 @keyframes slam { from { transform: translate(-50%, -50%) scale(2.2); opacity: 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes loser {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-6deg) scale(2.4); }
+  12% { opacity: 1; transform: translate(-50%, -50%) rotate(-6deg) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(-6deg) scale(1); }
+}
 @keyframes pulse { to { transform: translateX(-50%) scale(1.08); } }
 @keyframes glitch {
   0%, 88%, 100% { filter: none; transform: none; }

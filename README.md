@@ -24,6 +24,8 @@ Open http://localhost:3000.
 | 51–65 | Boss fight: balloon pop, platform climb, whack-a-button, shell game, then Simon, a bomb and a final smash |
 | +20 | "Just to make sure I'm dead." |
 
+Stuck on a boss level? Hit ⏭ and type the silly phrase it gives you (no pasting) to skip it. You will be called a loser.
+
 Progress is saved in localStorage, and every boss hit is a checkpoint.
 
 ## Code

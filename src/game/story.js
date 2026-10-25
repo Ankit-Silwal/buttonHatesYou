@@ -661,6 +661,7 @@ export function startGame(root) {
     bossbar: $('#bossbar', root),
     loadbar: $('#loadbar', root),
     again: $('#again', root),
+    skip: $('#skip', root),
     fx: h('div', 'fx'),
   });
   root.append(dom.fx);
@@ -761,6 +762,7 @@ export function startGame(root) {
     dom.bossbar.hidden = true;
     dom.loadbar.hidden = true;
     dom.again.hidden = true;
+    dom.skip.hidden = true;
     hideOverlay();
     setScene();
   };
