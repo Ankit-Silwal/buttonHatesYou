@@ -1,7 +1,5 @@
-'use strict';
-
 // Tiny synthesized sounds. Master volume is kept low on purpose.
-const Sound = (() => {
+export const Sound = (() => {
   const VOLUME = 0.12;
   let ctx = null;
   let master = null;
