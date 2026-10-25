@@ -5,7 +5,7 @@ import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
   save, load, wipeSave, makeChar, place, setMood, area, spot,
-  say, floatText, shake, updateHud, setScene,
+  say, floatText, shake, updateHud, setScene, showSkips,
 } from './core';
 
 /* ---------- what the button says ---------- */
@@ -532,20 +532,28 @@ async function beg() {
 }
 
 /* ---------- skipping ----------
-   In the story a skip lands you on the next scripted beat, so you miss the
-   filler clicks but never an event. */
+   A normal skip lands on the next scripted beat, so you miss the filler
+   clicks but never an event. A level skip jumps to the start of the next act
+   and rebuilds the room as it would look by then. */
 const BEATS = Object.keys(STORY).map(Number).sort((a, b) => a - b);
+const ACT_STARTS = [AT.legs, AT.cry, AT.army, BOSS_AT];
 
-function skipStory() {
-  const allowed = () => G.mode === 'story' && !G.locked;
+function skipStory(all) {
   openSkip({
-    canSkip: allowed,
+    title: all ? 'Skip this whole act?' : 'Skip ahead?',
+    canSkip: () => G.mode === 'story' && !G.locked,
     onSkip: () => {
+      const target = (all ? ACT_STARTS : BEATS).find((b) => b > G.clicks);
       G.skips++;
-      loserStamp("can't even click a button");
+      loserStamp(all ? 'skipped a whole act. wow.' : "can't even click a button");
       G.justRejected = false;
       G.dodges = 0;
-      G.clicks = BEATS.find((b) => b > G.clicks);
+      if (all) {
+        resetScene();
+        applyRoom(target - 1);
+        applyCast(target - 1);
+      }
+      G.clicks = target;
       save();
       updateHud();
       Sound.click(G.clicks);
@@ -555,11 +563,25 @@ function skipStory() {
   });
 }
 
+// Clear everything the story put on screen, before rebuilding it.
+function resetScene() {
+  endChase();
+  disguise(-1);
+  G.decoysOn = false;
+  decoys.forEach((d) => d.remove());
+  decoys = [];
+  followersList.forEach((el) => el.remove());
+  followersList = [];
+  dom.graves.innerHTML = '';
+  hero.className = 'char hero';
+  setScene();
+}
+
 /* ---------- the boss handoff ---------- */
 async function startBoss(resumed) {
   G.locked = true;
   G.mode = 'boss';
-  dom.skip.hidden = true;
+  showSkips(false);
   hero.classList.remove('tremble');
   if (!resumed) {
     showOverlay('<div class="blackout"><p id="bo1"></p><p id="bo2" class="big"></p></div>', 'black');
@@ -587,7 +609,7 @@ function startPost() {
   dom.world.hidden = false;
   dom.arena.hidden = true;
   dom.bossbar.hidden = true;
-  dom.skip.hidden = true;
+  showSkips(false);
   hero.className = 'char hero has-legs bandaged';
   setMood(hero, 'calm');
   place(hero, innerWidth / 2, innerHeight + 120);
@@ -639,11 +661,8 @@ function restart() {
 }
 
 /* ---------- picking up where you left off ---------- */
-function restore() {
-  const n = G.clicks;
-  if (G.done) return showDone();
-  if (G.inPost || n >= GOAL) return startPost();
-
+// How the house looks after n clicks.
+function applyRoom(n) {
   if (n >= AT.legs) hero.classList.add('has-legs');
   const b = document.body.classList;
   if (n >= AT.cracks) b.add('cracked');
@@ -652,15 +671,12 @@ function restore() {
   if (n >= AT.funeral) renderGraves();
   if (n >= AT.dusk) b.add('dusk');
   if (n >= AT.collapse) b.add('collapsed');
+}
 
-  if (n >= BOSS_AT) {
-    say('Oh, you’re back. The arena missed you.');
-    return startBoss(true);
-  }
-
+// Who is around after n clicks.
+function applyCast(n) {
   center();
   setMood(hero, defaultMood(n));
-  dom.skip.hidden = false;
   if (n >= AT.friends && n < AT.crash) spawnFriends(FRIENDS, 85);
   if (n >= AT.family && n < AT.funeral) spawnFriends(FAMILY, 60);
   if (n >= AT.army && n < AT.beg) {
@@ -670,6 +686,20 @@ function restore() {
   }
   if (disguised(n)) disguise(n - AT.disguise);
   if (chasing(n)) startChase();
+}
+
+function restore() {
+  const n = G.clicks;
+  if (G.done) return showDone();
+  if (G.inPost || n >= GOAL) return startPost();
+
+  applyRoom(n);
+  if (n >= BOSS_AT) {
+    say('Oh, you’re back. The arena missed you.');
+    return startBoss(true);
+  }
+  applyCast(n);
+  showSkips(true);
 
   const greeting = G.visits > 1 && n > 0 ? "Oh no. Not you again. Refreshing won't save you." : STORY[n]?.say || pick(pool(n));
   say(greeting);
@@ -690,6 +720,7 @@ export function startGame(root) {
     loadbar: $('#loadbar', root),
     again: $('#again', root),
     skip: $('#skip', root),
+    skipAll: $('#skipAll', root),
     fx: h('div', 'fx'),
   });
   root.append(dom.fx);
@@ -718,7 +749,9 @@ export function startGame(root) {
     save();
   });
   scope.on($('#restart', root), 'click', restart);
-  scope.on(dom.skip, 'click', () => (G.mode === 'boss' ? Boss.skip() : skipStory()));
+  const onSkip = (all) => () => (G.mode === 'boss' ? Boss.skip(all) : skipStory(all));
+  scope.on(dom.skip, 'click', onSkip(false));
+  scope.on(dom.skipAll, 'click', onSkip(true));
   scope.on(dom.again, 'click', () => {
     wipeSave();
     window.location.href = window.location.pathname;
@@ -791,7 +824,7 @@ export function startGame(root) {
     dom.bossbar.hidden = true;
     dom.loadbar.hidden = true;
     dom.again.hidden = true;
-    dom.skip.hidden = true;
+    showSkips(false);
     closeSkip();
     hideOverlay();
     setScene();

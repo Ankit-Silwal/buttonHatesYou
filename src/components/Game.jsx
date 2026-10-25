@@ -62,7 +62,8 @@ export default function Game() {
           <div id="bossbar" hidden />
         </div>
         <div className="tools">
-          <button id="skip" title="Skip level" aria-label="Skip level" hidden>⏭</button>
+          <button id="skip" title="Skip ahead" aria-label="Skip ahead" hidden>⏩</button>
+          <button id="skipAll" title="Skip the whole level" aria-label="Skip the whole level" hidden>⏭</button>
           <button id="mute" title="Sound on/off" aria-label="Toggle sound">🔊</button>
           <button id="restart" title="Start over" aria-label="Start over">↺</button>
         </div>

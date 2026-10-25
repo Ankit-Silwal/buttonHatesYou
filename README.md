@@ -24,7 +24,11 @@ Open http://localhost:3000.
 | 51–65 | Boss fight: balloon pop, platform climb, whack-a-button, shell game, then Simon, a bomb and a final smash |
 | +20 | "Just to make sure I'm dead." |
 
-Stuck? Hit ⏭ and type the silly phrase it gives you (no pasting). In the story it jumps you to the next event; in the boss fight it skips the current minigame. You will be called a loser.
+Stuck? There are two skips, and both make you type a silly phrase (no pasting):
+- ⏩ skips ahead a little: to the next event in the story, or one round of a boss minigame
+- ⏭ skips the whole level: to the next act in the story, or the rest of the current boss minigame
+
+You will be called a loser either way.
 
 Progress is saved in localStorage, and every boss hit is a checkpoint.
 

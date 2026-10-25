@@ -169,6 +169,14 @@ body.puddle #puddle { height: 6vh; }
   font-size: 16px;
 }
 
+/* phones: drop the brand so the counter and four buttons fit */
+@media (max-width: 520px) {
+  .brand { display: none; }
+  .mid { position: static; transform: none; align-items: flex-start; }
+  .tools { gap: 6px; }
+  .tools button { width: 34px; height: 34px; font-size: 14px; }
+}
+
 #line {
   position: fixed;
   top: 66px;

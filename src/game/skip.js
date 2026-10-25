@@ -28,16 +28,17 @@ export function closeSkip() {
   dom.overlay.className = '';
 }
 
+// title: what is being skipped
 // canSkip: is skipping still allowed right now (the level may end while typing)
 // onSkip: called once the phrase is typed correctly
-export function openSkip({ canSkip, onSkip, onCancel }) {
+export function openSkip({ title, canSkip, onSkip, onCancel }) {
   if (open || !canSkip()) return;
   open = true;
   const phrase = pick(SKIP_PHRASES);
   // A solid backdrop: a blurred one lets the animated arena draw over the card.
   dom.overlay.className = 'skipping';
   dom.overlay.innerHTML = `<div class="card skip-card">
-    <h2>Skip this level? 🍼</h2>
+    <h2></h2>
     <p>Fine. But first, type this exactly:</p>
     <p class="phrase"></p>
     <input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type it, no pasting…">
@@ -48,6 +49,7 @@ export function openSkip({ canSkip, onSkip, onCancel }) {
   const card = dom.overlay.querySelector('.card');
   const input = card.querySelector('input');
   const hint = card.querySelector('.hint');
+  card.querySelector('h2').textContent = `${title} 🍼`;
   card.querySelector('.phrase').textContent = `“${phrase}”`;
   input.focus();
 

@@ -2,7 +2,7 @@ import { Sound } from './sound';
 import {
   G, dom, hooks, scope, wait, rand, pick, clamp, h,
   BOSS_AT, BOSS_HITS, GOAL, FRIENDS, save, makeChar, place, setMood,
-  say, floatText, shake, flash, confetti, updateHud,
+  say, floatText, shake, flash, confetti, updateHud, showSkips,
 } from './core';
 import { openSkip, closeSkip, loserStamp } from './skip';
 
@@ -50,7 +50,7 @@ function clearArena() {
   stopPhase?.();
   stopPhase = null;
   dom.arena.innerHTML = '';
-  dom.skip.hidden = true;
+  showSkips(false);
 }
 
 function start() {
@@ -69,14 +69,17 @@ function stop() {
   document.body.classList.remove('glitchy', 'rave');
 }
 
-// Skipping a boss level counts as a hit, with extra shame.
-function skip() {
+// Skipping counts as hits, with extra shame. A normal skip passes one round;
+// a level skip passes every round left in this minigame.
+function skip(all = false) {
+  const rounds = all ? 3 - ((G.clicks - BOSS_AT) % 3) : 1;
   openSkip({
+    title: all ? 'Skip this whole minigame?' : 'Skip this round?',
     canSkip: () => !!stopPhase && !busy,
     onSkip: () => {
-      G.skips++;
-      loserStamp("can't even play kid games");
-      hit(pick(LOSER_LINES));
+      G.skips += rounds;
+      loserStamp(all ? 'skipped a whole kid game' : "can't even play kid games");
+      hit(pick(LOSER_LINES), rounds);
     },
     onCancel: () => say('Respect. Now get back in there.'),
   });
@@ -99,14 +102,14 @@ async function next(fresh = false) {
     await wait(300);
   }
   stopPhase = PHASES[p].run(round, () => hit());
-  dom.skip.hidden = false;
+  showSkips(true);
 }
 
-function hit(line) {
+function hit(line, count = 1) {
   if (busy) return;
   busy = true;
   clearArena();
-  G.clicks++;
+  G.clicks += count;
   save();
   updateHud();
   Sound.hit();

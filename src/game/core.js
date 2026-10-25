@@ -240,3 +240,8 @@ export function setScene(...classes) {
   document.body.classList.remove(...SCENE_CLASSES);
   document.body.classList.add(...classes);
 }
+
+export function showSkips(on) {
+  dom.skip.hidden = !on;
+  dom.skipAll.hidden = !on;
+}
