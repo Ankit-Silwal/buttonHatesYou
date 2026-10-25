@@ -1,5 +1,6 @@
 import { Sound } from './sound';
 import { Boss } from './boss';
+import { openSkip, closeSkip, loserStamp } from './skip';
 import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
@@ -530,10 +531,35 @@ async function beg() {
   G.locked = false;
 }
 
+/* ---------- skipping ----------
+   In the story a skip lands you on the next scripted beat, so you miss the
+   filler clicks but never an event. */
+const BEATS = Object.keys(STORY).map(Number).sort((a, b) => a - b);
+
+function skipStory() {
+  const allowed = () => G.mode === 'story' && !G.locked;
+  openSkip({
+    canSkip: allowed,
+    onSkip: () => {
+      G.skips++;
+      loserStamp("can't even click a button");
+      G.justRejected = false;
+      G.dodges = 0;
+      G.clicks = BEATS.find((b) => b > G.clicks);
+      save();
+      updateHud();
+      Sound.click(G.clicks);
+      advance(G.clicks);
+    },
+    onCancel: () => say('Good. Keep suffering.'),
+  });
+}
+
 /* ---------- the boss handoff ---------- */
 async function startBoss(resumed) {
   G.locked = true;
   G.mode = 'boss';
+  dom.skip.hidden = true;
   hero.classList.remove('tremble');
   if (!resumed) {
     showOverlay('<div class="blackout"><p id="bo1"></p><p id="bo2" class="big"></p></div>', 'black');
@@ -561,6 +587,7 @@ function startPost() {
   dom.world.hidden = false;
   dom.arena.hidden = true;
   dom.bossbar.hidden = true;
+  dom.skip.hidden = true;
   hero.className = 'char hero has-legs bandaged';
   setMood(hero, 'calm');
   place(hero, innerWidth / 2, innerHeight + 120);
@@ -633,6 +660,7 @@ function restore() {
 
   center();
   setMood(hero, defaultMood(n));
+  dom.skip.hidden = false;
   if (n >= AT.friends && n < AT.crash) spawnFriends(FRIENDS, 85);
   if (n >= AT.family && n < AT.funeral) spawnFriends(FAMILY, 60);
   if (n >= AT.army && n < AT.beg) {
@@ -690,6 +718,7 @@ export function startGame(root) {
     save();
   });
   scope.on($('#restart', root), 'click', restart);
+  scope.on(dom.skip, 'click', () => (G.mode === 'boss' ? Boss.skip() : skipStory()));
   scope.on(dom.again, 'click', () => {
     wipeSave();
     window.location.href = window.location.pathname;
@@ -763,6 +792,7 @@ export function startGame(root) {
     dom.loadbar.hidden = true;
     dom.again.hidden = true;
     dom.skip.hidden = true;
+    closeSkip();
     hideOverlay();
     setScene();
   };

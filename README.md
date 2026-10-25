@@ -24,7 +24,7 @@ Open http://localhost:3000.
 | 51–65 | Boss fight: balloon pop, platform climb, whack-a-button, shell game, then Simon, a bomb and a final smash |
 | +20 | "Just to make sure I'm dead." |
 
-Stuck on a boss level? Hit ⏭ and type the silly phrase it gives you (no pasting) to skip it. You will be called a loser.
+Stuck? Hit ⏭ and type the silly phrase it gives you (no pasting). In the story it jumps you to the next event; in the boss fight it skips the current minigame. You will be called a loser.
 
 Progress is saved in localStorage, and every boss hit is a checkpoint.
 
@@ -34,6 +34,7 @@ Progress is saved in localStorage, and every boss hit is a checkpoint.
 - `src/game/story.js` handles clicks 0–50 (the `AT` table at the top sets when each beat happens), the post-game and saving/resuming
 - `src/game/boss.js` has the five boss minigames
 - `src/game/core.js` has shared state and helpers
+- `src/game/skip.js` is the type-a-silly-phrase skip dialog
 - `src/game/sound.js` makes quiet synthesized sounds (no audio files)
 
 To test a section, open `/?at=55` to jump to any click count.
