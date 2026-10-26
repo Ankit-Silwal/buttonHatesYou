@@ -67,7 +67,8 @@ export const REWARDS = {
   'reason-finale': { coins: 80, diamonds: 5 }, // finishing The Reason
 };
 
-// Mini-games, as listed on the Games screen. `prize` is the line on the card.
+// Mini-games, as listed on the Games screen. `prize` is the line on the card;
+// `best` also puts a game in the starred "Best ones" row at the top.
 export const GAMES = [
   {
     id: 'desperate-for-love',
@@ -81,6 +82,7 @@ export const GAMES = [
   {
     id: 'the-reason',
     name: 'The Reason',
+    best: true, // featured in "Best ones" at the top of the Games screen
     emoji: '🗡️',
     color: '#c9cde8',
     blurb: 'The prequel. A sword-swinging platformer about why the button hates you. 9 episodes, about 50 minutes. Bring tissues.',

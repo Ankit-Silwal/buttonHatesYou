@@ -32,22 +32,29 @@ export default function Arcade() {
         </div>
       </div>
 
+      {GAMES.some((g) => g.best) && (
+        <section className="best">
+          <h2>
+            <span className="star" aria-hidden="true">
+              ⭐
+            </span>{' '}
+            Best ones
+          </h2>
+          <ul className="games featured">
+            {GAMES.filter((g) => g.best).map((g) => (
+              <li key={g.id}>
+                <GameCard game={g} best />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <h2 className="games-head">All games</h2>
       <ul className="games">
         {GAMES.map((g) => (
           <li key={g.id}>
-            <Link href={g.href} className="game" style={{ '--art': g.color }}>
-              <span className="art" aria-hidden="true">
-                {g.emoji}
-              </span>
-              <span className="info">
-                <b>{g.name}</b>
-                <span className="blurb">{g.blurb}</span>
-                <span className="meta">
-                  <span className="prize">{g.prize}</span>
-                  <span className="pill">Play</span>
-                </span>
-              </span>
-            </Link>
+            <GameCard game={g} />
           </li>
         ))}
         <li>
@@ -63,5 +70,26 @@ export default function Arcade() {
         </li>
       </ul>
     </main>
+  );
+}
+
+function GameCard({ game: g, best }) {
+  return (
+    <Link href={g.href} className={`game ${best ? 'best' : ''}`} style={{ '--art': g.color }}>
+      <span className="art" aria-hidden="true">
+        {g.emoji}
+        {g.best && <span className="badge">★ Best</span>}
+      </span>
+      <span className="info">
+        <b>
+          {g.name} {g.best && <span className="star">★</span>}
+        </b>
+        <span className="blurb">{g.blurb}</span>
+        <span className="meta">
+          <span className="prize">{g.prize}</span>
+          <span className="pill">Play</span>
+        </span>
+      </span>
+    </Link>
   );
 }
