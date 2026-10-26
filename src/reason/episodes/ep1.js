@@ -15,10 +15,11 @@ export const BEDROOM = {
   deco: [
     { t: 'wall', x: 0, y: 0, w: 960, h: GROUND },
     { t: 'window', x: 560, y: 130, w: 120, h: 100, rain: true, night: true },
-    { t: 'photo', x: 330, y: 170 },
+    { t: 'weddingPhoto', x: 320, y: 165 },
     { t: 'rug', x: 360, y: GROUND, w: 200 },
     { t: 'lamp', x: 720, y: GROUND },
     { t: 'table', x: 760, y: GROUND, soup: true },
+    { t: 'bloomVase', x: 832, y: GROUND - 40 },
     { t: 'door', x: 890, y: GROUND },
   ],
   spawn: { x: 120, y: GROUND - 80 },
@@ -345,7 +346,7 @@ export default async function play(g, p) {
     ['bella', 'Come here. I have something for you.'],
   ]);
   await g.walk(bellaOut, cx(p) - 50, 80);
-  await g.card('', 'Bella gives Bobby a small silver heart-shaped pendant.', 2.6, 'soft');
+  await g.card('', 'Bobby left his wedding pendant on the nightstand again. Bella fastens it back around his neck.', 3, 'soft');
   await g.talk([
     ['bella', 'If you ever get lost, this will remind you where home is.'],
     ['bobby', 'I’m going to the market, not to war.'],

@@ -4,6 +4,7 @@ import './avatar.css';
 import './hub.css';
 import './love.css';
 import './reason.css';
+import './story.css';
 import './adventure.css';
 
 const fredoka = Fredoka({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font' });

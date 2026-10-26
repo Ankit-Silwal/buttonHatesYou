@@ -98,6 +98,7 @@
   bottom: max(24px, 6vh);
   z-index: 10;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
   padding: 0 16px;
@@ -233,6 +234,36 @@ a.game:focus-visible { outline: 3px dashed var(--mustard); outline-offset: 4px; 
 .game .prize { font-weight: 700; }
 .game.soon { background: transparent; box-shadow: inset 0 0 0 2px var(--floor); opacity: 0.75; }
 .game.soon .art { background: transparent; }
+.game .art { position: relative; }
+.game .badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f2c14e;
+  color: #5a3a00;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 3px 0 #c99a2e;
+}
+.game .star { color: #e6a817; }
+
+/* "Best ones": starred games, one wide card each */
+.best { max-width: 960px; margin: 0 auto 26px; }
+.best h2, .games-head { max-width: 960px; margin: 0 auto 12px; font-size: 22px; }
+.best h2 .star { display: inline-block; animation: twinkle 2.4s ease-in-out infinite; }
+@keyframes twinkle { 50% { transform: scale(1.18) rotate(12deg); } }
+@media (prefers-reduced-motion: reduce) { .best h2 .star { animation: none; } }
+.games.featured { grid-template-columns: 1fr; }
+.game.best { flex-direction: row; box-shadow: 0 0 0 3px #f2c14e, 0 10px 28px var(--shadow); }
+.game.best .art { flex: 0 0 40%; height: auto; min-height: 180px; font-size: 90px; }
+.game.best b { font-size: 26px; }
+.game.best .blurb { font-size: 15px; }
+@media (max-width: 600px) {
+  .game.best { flex-direction: column; }
+  .game.best .art { min-height: 150px; }
+}
 
 @keyframes bump { 0% { transform: scale(1.5); } 100% { transform: scale(1); } }
 @keyframes sheetIn { from { transform: translate(-50%, 100%); } }

@@ -174,6 +174,21 @@ const THEMES = {
       { notes: 'A2 _ _ _ _ _ _ _ | F2 _ _ _ _ _ _ _ | D2 _ _ _ _ _ _ _ | E2 _ _ _ _ _ _ _', wave: 'triangle', vol: 0.45 },
     ],
   },
+  love: {
+    bpm: 84,
+    parts: [
+      { notes: 'A4 _ C5 _ F5 _ _ E5 | D5 _ C5 _ A4 _ _ _ | Bb4 _ D5 _ G5 _ _ F5 | E5 _ _ _ C5 _ _ _ | A4 _ C5 _ F5 _ _ A5 | G5 _ F5 _ D5 _ _ _ | Bb4 _ A4 _ G4 _ E5 _ | F5 _ _ _ _ _ _ _', wave: 'triangle', vol: 0.45 },
+      { notes: 'F2 _ C3 _ F3 _ C3 _ | D2 _ A2 _ D3 _ A2 _ | G2 _ D3 _ G3 _ D3 _ | C3 _ G3 _ C3 _ G2 _ | F2 _ C3 _ F3 _ C3 _ | D2 _ A2 _ Bb2 _ F3 _ | C3 _ G3 _ C3 _ E3 _ | F2 _ C3 _ F3 _ _ _', wave: 'sine', vol: 0.5 },
+    ],
+  },
+  // the bridal chorus (Wagner, 1850), at a button's pace
+  wedding: {
+    bpm: 96,
+    parts: [
+      { notes: 'C5 _ _ F5 F5 _ F5 _ | _ _ _ _ C5 _ _ G5 | E5 _ F5 _ _ _ _ _ | . . . . . . . . | C5 _ _ F5 F5 _ Bb5 _ | Bb5 _ A5 _ G5 _ F5 _ | E5 _ F5 _ G5 _ _ _ | . . . . . . . .', wave: 'triangle', vol: 0.5 },
+      { notes: 'F3 _ _ _ A3 _ _ _ | F3 _ _ _ C3 _ _ _ | C3 _ _ _ F3 _ _ _ | F3 _ _ _ C3 _ _ _ | F3 _ _ _ D3 _ _ _ | Bb2 _ _ _ D3 _ _ _ | C3 _ _ _ C3 _ _ _ | F2 _ _ _ C3 _ _ _', wave: 'sine', vol: 0.45 },
+    ],
+  },
   music_box: {
     bpm: 84,
     parts: [{ notes: VILLAGE_A, wave: 'sine', vol: 0.4 }],

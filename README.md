@@ -55,6 +55,29 @@ Levels can be skipped after 25 seconds or a failed attempt.
   speech bubbles, drag and drop, timers and sounds
 - `src/love/LoveGame.jsx` is the map, intro/result cards, skipping and saving
 
+## How I Met Your Cursor
+
+The story before The Reason, and the opposite of it: funny, romantic and
+wholesome. Bobby meets Cursor (a cursor who points at things for a living)
+and Tabby, survives the worst first date ever, and marries Bella. 6 chapters,
+about 30 minutes, on the same engine as The Reason. Cursor is a companion:
+click anything glowing (or press R) and he flies over and presses it. Each
+chapter pays 15 🪙 the first time; finishing pays 60 🪙 + 4 💎.
+
+- `src/cursor/chapters/chN.js`: one file per chapter; `index.js` lists them
+- `src/cursor/foes.js`: its enemies and bosses (Tax Collector, Karen Popup,
+  Lord 404, the CAPTCHA Golem, Error 500)
+- `src/cursor/companion.js`: Cursor, and glowing switches he can press
+- `src/reason/StoryGame.jsx`: the menu and episode runner both story games share
+
+## The Story page
+
+`/story` (📖 Story on the home screen) tells the whole series in order: How I
+Met Your Cursor, The Reason, then The Button That Hates You, with Desperate
+for Love as a side story. Every part's premise is readable; each chapter's
+retelling unlocks once that chapter is finished in its game (read from each
+game's save in localStorage). The text lives in `src/story/content.js`.
+
 ## The Reason
 
 The prequel: why the button hates you. A Swordigo-style platformer in 9

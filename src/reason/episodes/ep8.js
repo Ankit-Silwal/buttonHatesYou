@@ -38,10 +38,11 @@ const ROOM = {
   deco: [
     { t: 'wall', x: 0, y: 0, w: 960, h: GROUND, color: '#cdbba6', broken: true },
     { t: 'window', x: 560, y: 130, w: 120, h: 100, broken: true, night: true },
-    { t: 'photo', x: 330, y: 170, dark: true },
+    { t: 'weddingPhoto', x: 320, y: 165, cracked: true },
     { t: 'rug', x: 360, y: GROUND, w: 200, color: '#8a6a5a' },
     { t: 'lamp', x: 720, y: GROUND, off: true },
     { t: 'table', x: 760, y: GROUND, soup: true },
+    { t: 'bloomVase', x: 832, y: GROUND - 40, wilted: true },
     { t: 'bed', x: 110, y: GROUND },
     { t: 'rubble', x: 600, y: GROUND, w: 80 },
   ],

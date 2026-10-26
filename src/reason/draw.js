@@ -28,6 +28,16 @@ export const SPEAKERS = {
   recorder: { name: 'Old recording', color: '#c9c27a', pitch: 0.7 },
   sign: { name: 'Signpost', color: '#c9a36b', pitch: 0.8 },
   ad: { name: 'THE UNSKIPPABLE AD', color: '#ffd84d', pitch: 1.4 },
+  // How I Met Your Cursor
+  cursor: { name: 'Cursor', color: '#dff1ff', pitch: 1.25 },
+  tax: { name: 'The Tax Collector', color: '#f4a6b8', pitch: 0.55 },
+  karen: { name: 'Karen Popup', color: '#ff7a59', pitch: 1.35 },
+  lord404: { name: 'Lord 404', color: '#b57cff', pitch: 0.5 },
+  golem: { name: 'CAPTCHA Golem', color: '#9ec3ff', pitch: 0.45 },
+  e500: { name: 'ERROR 500', color: '#ff5a5a', pitch: 0.4 },
+  priest: { name: 'Priest (a checkbox)', color: '#e8e8e8', pitch: 1.6 },
+  jeweler: { name: 'Mr. Shift', color: '#f2c14e', pitch: 0.9 },
+  waiter: { name: 'Waiter', color: '#d9d0c4', pitch: 1.1 },
 };
 
 const hash = (i) => {
@@ -68,6 +78,8 @@ const SKIES = {
   void: { top: '#100419', bottom: '#3d0b2f', grid: 1, glitchy: 1 },
   epilogue: { top: '#7cc6ff', bottom: '#ffe6c7', hills: ['#a8dc96', '#7fc276'], clouds: 1, sun: 1 },
   night: { top: '#0f1630', bottom: '#2f3a63', hills: ['#2b3a4d', '#1f2b3a'], trees: 1, stars: 1 },
+  mine: { top: '#140d08', bottom: '#3a2818', mine: 1, inside: true },
+  sunset: { top: '#ff9a6b', bottom: '#ffd9a8', hills: ['#c98a7a', '#a86e64'], clouds: 1, sun: 1 },
 };
 
 export function drawSky(c, g) {
@@ -180,6 +192,26 @@ export function drawSky(c, g) {
       c.moveTo(x, 0);
       c.quadraticCurveTo(x + 80, 160 + hash(i) * 120, x + 200, 0);
       c.stroke();
+    }
+  }
+  if (s.mine) {
+    for (let layer = 0; layer < 2; layer++) {
+      c.fillStyle = layer ? '#24180f' : '#1c130c';
+      const off = cam.x * (layer ? 0.4 : 0.2);
+      for (let i = -1; i < 20; i++) {
+        const wx = Math.floor(off / 60) + i;
+        const x = wx * 60 - off;
+        const h = 30 + hash(wx + layer * 50) * 90;
+        c.beginPath();
+        c.moveTo(x, 0);
+        c.lineTo(x + 30, h);
+        c.lineTo(x + 60, 0);
+        c.fill();
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      c.fillStyle = `rgba(242,193,78,${0.25 + 0.25 * Math.sin(t * 2 + i)})`;
+      c.fillRect(((hash(i) * 2000 - cam.x * 0.3) % 1100 + 1100) % 1100 - 70, 160 + hash(i + 4) * 240, 4, 4);
     }
   }
   if (s.hills && !s.city) {
@@ -764,6 +796,71 @@ const DECO = {
     c.arc(d.x, d.y - 60, 8, 0, Math.PI * 2);
     c.stroke();
   },
+  // Bobby, Bella, Cursor and Tabby on the wedding day.
+  weddingPhoto(c, d) {
+    c.save();
+    c.translate(d.x, d.y);
+    if (d.fallen) c.rotate(1.45);
+    c.fillStyle = '#c9a43a';
+    c.fillRect(0, 0, 76, 56);
+    c.fillStyle = d.cracked ? '#6a6670' : '#ffeacc';
+    c.fillRect(5, 5, 66, 46);
+    const people = [['#e2674f', 18], ['#f39ac0', 34]];
+    for (const [col, x] of people) {
+      c.fillStyle = col;
+      c.beginPath();
+      c.arc(x, 34, 8, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.fillStyle = '#5b9bd5';
+    c.fillRect(46, 26, 16, 14);
+    c.save();
+    c.translate(52, 12);
+    c.scale(0.5, 0.5);
+    cursorShape(c, '#fff', '#333');
+    c.restore();
+    heart(c, 26, 16, 4, '#ff4f7b');
+    if (d.cracked) {
+      c.strokeStyle = '#eee';
+      c.lineWidth = 1.2;
+      c.beginPath();
+      c.moveTo(10, 8);
+      c.lineTo(34, 28);
+      c.lineTo(26, 48);
+      c.moveTo(34, 28);
+      c.lineTo(66, 18);
+      c.stroke();
+    }
+    c.restore();
+  },
+  // The Forever Bloom in its vase. wilted: after the purge.
+  bloomVase(c, d, g) {
+    c.fillStyle = '#7fb6e6';
+    rr(c, d.x - 9, d.y - 22, 18, 22, 5);
+    c.fill();
+    c.strokeStyle = d.wilted ? '#6a5a3a' : '#4c8a3e';
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.moveTo(d.x, d.y - 20);
+    if (d.wilted) c.quadraticCurveTo(d.x + 4, d.y - 40, d.x + 14, d.y - 30);
+    else c.lineTo(d.x, d.y - 44);
+    c.stroke();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + (d.wilted ? 0 : g.time);
+      c.fillStyle = d.wilted ? '#7a6a7a' : `hsl(${(g.time * 60 + i * 50) % 360}, 90%, 70%)`;
+      const cxp = d.wilted ? d.x + 15 : d.x;
+      const cyp = d.wilted ? d.y - 28 : d.y - 46;
+      c.beginPath();
+      c.arc(cxp + Math.cos(a) * 6, cyp + Math.sin(a) * 6, d.wilted ? 3 : 4.5, 0, Math.PI * 2);
+      c.fill();
+    }
+  },
+  water(c, d, g) {
+    c.fillStyle = '#5fa8d8';
+    c.fillRect(d.x, d.y, d.w, 400);
+    c.fillStyle = 'rgba(255,255,255,0.5)';
+    for (let i = 0; i < d.w / 20; i++) c.fillRect(d.x + i * 20 + ((g.time * 30) % 20), d.y + 6 + (i % 2) * 6, 10, 2);
+  },
   textD(c, d) {
     text(c, d.text, d.x, d.y, { size: d.size ?? 16, color: d.color ?? '#fff' });
   },
@@ -896,6 +993,19 @@ export function drawButton(c, o) {
     c.fillRect(x + w * 0.65 - ph - 2 + f * 2, y + h - 3 + air, 6, 3);
   }
 
+  const acc = o.acc ?? [];
+  if (acc.includes('cape')) {
+    const k = Math.sin((o.t ?? 0) * 6) * 3;
+    c.fillStyle = '#c62f3a';
+    c.beginPath();
+    c.moveTo(x + w * 0.2, by + bodyH * 0.3);
+    c.lineTo(x + w * 0.8, by + bodyH * 0.3);
+    c.lineTo(x + w / 2 - f * (w * 0.75) + k, by + bodyH + 4);
+    c.lineTo(x + w / 2 - f * (w * 0.2), by + bodyH + 6);
+    c.fill();
+    text(c, 'ALPHA', x + w / 2 - f * w * 0.42, by + bodyH * 0.85, { size: 6, color: '#ffe08a' });
+  }
+
   // body: a fat round button with a darker rim at the bottom
   const color = o.flash ? '#ffffff' : o.color;
   const dark = o.flash ? '#dddddd' : o.dark;
@@ -912,6 +1022,7 @@ export function drawButton(c, o) {
   if (o.label) text(c, o.label, x + w / 2, by + bodyH * 0.7, { size: 8, color: 'rgba(0,0,0,0.4)' });
 
   face(c, x + w / 2 + f * w * 0.08, by + bodyH * 0.42, w, o);
+  if (acc.length) accessories(c, acc, x, by, w, bodyH, f, o.t ?? 0);
 
   if (o.bow) {
     c.fillStyle = '#ff4f7b';
@@ -948,6 +1059,68 @@ export function drawButton(c, o) {
     }
   }
   c.restore();
+}
+
+// Bobby's glow-up items (and wedding clothes). Drawn over the body.
+function accessories(c, acc, x, y, w, h, f, t) {
+  const ex = x + w / 2 + f * w * 0.08;
+  const ey = y + h * 0.42;
+  if (acc.includes('abs')) {
+    c.fillStyle = 'rgba(120, 30, 20, 0.35)';
+    for (let r = 0; r < 3; r++) for (const s of [-1, 1]) rr(c, x + w / 2 + s * 5 - 4, y + h * 0.56 + r * 5, 7, 4, 2), c.fill();
+  }
+  if (acc.includes('grass')) {
+    c.fillStyle = '#5fbf4e';
+    for (let i = 0; i < 7; i++) {
+      const gx = x + 3 + i * ((w - 6) / 6);
+      c.beginPath();
+      c.moveTo(gx - 3, y + 3);
+      c.lineTo(gx + Math.sin(t * 4 + i) * 2, y - 9 - (i % 2) * 4);
+      c.lineTo(gx + 3, y + 3);
+      c.fill();
+    }
+  }
+  if (acc.includes('shades')) {
+    c.fillStyle = '#111';
+    rr(c, ex - w * 0.48, ey - 6, w * 0.96, 11, 4);
+    c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.35)';
+    c.fillRect(ex - w * 0.38, ey - 4, 6, 2);
+  }
+  if (acc.includes('stache')) {
+    // it moves on its own
+    const k = Math.sin(t * 9) * 2;
+    c.fillStyle = '#f2c14e';
+    c.beginPath();
+    c.ellipse(ex - 5, ey + 7 + k * 0.5, 6, 2.6, -0.3 + k * 0.1, 0, Math.PI * 2);
+    c.ellipse(ex + 5, ey + 7 - k * 0.5, 6, 2.6, 0.3 - k * 0.1, 0, Math.PI * 2);
+    c.fill();
+  }
+  if (acc.includes('bowtie') || acc.includes('bigbow')) {
+    const s = acc.includes('bigbow') ? 2.3 : 1;
+    const bx = x + w / 2;
+    const byy = y + h * 0.72;
+    c.fillStyle = '#16161c';
+    c.beginPath();
+    c.moveTo(bx, byy);
+    c.lineTo(bx - 8 * s, byy - 5 * s);
+    c.lineTo(bx - 8 * s, byy + 5 * s);
+    c.closePath();
+    c.moveTo(bx, byy);
+    c.lineTo(bx + 8 * s, byy - 5 * s);
+    c.lineTo(bx + 8 * s, byy + 5 * s);
+    c.closePath();
+    c.fill();
+  }
+  if (acc.includes('veil')) {
+    c.fillStyle = 'rgba(255,255,255,0.7)';
+    c.beginPath();
+    c.moveTo(x + w * 0.2, y + 2);
+    c.quadraticCurveTo(x + w / 2, y - 10, x + w * 0.8, y + 2);
+    c.lineTo(x + w + 6, y + h * 0.7);
+    c.lineTo(x + w * 0.6, y + h * 0.5);
+    c.fill();
+  }
 }
 
 function face(c, x, y, w, o) {
@@ -1098,6 +1271,20 @@ export function drawHud(c, g) {
       c.fill();
       text(c, k >= 1 ? 'Q · Tabby slam' : 'Tabby…', 66, 85, { size: 11, color: '#fff' });
     }
+  }
+  const m = g.meter;
+  if (m && !g.locked) {
+    const x = 760;
+    const y = 74;
+    text(c, m.label, x + 90, y - 12, { size: 12, color: '#fff' });
+    c.fillStyle = 'rgba(0,0,0,0.4)';
+    rr(c, x, y, 180, 14, 7);
+    c.fill();
+    const k = Math.max(0, m.value) / 100;
+    c.fillStyle = k > 1 ? `hsl(${(g.time * 200) % 360}, 90%, 60%)` : m.color ?? '#ff8fb1';
+    rr(c, x, y, Math.min(1, k) * 180, 14, 7);
+    c.fill();
+    text(c, `${Math.round(m.value)}%`, x + 90, y + 7, { size: 11, color: '#fff' });
   }
   const b = g.boss;
   if (b && !b.dead && b.showBar !== false) {
