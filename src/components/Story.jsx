@@ -10,6 +10,9 @@ import { CHAPTERS as LOVE_CHAPTERS, LEVELS as LOVE_LEVELS } from '@/love/levels'
 // The whole story, in order. Premises are free to read; each chapter's
 // retelling unlocks once you've finished that chapter in its game.
 
+// "Read it all" is remembered per browser, so a spoiler reader stays one.
+const REVEAL_KEY = 'buttonHatesYou.story.revealAll';
+
 function read(key) {
   try {
     return JSON.parse(localStorage.getItem(key)) ?? {};
@@ -33,8 +36,23 @@ function loadProgress() {
 export default function Story() {
   const profile = useProfile();
   const [done, setDone] = useState(null);
+  const [all, setAll] = useState(false);
 
-  useEffect(() => setDone(loadProgress()), []);
+  useEffect(() => {
+    setDone(loadProgress());
+    try {
+      setAll(localStorage.getItem(REVEAL_KEY) === '1');
+    } catch {}
+  }, []);
+
+  function reveal(on) {
+    if (on && !window.confirm('Unlock every chapter? This spoils both games, including the ending of The Reason.')) return;
+    setAll(on);
+    try {
+      if (on) localStorage.setItem(REVEAL_KEY, '1');
+      else localStorage.removeItem(REVEAL_KEY);
+    } catch {}
+  }
 
   const total = SERIES.reduce((n, s) => n + s.chapters.length, 0);
   const unlocked = done ? SERIES.reduce((n, s) => n + done[s.id].size, 0) : 0;
@@ -59,14 +77,17 @@ export default function Story() {
             finish a chapter and its story appears here.
           </p>
           <p className="story-count">
-            {done ? `${Math.min(unlocked, total)} of ${total} chapters unlocked` : '…'}
+            {all ? 'Everything unlocked. Spoilers ahead.' : done ? `${Math.min(unlocked, total)} of ${total} chapters unlocked` : '…'}
           </p>
+          <button className={`pill ${all ? 'ghost' : 'reveal'}`} onClick={() => reveal(!all)}>
+            {all ? '🔒 Lock it again' : '📖 Read it all (spoilers)'}
+          </button>
         </div>
       </section>
 
       <ol className="story-parts">
         {SERIES.map((s) => (
-          <Part key={s.id} s={s} done={done?.[s.id]} />
+          <Part key={s.id} s={s} done={done?.[s.id]} all={all} />
         ))}
       </ol>
 
@@ -76,7 +97,7 @@ export default function Story() {
         <p className="premise">{SIDE.premise}</p>
         <ul className="side-chapters">
           {LOVE_CHAPTERS.map((c) => {
-            const open = done?.love.has(c.n);
+            const open = all || done?.love.has(c.n);
             return (
               <li key={c.n} className={open ? 'open' : 'locked'}>
                 <b>
@@ -101,7 +122,7 @@ export default function Story() {
   );
 }
 
-function Part({ s, done }) {
+function Part({ s, done, all }) {
   const finished = done?.size ?? 0;
   return (
     <li className="story-part" style={{ '--tone': s.color }}>
@@ -113,16 +134,14 @@ function Part({ s, done }) {
           <Link href={s.href} className="pill">
             {finished ? 'Keep playing' : 'Play'} →
           </Link>
-          <span>
-            {finished} / {s.chapters.length} unlocked
-          </span>
+          <span>{all ? 'all unlocked' : `${finished} / ${s.chapters.length} unlocked`}</span>
         </div>
       </div>
 
       <ol className="part-chapters">
         {s.chapters.map((c, i) => {
           const n = i + 1;
-          const open = !!done?.has(n);
+          const open = all || !!done?.has(n);
           // the next chapter's title is a fair teaser; anything further stays hidden
           const showTitle = open || !!done?.has(n - 1) || n === 1;
           return (

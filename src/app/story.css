@@ -65,6 +65,8 @@
 .side-chapters .locked { color: var(--ink-soft); }
 .side-chapters span { color: var(--ink-soft); font-size: 13px; }
 
+.story-hero .pill { margin-top: 12px; }
+.story .pill.reveal { background: #8a6fb8; box-shadow: 0 4px 0 #64508a; }
 .story-btn { background: #8a6fb8; box-shadow: 0 4px 0 #64508a; }
 
 @media (max-width: 600px) {
