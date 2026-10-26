@@ -1,0 +1,94 @@
+/* Chapter 7: Catch Your Crush */
+.c7-hud { position: absolute; top: 8px; left: 50%; z-index: 6; display: flex; gap: 14px; translate: -50% 0; padding: 4px 14px; border-radius: 999px; background: var(--cream); box-shadow: 0 3px 10px var(--shadow); font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
+
+/* 31 */
+.c7-chase { cursor: crosshair; touch-action: none; }
+.c7-chaser { position: absolute; translate: -50% -50%; pointer-events: none; }
+.c7-chaser.c7-dizzy { animation: c7-spin 0.6s linear infinite; }
+@keyframes c7-spin { to { rotate: 360deg; } }
+.c7-heart { position: absolute; translate: -50% -50%; font-size: 24px; pointer-events: none; animation: c7-throb 0.4s ease-in-out infinite alternate; }
+@keyframes c7-throb { to { scale: 1.25; } }
+
+/* 32 */
+.c7-sim { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 16px 16px; }
+.c7-spot {
+  position: relative;
+  flex: 1;
+  width: min(92vw, 560px);
+  max-height: 380px;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 50% 60%, #fff 0 30%, #ffe1ec 70%);
+  box-shadow: inset 0 0 0 3px dashed var(--floor), 0 10px 30px var(--shadow);
+  outline: 3px dashed var(--btn);
+  outline-offset: -10px;
+}
+.c7-table { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font-size: 56px; }
+.c7-placed { position: absolute; translate: -50% -50%; font-size: clamp(30px, 7vw, 42px); animation: rise 0.3s ease-out; }
+.c7-sim-bobby { position: absolute; left: 50%; bottom: -14px; translate: -50% 0; }
+.c7-sim-label { position: absolute; left: 14px; top: 10px; color: var(--ink-soft); font-size: 13px; font-weight: 700; }
+.c7-shelf { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; min-height: 64px; }
+.c7-item { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 16px; background: var(--cream); box-shadow: 0 4px 12px var(--shadow); font-size: 32px; }
+.c7-ask { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(120, 30, 60, 0.2); }
+.c7-ask-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 12px 14px; }
+.c7-ask-row .pill { margin: 0; }
+
+/* 33 */
+.c7-ctrl {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  translate: -50% -50%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 16px var(--shadow);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.c7-widget { display: inline-block; flex: none; width: 20px; height: 20px; border: 2px solid var(--ink-soft); border-radius: 5px; }
+.c7-toggle .c7-widget { width: 36px; border-radius: 999px; position: relative; }
+.c7-toggle .c7-widget::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink-soft); transition: left 0.2s; }
+.c7-radio .c7-widget { border-radius: 50%; }
+.c7-drop .c7-widget { display: none; }
+.c7-ctrl.c7-on { background: #e9fbef; color: #23824a; }
+.c7-ctrl.c7-on .c7-widget { border-color: #39c06b; background: #39c06b; }
+.c7-toggle.c7-on .c7-widget::after { left: 20px; background: #fff; }
+.c7-guard { position: absolute; z-index: 3; translate: -50% -50%; transition: left 0.32s cubic-bezier(0.34, 1.4, 0.64, 1), top 0.32s cubic-bezier(0.34, 1.4, 0.64, 1); cursor: not-allowed; }
+.c7-count { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; }
+
+/* 34 */
+.c7-walk { touch-action: none; }
+.c7-path { position: absolute; inset: 0; pointer-events: none; }
+.c7-path polyline { fill: none; stroke: var(--floor); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 2 16; }
+.c7-flag { position: absolute; translate: -50% -50%; font-size: 36px; }
+.c7-walker { position: absolute; translate: -50% -50%; pointer-events: none; }
+.c7-hand { position: absolute; left: 50%; top: calc(50% - 10px); z-index: -1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 79, 123, 0.14), transparent 70%); }
+.c7-kneel { rotate: -14deg; translate: 0 18px; transition: rotate 0.2s, translate 0.2s; }
+.c7-stroll .char .body { animation: bob 0.3s infinite alternate; }
+
+/* 35 */
+.c7-date { background: radial-gradient(ellipse at 50% 30%, #fff3d6, transparent 60%), #3a1626; }
+.c7-candle { position: absolute; left: 50%; top: 6%; translate: -50% 0; font-size: 40px; filter: drop-shadow(0 0 18px #ffd27a); }
+.c7-diners { position: absolute; left: 50%; top: 18%; display: flex; align-items: flex-end; gap: clamp(40px, 16vw, 160px); translate: -50% 0; }
+.c7-tablecloth { position: absolute; left: 6%; right: 6%; top: 46%; bottom: 6%; border-radius: 24px 24px 12px 12px; background: repeating-linear-gradient(45deg, #fff 0 18px, #ffe1ec 18px 36px); box-shadow: 0 -6px 0 #d94b72 inset; }
+.c7-pixel { position: absolute; width: 26px; height: 26px; translate: -50% -50%; border: 0; border-radius: 4px; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2); cursor: pointer; animation: rise 0.2s ease-out; }
+.c7-waiter { position: absolute; z-index: 4; display: flex; align-items: center; gap: 8px; max-width: 72vw; padding: 10px 12px; border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3); font-size: 14px; font-weight: 600; animation: rise 0.2s ease-out; }
+.c7-waiter button { flex: none; width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--wall); font-weight: 700; cursor: pointer; }
+.c7-select { width: min(86vw, 320px); overflow: hidden; border-radius: 12px; background: #fff; box-shadow: 0 16px 40px var(--shadow); animation: c7-drop 0.5s cubic-bezier(0.34, 1.4, 0.64, 1); }
+@keyframes c7-drop { from { translate: 0 -60vh; rotate: -8deg; } }
+.c7-select-head { padding: 12px 14px; background: #3a1626; color: #fff; font-weight: 700; }
+.c7-option { display: block; width: 100%; padding: 12px 14px; border: 0; border-top: 1px solid #f0e3e9; background: #fff; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.c7-option:hover { background: #ffe1ec; }
+
+@media (max-width: 520px) {
+  .c7-ctrl { gap: 6px; padding: 10px 10px; font-size: 13px; }
+  .c7-toggle .c7-widget { width: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c7-chaser.c7-dizzy, .c7-heart, .c7-stroll .char .body { animation: none; }
+}

@@ -63,7 +63,7 @@ export const LEVELS = [
   L(34, 'Hold My Hand', 'Keep your cursor next to Bobby through the course.', "Hold my hand. Don't let go. I'll fall over. Dramatically."),
   L(35, 'The First Date', 'Feed Bobby pixels. Dodge the interruptions.', 'Candlelight. Pixels. You. This is the best day of my life.'),
   // Chapter 8
-  L(36, 'The Proposal', 'Answer him.', 'I know it’s been 4 levels. But when you know, you know.'),
+  L(36, 'The Proposal', 'Open the box, then answer him.', 'I know it’s been 4 levels. But when you know, you know.'),
   L(37, 'Meet My Parents', 'Follow the etiquette rules of Enter and Escape.', 'My parents are keys. Very traditional. Enter is strict. Escape keeps leaving.'),
   L(38, 'Wedding Planner.exe', 'Put the guests in their seats. They will not stay.', 'The fanciest ceremony in computer history. Seating chart is mandatory.'),
   L(39, 'The Ex-Girlfriend Returns', 'Help Bobby answer without insulting anyone.', "Bella's here. And Chad. In a bridesmaid dress. Why."),
