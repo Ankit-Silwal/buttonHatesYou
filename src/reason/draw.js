@@ -202,18 +202,19 @@ export function drawSky(c, g) {
 }
 
 function cloud(c, x, y, s) {
-  blobs(c, [[x, y, 22 * s], [x + 26 * s, y - 10 * s, 28 * s], [x + 56 * s, y, 22 * s]]);
-  c.fillRect(x, y, 56 * s, 22 * s);
+  blobs(c, [[x, y, 22 * s], [x + 26 * s, y - 10 * s, 28 * s], [x + 56 * s, y, 22 * s]], [x, y, 56 * s, 22 * s]);
 }
 
-// Several circles filled as one shape, without stray connecting edges.
-function blobs(c, list) {
+// Several circles (and an optional base rectangle) filled as one shape, so
+// overlaps don't show through translucent fills.
+function blobs(c, list, base) {
   c.beginPath();
   for (const [x, y, r] of list) {
     c.moveTo(x + r, y);
     c.arc(x, y, r, 0, Math.PI * 2);
   }
-  c.fill();
+  if (base) c.rect(...base);
+  c.fill('nonzero');
 }
 
 function hills(c, off, base, amp, color, seed) {
