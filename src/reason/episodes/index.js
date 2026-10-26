@@ -3,6 +3,7 @@ import ep2 from './ep2';
 import ep3 from './ep3';
 import ep4 from './ep4';
 import ep5 from './ep5';
+import ep6 from './ep6';
 
 // The whole story, in order. `start` is what Bobby can already do when an
 // episode is played straight from the menu; story choices carry over from
@@ -20,7 +21,7 @@ export const EPISODES = [
   { n: 3, act: 2, title: 'Two Idiots and a Sword', mins: 5, start: { sword: true, pendant: true }, play: ep3 },
   { n: 4, act: 2, title: 'The Forgotten Kingdom', mins: 5, start: { sword: true, pendant: true, doubleJump: true }, play: ep4 },
   { n: 5, act: 2, title: 'The Truth Beneath the Code', mins: 5, start: { sword: true, pendant: true, doubleJump: true }, play: ep5 },
-  { n: 6, act: 3, title: 'The Last Laugh', mins: 5, start: { sword: true, pendant: true, doubleJump: true, dash: true } },
+  { n: 6, act: 3, title: 'The Last Laugh', mins: 5, start: { sword: true, pendant: true, doubleJump: true, dash: true }, play: ep6 },
   { n: 7, act: 3, title: 'The False Choice', mins: 5, start: { sword: true, pendant: true, doubleJump: true, dash: true, tabbySword: true } },
   { n: 8, act: 3, title: 'The Day Everything Died', mins: 6, start: { sword: true, pendant: true, doubleJump: true, dash: true, tabbySword: true } },
   { n: 9, act: 4, title: 'I Hate You', mins: 10, start: { sword: true, pendant: true, doubleJump: true, dash: true, tabbySword: true, pendantCracked: true } },

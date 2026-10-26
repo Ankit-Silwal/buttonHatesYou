@@ -146,6 +146,7 @@ export class Bobby {
         this.y = this.safe.y - 4;
         this.vx = this.vy = 0;
         this.iframes = 1;
+        g.onRespawn?.();
         g.snapCamera();
       } else this.die(g);
     }
