@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Avatar from './Avatar';
 import { useProfile } from '@/profile/useProfile';
-import { SERIES, SIDE } from '@/story/content';
-import { CHAPTERS as LOVE_CHAPTERS, LEVELS as LOVE_LEVELS } from '@/love/levels';
+import { SERIES } from '@/story/content';
 
 // The whole story, in order. Premises are free to read; each chapter's
 // retelling unlocks once you've finished that chapter in its game.
@@ -28,8 +27,6 @@ function loadProgress() {
     const save = read(s.save);
     out[s.id] = new Set(s.id === 'please-dont' ? (save.done ? [1] : []) : Object.keys(save.done ?? {}).map(Number));
   }
-  const love = read(SIDE.save).done ?? {};
-  out.love = new Set(LOVE_CHAPTERS.filter((c) => LOVE_LEVELS.filter((l) => l.chapter === c.n).every((l) => love[l.id])).map((c) => c.n));
   return out;
 }
 
@@ -90,34 +87,6 @@ export default function Story() {
           <Part key={s.id} s={s} done={done?.[s.id]} all={all} />
         ))}
       </ol>
-
-      <section className="story-side">
-        <p className="kicker">{SIDE.order}</p>
-        <h2>{SIDE.title}</h2>
-        <p className="premise">{SIDE.premise}</p>
-        <ul className="side-chapters">
-          {LOVE_CHAPTERS.map((c) => {
-            const open = all || done?.love.has(c.n);
-            return (
-              <li key={c.n} className={open ? 'open' : 'locked'}>
-                <b>
-                  {open ? c.emoji : '🔒'} Chapter {c.n}: {open ? c.title : '???'}
-                </b>
-                {open && (
-                  <span>
-                    {LOVE_LEVELS.filter((l) => l.chapter === c.n)
-                      .map((l) => l.title)
-                      .join(' · ')}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        <Link href={SIDE.href} className="pill">
-          Play {SIDE.title}
-        </Link>
-      </section>
     </main>
   );
 }

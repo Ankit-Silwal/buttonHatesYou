@@ -523,7 +523,7 @@ body.puddle #puddle { height: 6vh; }
   -webkit-user-select: text;
 }
 .skip-card input:focus { border-color: var(--mustard); }
-.skip-card .hint { min-height: 1.4em; color: var(--btn); font-weight: 600; }
+.skip-card .hint { min-height: 1.4em; margin: 0; color: var(--btn); font-size: 13px; font-weight: 600; }
 
 .loser {
   position: absolute;

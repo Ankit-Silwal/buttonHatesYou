@@ -61,8 +61,6 @@ export const DEFAULT_LOOK = {
 // earns it; the server only ever pays amounts from this table.
 export const REWARDS = {
   'please-dont': { coins: 20, diamonds: 1 }, // finishing Please Don't
-  'love-chapter': { coins: 10, diamonds: 0 }, // each chapter of Desperate for Love
-  'love-finale': { coins: 50, diamonds: 3 }, // finishing Desperate for Love
   'reason-episode': { coins: 15, diamonds: 0 }, // each episode of The Reason
   'reason-finale': { coins: 80, diamonds: 5 }, // finishing The Reason
   'cursor-chapter': { coins: 15, diamonds: 0 }, // each chapter of How I Met Your Cursor
@@ -85,16 +83,6 @@ const ADVENTURE_PRIZE = '+8 🪙 at the goal';
 // score in `unit`s, and two lines for the results card (`quips.goal` when
 // the player made it, `quips.fail` when the button got its way).
 export const GAMES = [
-  {
-    id: 'desperate-for-love',
-    name: 'Desperate for Love',
-    emoji: '💘',
-    color: '#ffc8dc',
-    blurb: "Bobby the button has been single for 404 days. Be his wingman. 50 levels of terrible romance.",
-    href: '/games/desperate-for-love',
-    category: 'story',
-    prize: '+10 🪙 a chapter',
-  },
   {
     id: 'how-i-met-your-cursor',
     name: 'How I Met Your Cursor',

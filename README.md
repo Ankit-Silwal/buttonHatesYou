@@ -40,21 +40,6 @@ everything works offline. Every change is recorded as an event (`reward`, `buy`,
 it has already seen, and its answer becomes the new truth. Guest progress is
 uploaded the first time you sign in.
 
-## Desperate for Love
-
-Bobby (your button, in your outfit) has been single for 404 days. You are his
-wingman across 50 short levels in 10 chapters: a dating-app disaster, a villain
-arc, dates with a checkbox and a slider, and a twist where Bobby falls for your
-mouse cursor. Each chapter pays 10 🪙 the first time; finishing pays 50 🪙 + 3 💎.
-Levels can be skipped after 25 seconds or a failed attempt.
-
-- `src/love/levels.js` lists every level (title, goal, Bobby's intro line)
-- `src/love/chapters/chN.jsx` (+ `chN.css`) holds that chapter's levels; each
-  level is a component that gets `win(line)`, `fail(line)`, `say(text)`
-- `src/love/kit.jsx` has the cast (Bobby, Bella, Chad the Toggle, the cursor),
-  speech bubbles, drag and drop, timers and sounds
-- `src/love/LoveGame.jsx` is the map, intro/result cards, skipping and saving
-
 ## How I Met Your Cursor
 
 The story before The Reason, and the opposite of it: funny, romantic and
@@ -73,8 +58,7 @@ chapter pays 15 🪙 the first time; finishing pays 60 🪙 + 4 💎.
 ## The Story page
 
 `/story` (📖 Story on the home screen) tells the whole series in order: How I
-Met Your Cursor, The Reason, then The Button That Hates You, with Desperate
-for Love as a side story. Every part's premise is readable; each chapter's
+Met Your Cursor, The Reason, then The Button That Hates You. Every part's premise is readable; each chapter's
 retelling unlocks once that chapter is finished in its game (read from each
 game's save in localStorage). The text lives in `src/story/content.js`.
 
@@ -105,7 +89,7 @@ E talk / use · Esc pause. Phones get an on-screen pad.
 
 ## Adventure games
 
-The Games screen has two shelves: **Story** (Desperate for Love, The Reason,
+The Games screen has two shelves: **Story** (How I Met Your Cursor, The Reason,
 Please Don't) and **Adventure**, nine short arcade games starring the button
 in whatever it's wearing:
 

@@ -52,19 +52,6 @@
 .part-chapters .lock { color: var(--ink-soft); font-style: italic; }
 .part-chapters .lock a { color: var(--btn-dark); font-weight: 700; }
 
-.story-side {
-  max-width: 820px;
-  margin: 26px auto 0;
-  padding: 22px 24px;
-  border-radius: 22px;
-  box-shadow: inset 0 0 0 2px var(--floor);
-}
-.story-side h2 { margin: 2px 0 0; }
-.side-chapters { display: grid; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
-.side-chapters li { display: flex; flex-direction: column; gap: 2px; }
-.side-chapters .locked { color: var(--ink-soft); }
-.side-chapters span { color: var(--ink-soft); font-size: 13px; }
-
 .story-hero .pill { margin-top: 12px; }
 .story .pill.reveal { background: #8a6fb8; box-shadow: 0 4px 0 #64508a; }
 .story-btn { background: #8a6fb8; box-shadow: 0 4px 0 #64508a; }

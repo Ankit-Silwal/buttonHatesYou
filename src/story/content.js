@@ -165,16 +165,3 @@ export const SERIES = [
     ],
   },
 ];
-
-// Not part of the main timeline: a what-if comedy about Bobby before he met
-// anyone. Its chapters come straight from the game's own level list.
-export const SIDE = {
-  id: 'love',
-  order: 'Side story',
-  title: 'Desperate for Love',
-  href: '/games/desperate-for-love',
-  save: 'buttonHatesYou.love.v1',
-  color: '#ff8fb1',
-  premise:
-    'A what-if, outside the main story: Bobby has been single for 404 days and you are his wingman across fifty levels of dating apps, villain arcs and terrible romance. It doesn’t have to fit the timeline. It only has to be funny.',
-};
