@@ -8,11 +8,7 @@ import { grantReward } from '@/profile/store';
 import { REWARDS } from '@/economy/catalog';
 import { CHAPTERS, LEVELS, LEVEL, LAST, isChapterEnd } from './levels';
 import { Bobby, Bubble, sfx } from './kit';
-import ch1 from './chapters/ch1';
-import ch2 from './chapters/ch2';
-
-// Level id -> component. Each chapter file exports { [id]: Component }.
-const PLAYS = { ...ch1, ...ch2 };
+import { PLAYS } from './chapters';
 
 const SAVE_KEY = 'buttonHatesYou.love.v1';
 const SKIP_AFTER_MS = 25000;
