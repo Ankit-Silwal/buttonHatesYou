@@ -2,6 +2,8 @@
 // Nothing here touches the browser at import time, so it is safe to import
 // from a component that Next.js also renders on the server.
 
+import { CHAR_HTML, dress } from '@/avatar/look';
+
 export const BOSS_AT = 50;
 export const BOSS_HITS = 15;
 export const GOAL = BOSS_AT + BOSS_HITS;
@@ -30,6 +32,7 @@ const fresh = () => ({
   muted: false,
   visits: 0,
   skips: 0,
+  testRun: false, // started from ?at=, so finishing it pays nothing
   // runtime only
   mode: 'story', // story | boss | post | done
   locked: false,
@@ -115,8 +118,8 @@ export const wait = (ms) => new Promise((r) => scope.later(r, ms));
 /* ---------- saving ---------- */
 export function save() {
   try {
-    const { clicks, post, popped, inPost, done, muted, visits, skips } = G;
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ clicks, post, popped, inPost, done, muted, visits, skips }));
+    const { clicks, post, popped, inPost, done, muted, visits, skips, testRun } = G;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ clicks, post, popped, inPost, done, muted, visits, skips, testRun }));
   } catch {}
 }
 
@@ -135,16 +138,15 @@ export function wipeSave() {
 
 /* ---------- the character ----------
    Everyone in this game (the button, friends, decoys, the boss) is the same
-   little round face with different colors and moods. */
+   little round face with different colors and moods. The button itself, and
+   everything pretending to be it, wears the player's outfit. */
+let look = null;
+export const setLook = (equipped) => (look = equipped);
+
 export function makeChar(cls = '') {
-  const el = h(
-    'button',
-    'char ' + cls,
-    '<span class="legs"><i></i><i></i></span>' +
-      '<span class="body"><span class="brows"><i></i><i></i></span>' +
-      '<span class="eyes"><i></i><i></i></span><span class="mouth"></span></span>'
-  );
+  const el = h('button', 'char ' + cls, CHAR_HTML);
   el.type = 'button';
+  if (look && /\b(hero|decoy|boss)\b/.test(cls)) dress(el, look);
   return el;
 }
 

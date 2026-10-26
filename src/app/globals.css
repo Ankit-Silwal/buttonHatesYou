@@ -170,7 +170,10 @@ body.puddle #puddle { height: 6vh; }
 #bossbar i { width: 12px; height: 10px; border-radius: 3px; background: var(--btn); box-shadow: 0 0 8px var(--btn); transition: opacity 0.4s, transform 0.4s; }
 #bossbar i.gone { opacity: 0.15; box-shadow: none; transform: scale(0.7); }
 .tools { display: flex; gap: 8px; }
-.tools button {
+.tools button, .tools a {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
   width: 38px;
   height: 38px;
   border: 0;
@@ -186,7 +189,7 @@ body.puddle #puddle { height: 6vh; }
   .brand { display: none; }
   .mid { position: static; transform: none; align-items: flex-start; }
   .tools { gap: 6px; }
-  .tools button { width: 34px; height: 34px; font-size: 14px; }
+  .tools button, .tools a { width: 34px; height: 34px; font-size: 14px; }
 }
 
 #line {
@@ -227,8 +230,8 @@ body.puddle #puddle { height: 6vh; }
 
 .char {
   --s: 96px;
-  --c: var(--btn);
-  --cd: var(--btn-dark);
+  --c: var(--skin, var(--btn)); /* --skin: the player's chosen color, see avatar.css */
+  --cd: var(--skin-dark, var(--btn-dark));
   position: absolute;
   left: 0;
   top: 0;
@@ -578,6 +581,7 @@ body.puddle #puddle { height: 6vh; }
   white-space: nowrap;
   animation: floatUp 0.9s ease-out forwards;
 }
+.float.reward { color: var(--ink); font-size: 26px; animation-duration: 2s; }
 .float.hot { color: var(--mustard); font-size: 24px; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25); }
 .flash { position: absolute; inset: 0; animation: flash 0.35s ease-out forwards; }
 .confetti { position: absolute; width: 9px; height: 14px; border-radius: 2px; }

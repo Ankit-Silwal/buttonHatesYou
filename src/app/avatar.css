@@ -1,0 +1,213 @@
+/* ---------- the button's outfit ----------
+   Set by src/avatar/look.js: --skin/--skin-dark for the color (used by
+   .char in globals.css) and one
+   data-attribute per accessory. Everything is sized off --s, so the same
+   outfit works on a 64px wardrobe tile and a 200px boss. */
+
+/* when it turns into the boss it goes red no matter what you paid for */
+body.boss .char { --c: var(--btn); --cd: var(--btn-dark); }
+
+/* outside the game: just stands where it's put */
+.char.static { position: relative; left: auto; top: auto; display: inline-block; flex: none; transform: none; }
+
+.char .ears, .char .scarf, .char .hat { display: none; position: absolute; pointer-events: none; }
+.char.disguised .ears, .char.disguised .scarf, .char.disguised .hat { display: none !important; }
+
+/* ---------- ears (behind the body) ---------- */
+.char[data-ears] .ears { display: block; inset: 0; }
+.char .ears i { position: absolute; display: block; background: var(--c); }
+.char .ears i::after { content: ''; position: absolute; background: #f6b8c4; }
+
+.char[data-ears='cat'] .ears i {
+  top: -14%;
+  width: 34%;
+  height: 40%;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.char[data-ears='cat'] .ears i:first-child { left: 6%; transform: rotate(-18deg); }
+.char[data-ears='cat'] .ears i:last-child { right: 6%; transform: rotate(18deg); }
+.char[data-ears='cat'] .ears i::after { left: 25%; right: 25%; top: 30%; bottom: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+.char[data-ears='bear'] .ears i { top: -6%; width: 34%; height: 34%; border-radius: 50%; }
+.char[data-ears='bear'] .ears i:first-child { left: 2%; }
+.char[data-ears='bear'] .ears i:last-child { right: 2%; }
+.char[data-ears='bear'] .ears i::after { inset: 22%; border-radius: 50%; background: var(--cd); }
+
+.char[data-ears='bunny'] .ears i { top: -46%; width: 22%; height: 64%; border-radius: 50%; }
+.char[data-ears='bunny'] .ears i:first-child { left: 18%; transform: rotate(-10deg); }
+.char[data-ears='bunny'] .ears i:last-child { right: 18%; transform: rotate(14deg); }
+.char[data-ears='bunny'] .ears i::after { left: 28%; right: 28%; top: 12%; bottom: 20%; border-radius: 50%; }
+
+.char[data-ears='devil'] .ears i {
+  top: -10%;
+  width: 18%;
+  height: 28%;
+  background: #8e1b1b;
+  clip-path: polygon(30% 0, 100% 100%, 0 100%);
+}
+.char[data-ears='devil'] .ears i:first-child { left: 20%; transform: rotate(-20deg); }
+.char[data-ears='devil'] .ears i:last-child { right: 20%; transform: rotate(20deg) scaleX(-1); }
+.char[data-ears='devil'] .ears i::after { display: none; }
+
+/* ---------- eyes ---------- */
+.char[data-eyes='sleepy'] .eyes i::before { height: 48%; }
+
+.char[data-eyes='googly'] .eyes i {
+  width: calc(var(--s) * 0.22);
+  height: calc(var(--s) * 0.22);
+  box-shadow: 0 0 0 calc(var(--s) * 0.02) var(--face);
+}
+.char[data-eyes='googly'] .eyes i::after { width: 42%; height: 42%; top: 46%; animation: googly 1.6s ease-in-out infinite alternate; }
+.char[data-eyes='googly'] .eyes i:last-child::after { animation-delay: -0.7s; }
+
+.char[data-eyes='hearts'] .eyes i,
+.char[data-eyes='stars'] .eyes i { overflow: visible; background: none; }
+.char[data-eyes='hearts'] .eyes i::after,
+.char[data-eyes='stars'] .eyes i::after {
+  content: '♥';
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  background: none;
+  color: #d93a6a;
+  font-size: calc(var(--s) * 0.24);
+  line-height: 1;
+}
+.char[data-eyes='stars'] .eyes i::after { content: '★'; color: #ffd23f; text-shadow: 0 0 calc(var(--s) * 0.02) var(--face); }
+.char[data-eyes='hearts'] .eyes i::before,
+.char[data-eyes='stars'] .eyes i::before { display: none; }
+
+.char[data-eyes='shades'] .eyes i {
+  width: calc(var(--s) * 0.24);
+  height: calc(var(--s) * 0.16);
+  border-radius: 20% 20% 50% 50%;
+  background: #1e1a24;
+}
+.char[data-eyes='shades'] .eyes i::after { left: 16%; top: 16%; width: 28%; height: 24%; background: rgba(255, 255, 255, 0.55); }
+.char[data-eyes='shades'] .eyes { gap: calc(var(--s) * 0.06); }
+.char[data-eyes='shades'] .eyes::before { /* bridge */
+  content: '';
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  top: 22%;
+  height: calc(var(--s) * 0.03);
+  background: #1e1a24;
+}
+
+/* ---------- scarf (in front, around the bottom) ---------- */
+.char[data-scarf] .scarf {
+  display: block;
+  left: 10%;
+  right: 10%;
+  top: 74%;
+  height: 16%;
+  border-radius: 50% / 60%;
+  background: var(--scarf);
+  box-shadow: inset 0 calc(var(--s) * -0.03) 0 rgba(0, 0, 0, 0.18);
+}
+.char .scarf i {
+  position: absolute;
+  right: 16%;
+  top: 55%;
+  width: 18%;
+  height: 120%;
+  border-radius: 3px 3px 6px 6px;
+  background: inherit;
+  box-shadow: inherit;
+  transform: rotate(-10deg);
+}
+.char[data-scarf='red'] { --scarf: #c0392b; }
+.char[data-scarf='sage'] { --scarf: #6f9a6e; }
+.char[data-scarf='striped'] { --scarf: repeating-linear-gradient(90deg, #f0c36d 0 12%, #fffaf2 12% 24%); }
+.char[data-scarf='rainbow'] { --scarf: linear-gradient(90deg, #e2674f, #f0c36d, #9bbf9a, #8fb8d8, #c4a6dc); }
+
+/* ---------- hats (on top) ---------- */
+.char[data-hat] .hat { display: block; left: 50%; }
+
+.char[data-hat='beanie'] .hat {
+  top: -10%;
+  width: 72%;
+  height: 34%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 12% 12% / 80% 80% 20% 20%;
+  background: #5b7fa8;
+  box-shadow: inset 0 calc(var(--s) * -0.07) 0 #3f6189;
+}
+.char[data-hat='beanie'] .hat::after { /* pompom */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -22%;
+  width: 26%;
+  height: 40%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #fffaf2;
+}
+
+.char[data-hat='party'] .hat {
+  top: -40%;
+  width: 34%;
+  height: 46%;
+  transform: translateX(-30%) rotate(14deg);
+}
+.char[data-hat='party'] .hat::before { /* the cone */
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background: repeating-linear-gradient(-45deg, #8fb8d8 0 12%, #f3a6a0 12% 24%);
+}
+.char[data-hat='party'] .hat::after { /* pompom */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -10%;
+  width: 30%;
+  height: 22%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #f0c36d;
+}
+
+.char[data-hat='top'] .hat {
+  top: -38%;
+  width: 44%;
+  height: 42%;
+  transform: translateX(-50%);
+  border-radius: 6% 6% 0 0;
+  background: #2b1d17;
+  box-shadow: inset 0 calc(var(--s) * -0.08) 0 #b84a36;
+}
+.char[data-hat='top'] .hat::after { /* brim */
+  content: '';
+  position: absolute;
+  left: -32%;
+  right: -32%;
+  bottom: -10%;
+  height: 22%;
+  border-radius: 50%;
+  background: #2b1d17;
+}
+
+.char[data-hat='crown'] .hat {
+  top: -24%;
+  width: 52%;
+  height: 30%;
+  transform: translateX(-50%);
+  clip-path: polygon(0 100%, 0 20%, 20% 55%, 35% 0, 50% 50%, 65% 0, 80% 55%, 100% 20%, 100% 100%);
+  background: linear-gradient(#ffd96a, #e0a81e);
+}
+
+@keyframes googly {
+  from { transform: translate(-20%, -25%); }
+  to { transform: translate(25%, 15%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .char[data-eyes='googly'] .eyes i::after { animation: none; }
+}

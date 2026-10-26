@@ -1,5 +1,5 @@
-import Game from '@/components/Game';
+import Hub from '@/components/Hub';
 
 export default function Home() {
-  return <Game />;
+  return <Hub />;
 }

@@ -1,11 +1,13 @@
 import { Fredoka } from 'next/font/google';
 import './globals.css';
+import './avatar.css';
+import './hub.css';
 
 const fredoka = Fredoka({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font' });
 
 export const metadata = {
-  title: "Please Don't",
-  description: 'A tiny game about a button that really, really does not want to be pressed.',
+  title: 'Button Hates You',
+  description: 'A button that really, really does not want to be pressed, and a bunch of mini-games about it.',
 };
 
 export default function RootLayout({ children }) {

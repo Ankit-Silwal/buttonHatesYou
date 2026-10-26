@@ -1,12 +1,16 @@
 import { Sound } from './sound';
 import { Boss } from './boss';
 import { openSkip, closeSkip, loserStamp } from './skip';
+import { getProfile, grantReward } from '@/profile/store';
+import { GAME } from '@/economy/catalog';
 import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
   save, load, wipeSave, makeChar, place, setMood, area, spot,
-  say, floatText, shake, updateHud, setScene, showSkips,
+  say, floatText, shake, updateHud, setScene, showSkips, setLook,
 } from './core';
+
+const REWARD = GAME['please-dont'].reward;
 
 /* ---------- what the button says ---------- */
 const LINES = {
@@ -700,6 +704,10 @@ function postClick() {
   if (G.post === POST_GOAL) {
     G.done = true;
     save();
+    // Queued in the profile before the redirect; it syncs now or on the next visit.
+    if (!G.testRun && grantReward('please-dont')) {
+      floatText(`+${REWARD.coins} 🪙  +${REWARD.diamonds} 💎`, hero._x, hero._y - 90, 'reward');
+    }
     dom.loadbar.querySelector('.fill').style.width = '100%';
     Sound.win();
     // Same-tab navigation, so no popup blocker gets in the way.
@@ -795,10 +803,11 @@ export function startGame(root) {
   load();
   // Testing shortcut: /?at=55 jumps straight to click 55.
   const at = new URLSearchParams(location.search).get('at');
-  if (at !== null) Object.assign(G, { clicks: clamp(+at || 0, 0, GOAL), post: 0, inPost: false, done: false });
+  if (at !== null) Object.assign(G, { clicks: clamp(+at || 0, 0, GOAL), post: 0, inPost: false, done: false, testRun: true });
   G.visits++;
   save();
 
+  setLook(getProfile().wallet.equipped);
   hero = makeChar('hero');
   hero.setAttribute('aria-label', 'The button. Please do not press it.');
   dom.world.append(hero);
