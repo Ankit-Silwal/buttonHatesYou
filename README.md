@@ -55,6 +55,31 @@ Levels can be skipped after 25 seconds or a failed attempt.
   speech bubbles, drag and drop, timers and sounds
 - `src/love/LoveGame.jsx` is the map, intro/result cards, skipping and saving
 
+## The Reason
+
+The prequel: why the button hates you. A Swordigo-style platformer in 9
+episodes (about 50 minutes). Bobby, his wife Bella and his best friend Tabby
+the Tab key are helping a mysterious Player save Clicktopia for THE ADMIN,
+until it turns out the Player's clicks are what the Admin needed all along.
+In the final episode Bobby becomes the boss and you play as the cursor.
+Each episode pays 15 🪙 the first time; finishing pays 80 🪙 + 5 💎.
+
+Controls: ← → move · Space jump (twice once unlocked) · J attack (three
+presses for a combo, ↓ + J in the air to bounce) · K dash · Q Tabby's slam ·
+E talk / use · Esc pause. Phones get an on-screen pad.
+
+- `src/reason/engine.js`: fixed-step loop, input, collisions, camera, and
+  the script API episodes `await` (`say`, `choose`, `walk`, `reach`, `card`…)
+- `src/reason/actors.js`: Bobby's controller, NPCs, Tabby as a companion,
+  enemies, pickups and moving/falling/vanishing platforms
+- `src/reason/bosses.js`, `src/reason/finale.js`: the bosses, the cursor
+  player and THE ADMIN
+- `src/reason/draw.js`: everything is drawn with canvas shapes (no assets)
+- `src/reason/audio.js`: synthesized effects and a tiny step sequencer for
+  the music (the boss theme is the village theme, in minor)
+- `src/reason/episodes/epN.js`: one file per episode; `index.js` lists them
+  and what Bobby can already do when one is started from the menu
+
 ## Please Don't: how it plays
 
 | Clicks | What happens |
