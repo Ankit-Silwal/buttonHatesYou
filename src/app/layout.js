@@ -3,6 +3,7 @@ import './globals.css';
 import './avatar.css';
 import './hub.css';
 import './love.css';
+import './reason.css';
 
 const fredoka = Fredoka({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font' });
 
