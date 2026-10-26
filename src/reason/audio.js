@@ -98,6 +98,7 @@ export const sfx = {
   win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, 'triangle', 0.6, null, i * 0.12)),
   crack: () => { noise(0.3, 0.7, 2600); tone(1800, 0.05, 'square', 0.2, 900); },
   rumble: () => noise(1.2, 0.5, 160),
+  ring: () => [0, 0.18].forEach((d) => { tone(1318, 0.12, 'sine', 0.4, null, d); tone(1760, 0.12, 'sine', 0.3, null, d + 0.06); }),
 };
 
 /* ---------- music ---------- */
