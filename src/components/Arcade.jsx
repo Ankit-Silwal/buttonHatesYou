@@ -1,16 +1,20 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Avatar from './Avatar';
 import Account from './Account';
 import Wallet from './Wallet';
 import { useProfile } from '@/profile/useProfile';
 import { GAMES, CATEGORIES } from '@/economy/catalog';
+import { lookOf } from '@/adventure/kit';
+import { PAINT, ART_W, ART_H } from './gameArt';
 
 // Every mini-game, as one big card each, on its category's shelf. New games
 // show up here as soon as they are added to GAMES in the catalog.
 export default function Arcade() {
   const profile = useProfile();
+  const equipped = profile.wallet.equipped;
 
   return (
     <main className="arcade">
@@ -25,32 +29,12 @@ export default function Arcade() {
       </header>
 
       <div className="arcade-head">
-        <Avatar size={64} equipped={profile.wallet.equipped} mood="smug" className="has-legs" />
+        <Avatar size={64} equipped={equipped} mood="smug" className="has-legs" />
         <div>
           <h1>Games</h1>
           <p>Finish a game to earn coins and diamonds. The button will hate every second of it.</p>
         </div>
       </div>
-
-      {GAMES.some((g) => g.best) && (
-        <section className="best">
-          <h2>
-            <span className="star" aria-hidden="true">
-              ⭐
-            </span>{' '}
-            Best ones
-          </h2>
-          <ul className="games featured">
-            {GAMES.filter((g) => g.best)
-              .sort((a, b) => a.best - b.best)
-              .map((g) => (
-              <li key={g.id}>
-                <GameCard game={g} best />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {CATEGORIES.map((cat) => (
         <section key={cat.id} className="shelf" aria-labelledby={`shelf-${cat.id}`}>
@@ -63,7 +47,7 @@ export default function Arcade() {
           <ul className="games">
             {GAMES.filter((g) => g.category === cat.id).map((g) => (
               <li key={g.id}>
-                <GameCard game={g} />
+                <GameCard game={g} equipped={equipped} />
               </li>
             ))}
           </ul>
@@ -73,17 +57,14 @@ export default function Arcade() {
   );
 }
 
-function GameCard({ game: g, best }) {
+function GameCard({ game: g, equipped }) {
   return (
-    <Link href={g.href} className={`game ${best ? 'best' : ''}`} style={{ '--art': g.color }}>
+    <Link href={g.href} className="game" style={{ '--art': g.color }}>
       <span className="art" aria-hidden="true">
-        {g.emoji}
-        {g.best && <span className="badge">★ Best</span>}
+        {PAINT[g.id] ? <Art id={g.id} equipped={equipped} /> : g.emoji}
       </span>
       <span className="info">
-        <b>
-          {g.name} {g.best && <span className="star">★</span>}
-        </b>
+        <b>{g.name}</b>
         <span className="blurb">{g.blurb}</span>
         <span className="meta">
           <span className="prize">{g.prize}</span>
@@ -92,4 +73,27 @@ function GameCard({ game: g, best }) {
       </span>
     </Link>
   );
+}
+
+// A still picture from the game itself, redrawn when the outfit changes.
+function Art({ id, equipped }) {
+  const ref = useRef(null);
+  const key = JSON.stringify(equipped);
+
+  useEffect(() => {
+    const cv = ref.current;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = ART_W * dpr;
+    cv.height = ART_H * dpr;
+    const c = cv.getContext('2d');
+    c.scale(dpr, dpr);
+    try {
+      PAINT[id](c, lookOf(equipped));
+    } catch (err) {
+      console.error(`card art for ${id}`, err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, key]);
+
+  return <canvas ref={ref} width={ART_W} height={ART_H} />;
 }

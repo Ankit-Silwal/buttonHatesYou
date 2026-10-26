@@ -154,7 +154,7 @@ To test a section, open `/games/please-dont?at=55` to jump to any click count (t
 
 ### Adding a mini-game
 
-Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, category, reward) and it shows up on its shelf of the Games screen (`/games`). Give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
+Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, category, reward) and it shows up on its shelf of the Games screen (`/games`). Its card picture comes from `PAINT` in `src/components/gameArt.js` (story games draw a scene with the game's own drawing code; Adventure games list how long to run and where to crop); without one the card shows the emoji. Give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
 
 A quick arcade game is easier: write `src/adventure/games/<id>.js`, list it in
 `src/adventure/games/index.js`, and add an `adventure` entry to `GAMES` with its
