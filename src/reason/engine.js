@@ -167,7 +167,7 @@ export class Game {
     this.cam = { x: W / 2, y: H / 2, zoom: 1, shake: 0, target: null, fixed: null, ox: 0, oy: 0 };
     this.fx = { fade: this.fx?.fade ?? 0, fadeTo: this.fx?.fadeTo ?? 0, fadeSpeed: 2, flash: 0, glitch: 0, tint: null, tintA: 0, redSky: 0, letterbox: 0, heart: 0, noHud: false, bw: 0 };
     this.boss = null;
-    this.locked = false;
+    this.locked = this.locked ?? false; // a level change mid-cutscene stays a cutscene
     this.freeze = false;
     this.checkpointAt = null;
     this.onRespawn = null;
