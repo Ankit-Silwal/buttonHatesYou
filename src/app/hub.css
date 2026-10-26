@@ -88,7 +88,7 @@
   padding: 120px 0 14vh;
   transition: padding 0.4s ease;
 }
-.hub[data-panel] .hub-stage { padding: 110px 0 58vh; }
+.hub[data-panel] .hub-stage { padding: 160px 0 56vh; } /* room for tall hats under the speech line */
 .hub-stage .char { z-index: 1; }
 
 .hub-actions {
@@ -180,21 +180,59 @@
 .buybar .note { color: var(--ink-soft); font-size: 14px; }
 .buybar .row { display: flex; gap: 8px; }
 
-.game-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 10px;
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--wall);
+/* ---------- games screen ---------- */
+.arcade {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  padding: 76px 16px 40px;
+  background: linear-gradient(to bottom, var(--wall), var(--floor));
 }
-.game-card .emoji { font-size: 40px; }
-.game-card h3 { margin: 0; font-size: 18px; }
-.game-card p { margin: 4px 0; color: var(--ink-soft); font-size: 14px; line-height: 1.35; }
-.game-card .reward { color: var(--ink); font-weight: 600; font-size: 13px; }
-.game-card .pill { flex: none; margin-left: auto; }
-.game-card.soon { background: transparent; box-shadow: inset 0 0 0 2px var(--floor); opacity: 0.7; }
+.arcade .hub-top { position: fixed; background: linear-gradient(var(--wall) 60%, transparent); }
+.arcade-left { display: flex; align-items: center; gap: 8px; }
+.chip.home { justify-content: center; width: 38px; padding: 0; text-decoration: none; }
+
+.arcade-head { display: flex; align-items: center; gap: 18px; max-width: 960px; margin: 18px auto 22px; }
+.arcade-head h1 { margin: 0; font-size: clamp(30px, 6vw, 44px); }
+.arcade-head p { margin: 4px 0 0; color: var(--ink-soft); }
+
+.games {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--cream);
+  box-shadow: 0 8px 24px var(--shadow);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+a.game:hover { transform: translateY(-4px); box-shadow: 0 14px 30px var(--shadow); }
+a.game:focus-visible { outline: 3px dashed var(--mustard); outline-offset: 4px; }
+.game .art {
+  display: grid;
+  place-items: center;
+  height: 150px;
+  background: radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.35), transparent 60%), var(--art, var(--floor));
+  font-size: 72px;
+}
+.game .info { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 16px 18px 18px; }
+.game b { font-size: 20px; }
+.game .blurb { color: var(--ink-soft); font-size: 14px; line-height: 1.4; }
+.game .meta { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 10px; }
+.game .prize { font-weight: 700; }
+.game.soon { background: transparent; box-shadow: inset 0 0 0 2px var(--floor); opacity: 0.75; }
+.game.soon .art { background: transparent; }
 
 @keyframes bump { 0% { transform: scale(1.5); } 100% { transform: scale(1); } }
 @keyframes sheetIn { from { transform: translate(-50%, 100%); } }
@@ -207,7 +245,7 @@
   .chip.sync .label, .chip.who .name { display: none; }
   .chip.who { padding: 0 3px; }
   .pill.big { padding: 12px 20px; font-size: 18px; }
-  .game-card { flex-wrap: wrap; }
+  .arcade-head { gap: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,10 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Avatar from './Avatar';
 import Account from './Account';
-import Sheet from './Sheet';
+import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
 import { useProfile } from '@/profile/useProfile';
-import { GAMES } from '@/economy/catalog';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -21,15 +20,6 @@ const POKES = [
   ['I can hear you breathing.', 'scared'],
   'Nice outfit, right? You paid for it.',
 ];
-
-const SYNC = {
-  guest: ['💾', 'On this device', 'Playing as a guest: everything is saved on this device. Sign in to keep it in the cloud.'],
-  offline: ['📴', 'Offline', "You're offline. Everything is saved on this device and will sync when you're back."],
-  syncing: ['🔄', 'Syncing', 'Saving to the cloud…'],
-  pending: ['⏳', 'Waiting', 'Some changes are waiting to sync.'],
-  error: ['⚠️', 'Retrying', "Can't reach the server. Everything is saved on this device; we'll keep trying."],
-  synced: ['☁️', 'Saved', 'Saved to the cloud.'],
-};
 
 const DECOR = [
   { e: '🖼️', x: '12%', y: '18%' },
@@ -47,7 +37,7 @@ function greeting({ user, wallet }) {
 export default function Hub() {
   const profile = useProfile();
   const { wallet, user, ready } = profile;
-  const [panel, setPanel] = useState(null); // null | 'games' | 'wardrobe'
+  const [panel, setPanel] = useState(null); // null | 'wardrobe'
   const [preview, setPreview] = useState(null);
   const [line, setLine] = useState({ text: '', mood: 'calm', n: 0 });
   const [pressed, setPressed] = useState(false);
@@ -82,8 +72,6 @@ export default function Hub() {
     setPreview(null);
   }, []);
 
-  const [icon, label, hint] = SYNC[profile.status];
-
   return (
     <main className="hub" data-panel={panel ?? undefined}>
       <div className="hub-room" aria-hidden="true">
@@ -95,19 +83,7 @@ export default function Hub() {
       </div>
 
       <header className="hub-top">
-        <div className="wallet">
-          <span className="chip" title="Coins">
-            🪙 <b key={wallet.coins}>{wallet.coins}</b>
-          </span>
-          <span className="chip" title="Diamonds">
-            💎 <b key={wallet.diamonds}>{wallet.diamonds}</b>
-          </span>
-          {ready && (
-            <span className="chip sync" title={hint}>
-              {icon} <span className="label">{label}</span>
-            </span>
-          )}
-        </div>
+        <Wallet profile={profile} />
         <Account user={user} ready={ready} />
       </header>
 
@@ -130,42 +106,13 @@ export default function Hub() {
 
       {!panel && (
         <nav className="hub-actions">
-          <button className="pill big" onClick={() => setPanel('games')}>
+          <Link className="pill big" href="/games">
             🎮 Play
-          </button>
+          </Link>
           <button className="pill big alt" onClick={() => setPanel('wardrobe')}>
             👕 Wardrobe
           </button>
         </nav>
-      )}
-
-      {panel === 'games' && (
-        <Sheet title="Games" onClose={close}>
-          <div className="sheet-body">
-            {GAMES.map((g) => (
-              <article key={g.id} className="game-card">
-                <span className="emoji">{g.emoji}</span>
-                <div>
-                  <h3>{g.name}</h3>
-                  <p>{g.blurb}</p>
-                  <p className="reward">
-                    Finish it: +{g.reward.coins} 🪙{g.reward.diamonds ? ` +${g.reward.diamonds} 💎` : ''}
-                  </p>
-                </div>
-                <Link className="pill" href={g.href}>
-                  Play
-                </Link>
-              </article>
-            ))}
-            <article className="game-card soon">
-              <span className="emoji">🚧</span>
-              <div>
-                <h3>More games soon</h3>
-                <p>The button is reluctantly building more ways for you to bother it.</p>
-              </div>
-            </article>
-          </div>
-        </Sheet>
       )}
 
       {panel === 'wardrobe' && <Wardrobe wallet={wallet} onPreview={setPreview} onSay={say} onClose={close} />}

@@ -63,6 +63,7 @@ export const GAMES = [
     id: 'please-dont',
     name: "Please Don't",
     emoji: '🔴',
+    color: '#f6c9b8', // card background on the Games screen
     blurb: 'Press the button 65 times. It really, really does not want you to.',
     href: '/games/please-dont',
     reward: { coins: 20, diamonds: 1 },

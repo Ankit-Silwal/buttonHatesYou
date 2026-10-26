@@ -79,4 +79,4 @@ To test a section, open `/games/please-dont?at=55` to jump to any click count (t
 
 ### Adding a mini-game
 
-Add it to `GAMES` in `src/economy/catalog.js` (id, page, reward), give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
+Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, reward) and it shows up on the Games screen (`/games`). Give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
