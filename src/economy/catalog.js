@@ -65,10 +65,12 @@ export const REWARDS = {
   'love-finale': { coins: 50, diamonds: 3 }, // finishing Desperate for Love
   'reason-episode': { coins: 15, diamonds: 0 }, // each episode of The Reason
   'reason-finale': { coins: 80, diamonds: 5 }, // finishing The Reason
+  'cursor-chapter': { coins: 15, diamonds: 0 }, // each chapter of How I Met Your Cursor
+  'cursor-finale': { coins: 60, diamonds: 4 }, // finishing How I Met Your Cursor
 };
 
 // Mini-games, as listed on the Games screen. `prize` is the line on the card;
-// `best` also puts a game in the starred "Best ones" row at the top.
+// `best` (a rank, 1 = first) also puts a game in the starred "Best ones" row.
 export const GAMES = [
   {
     id: 'desperate-for-love',
@@ -80,9 +82,19 @@ export const GAMES = [
     prize: '+10 🪙 a chapter',
   },
   {
+    id: 'how-i-met-your-cursor',
+    name: 'How I Met Your Cursor',
+    best: 2,
+    emoji: '💍',
+    color: '#ffe0b8',
+    blurb: 'Button Quest: the story before The Reason. Bobby, his new best friend Cursor, and the most disastrous love story in internet history. 6 chapters, about 30 minutes.',
+    href: '/games/how-i-met-your-cursor',
+    prize: '+15 🪙 a chapter',
+  },
+  {
     id: 'the-reason',
     name: 'The Reason',
-    best: true, // featured in "Best ones" at the top of the Games screen
+    best: 1, // featured in "Best ones" at the top of the Games screen (lower = higher up)
     emoji: '🗡️',
     color: '#c9cde8',
     blurb: 'The prequel. A sword-swinging platformer about why the button hates you. 9 episodes, about 50 minutes. Bring tissues.',

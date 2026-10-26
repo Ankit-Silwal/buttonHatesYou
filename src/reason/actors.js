@@ -98,7 +98,8 @@ export class Bobby {
       this.vy = 0;
       if (Math.random() < 0.6) g.parts.push({ x: cx(this) - this.facing * 10, y: cy(this) + rand(-10, 10), vx: -this.facing * 60, vy: 0, grav: 0, life: 0.25, max: 0.25, color: 'rgba(255,255,255,0.7)', size: 6 });
     } else {
-      const target = move * SPEED;
+      this.slowT = Math.max(0, (this.slowT ?? 0) - dt);
+      const target = move * SPEED * (this.slowT > 0 ? 0.45 : 1);
       const accel = onGround ? 2400 : 1500;
       if (this.vx < target) this.vx = Math.min(target, this.vx + accel * dt);
       else if (this.vx > target) this.vx = Math.max(target, this.vx - accel * dt);
@@ -275,7 +276,7 @@ export class Bobby {
       color: this.color ?? '#e2674f', dark: this.dark ?? '#b84a36',
       facing: this.facing, t: this.t, moving, air: !this.ground,
       mood: this.mood, pendant: this.flags.pendant && !this.noPendant, crack: this.flags.pendantCracked,
-      flash: this.flash > 0, red: this.red, tears: this.tears, sit: this.sit, pendantGlow: this.pendantGlow,
+      flash: this.flash > 0, red: this.red, tears: this.tears, sit: this.sit, pendantGlow: this.pendantGlow, acc: this.acc,
     });
     if (a && a.t < 0.18) {
       // swoosh
@@ -633,6 +634,10 @@ export class Enemy {
   }
 
   think() {}
+
+  drawOver(c, g) {
+    if (this.bubble) drawBubble(c, g, this, this.bubble);
+  }
 
   gravity(g, dt) {
     this.vy = Math.min(900, this.vy + GRAVITY * dt);

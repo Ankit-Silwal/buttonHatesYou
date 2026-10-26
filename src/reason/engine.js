@@ -24,6 +24,7 @@ const KEYS = {
   KeyK: 'dash', KeyC: 'dash', ShiftLeft: 'dash', ShiftRight: 'dash',
   KeyQ: 'special', KeyL: 'special', KeyV: 'special',
   KeyE: 'act', Enter: 'act', KeyF: 'act',
+  KeyR: 'point', KeyI: 'point',
 };
 
 export class Input {
@@ -125,6 +126,28 @@ export class Game {
     window.addEventListener('keyup', this.onKey);
     window.addEventListener('blur', this.onBlur);
 
+    // The mouse, in world coordinates. Clicking a `clickable` entity calls
+    // onClickable (or its onPress); `draggable` ones can be dragged around.
+    this.mouse = { x: 0, y: 0, sx: 0, sy: 0, in: false };
+    this.clicks = [];
+    this.onPointer = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const sx = ((e.clientX - r.left) / r.width) * W;
+      const sy = ((e.clientY - r.top) / r.height) * H;
+      this.mouse.sx = sx;
+      this.mouse.sy = sy;
+      this.mouse.in = e.type !== 'pointerleave';
+      const w = this.toWorld(sx, sy);
+      this.mouse.x = w.x;
+      this.mouse.y = w.y;
+      if (e.type === 'pointerdown') {
+        initAudio();
+        this.clicks.push({ x: w.x, y: w.y });
+      }
+      if (e.type === 'pointerup' || e.type === 'pointercancel') this.mouse.up = true;
+    };
+    for (const t of ['pointermove', 'pointerdown', 'pointerup', 'pointercancel', 'pointerleave']) canvas.addEventListener(t, this.onPointer);
+
     this.last = performance.now();
     this.acc = 0;
     this.frame = (t) => {
@@ -153,6 +176,57 @@ export class Game {
     window.removeEventListener('keydown', this.onKey);
     window.removeEventListener('keyup', this.onKey);
     window.removeEventListener('blur', this.onBlur);
+    for (const t of ['pointermove', 'pointerdown', 'pointerup', 'pointercancel', 'pointerleave']) this.canvas.removeEventListener(t, this.onPointer);
+  }
+
+  toWorld(sx, sy) {
+    const c = this.cam;
+    return { x: (sx - W / 2 - c.ox) / c.zoom + c.x, y: (sy - H / 2 - c.oy) / c.zoom + c.y };
+  }
+
+  // The topmost clickable/draggable entity under a world point.
+  hit(x, y, key = 'clickable') {
+    let best = null;
+    for (const e of this.ents) {
+      if (!e[key] || e.dead || e.hidden) continue;
+      const pad = e.pad ?? 14;
+      if (x >= e.x - pad && x <= e.x + e.w + pad && y >= e.y - pad && y <= e.y + e.h + pad && (!best || (e.z ?? 0) >= (best.z ?? 0))) best = e;
+    }
+    return best;
+  }
+
+  updateMouse() {
+    const m = this.mouse;
+    const w = this.toWorld(m.sx, m.sy);
+    m.x = w.x;
+    m.y = w.y;
+    const busy = this.ui.talk || this.ui.choice || this.locked;
+    for (const c of this.clicks) {
+      if (busy) continue;
+      const d = this.hit(c.x, c.y, 'draggable');
+      if (d) {
+        this.dragging = { e: d, dx: c.x - d.x, dy: c.y - d.y };
+        d.onPick?.(this);
+        continue;
+      }
+      const t = this.hit(c.x, c.y);
+      if (t) (this.onClickable ?? ((t, g) => t.onPress?.(g)))(t, this);
+      else this.onClickWorld?.(c.x, c.y);
+    }
+    this.clicks = [];
+    if (this.dragging) {
+      const { e, dx, dy } = this.dragging;
+      e.x = m.x - dx;
+      e.y = m.y - dy;
+      if (m.up || busy) {
+        this.dragging = null;
+        e.onDrop?.(this);
+      }
+    }
+    m.up = false;
+    const hover = m.in && !busy && (this.hit(m.x, m.y, 'draggable') || this.hit(m.x, m.y));
+    const cur = this.dragging ? 'grabbing' : hover ? (hover.draggable ? 'grab' : 'pointer') : '';
+    if (this.canvas.style.cursor !== cur) this.canvas.style.cursor = cur;
   }
 
   // Empties the world (the player object survives and is re-added by load).
@@ -234,6 +308,7 @@ export class Game {
     }
     this.parts = this.parts.filter((p) => p.life > 0);
 
+    this.updateMouse();
     this.updatePrompt();
     this.updateCamera(dt);
     this.updateFx(dt);

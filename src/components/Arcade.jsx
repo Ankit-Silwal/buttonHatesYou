@@ -41,7 +41,9 @@ export default function Arcade() {
             Best ones
           </h2>
           <ul className="games featured">
-            {GAMES.filter((g) => g.best).map((g) => (
+            {GAMES.filter((g) => g.best)
+              .sort((a, b) => a.best - b.best)
+              .map((g) => (
               <li key={g.id}>
                 <GameCard game={g} best />
               </li>
