@@ -57,7 +57,15 @@ export const DEFAULT_LOOK = {
   hat: 'hat-none',
 };
 
-// Mini-games and what finishing one pays out.
+// What each payout is worth. A game asks for one by id when the player
+// earns it; the server only ever pays amounts from this table.
+export const REWARDS = {
+  'please-dont': { coins: 20, diamonds: 1 }, // finishing Please Don't
+  'love-chapter': { coins: 10, diamonds: 0 }, // each chapter of Desperate for Love
+  'love-finale': { coins: 50, diamonds: 3 }, // finishing Desperate for Love
+};
+
+// Mini-games, as listed on the Games screen. `prize` is the line on the card.
 export const GAMES = [
   {
     id: 'please-dont',
@@ -66,8 +74,15 @@ export const GAMES = [
     color: '#f6c9b8', // card background on the Games screen
     blurb: 'Press the button 65 times. It really, really does not want you to.',
     href: '/games/please-dont',
-    reward: { coins: 20, diamonds: 1 },
+    prize: '+20 🪙  +1 💎',
+  },
+  {
+    id: 'desperate-for-love',
+    name: 'Desperate for Love',
+    emoji: '💘',
+    color: '#ffc8dc',
+    blurb: "Bobby the button has been single for 404 days. Be his wingman. 50 levels of terrible romance.",
+    href: '/games/desperate-for-love',
+    prize: '+10 🪙 a chapter',
   },
 ];
-
-export const GAME = Object.fromEntries(GAMES.map((g) => [g.id, g]));

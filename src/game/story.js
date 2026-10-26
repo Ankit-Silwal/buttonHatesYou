@@ -2,7 +2,7 @@ import { Sound } from './sound';
 import { Boss } from './boss';
 import { openSkip, closeSkip, loserStamp } from './skip';
 import { getProfile, grantReward } from '@/profile/store';
-import { GAME } from '@/economy/catalog';
+import { REWARDS } from '@/economy/catalog';
 import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
@@ -10,7 +10,7 @@ import {
   say, floatText, shake, updateHud, setScene, showSkips, setLook,
 } from './core';
 
-const REWARD = GAME['please-dont'].reward;
+const REWARD = REWARDS['please-dont'];
 
 /* ---------- what the button says ---------- */
 const LINES = {

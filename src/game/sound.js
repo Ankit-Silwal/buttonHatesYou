@@ -56,6 +56,7 @@ export const Sound = (() => {
 
   return {
     init,
+    tone,
     setMuted(m) {
       muted = m;
       if (master) master.gain.value = m ? 0 : VOLUME;

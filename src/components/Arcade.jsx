@@ -7,8 +7,6 @@ import Wallet from './Wallet';
 import { useProfile } from '@/profile/useProfile';
 import { GAMES } from '@/economy/catalog';
 
-const reward = ({ coins, diamonds }) => `+${coins} 🪙${diamonds ? `  +${diamonds} 💎` : ''}`;
-
 // Every mini-game, as one big card each. New games show up here as soon as
 // they are added to GAMES in the catalog.
 export default function Arcade() {
@@ -45,7 +43,7 @@ export default function Arcade() {
                 <b>{g.name}</b>
                 <span className="blurb">{g.blurb}</span>
                 <span className="meta">
-                  <span className="prize">{reward(g.reward)}</span>
+                  <span className="prize">{g.prize}</span>
                   <span className="pill">Play</span>
                 </span>
               </span>
