@@ -1,5 +1,6 @@
 import ep1 from './ep1';
 import ep2 from './ep2';
+import ep3 from './ep3';
 
 // The whole story, in order. `start` is what Bobby can already do when an
 // episode is played straight from the menu; story choices carry over from
@@ -14,7 +15,7 @@ export const ACTS = [
 export const EPISODES = [
   { n: 1, act: 1, title: 'A Button With a Life', mins: 4, start: {}, play: ep1 },
   { n: 2, act: 1, title: 'The First Click', mins: 5, start: { sword: true, pendant: true }, play: ep2 },
-  { n: 3, act: 2, title: 'Two Idiots and a Sword', mins: 5, start: { sword: true, pendant: true } },
+  { n: 3, act: 2, title: 'Two Idiots and a Sword', mins: 5, start: { sword: true, pendant: true }, play: ep3 },
   { n: 4, act: 2, title: 'The Forgotten Kingdom', mins: 5, start: { sword: true, pendant: true, doubleJump: true } },
   { n: 5, act: 2, title: 'The Truth Beneath the Code', mins: 5, start: { sword: true, pendant: true, doubleJump: true } },
   { n: 6, act: 3, title: 'The Last Laugh', mins: 5, start: { sword: true, pendant: true, doubleJump: true, dash: true } },
