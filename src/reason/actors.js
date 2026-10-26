@@ -70,6 +70,7 @@ export class Bobby {
         this.goal = null;
         this.vx = 0;
       } else move = Math.sign(d) * (this.walkSpeed / SPEED);
+      if (this.wall && this.ground) this.vy = -620; // hop small ledges on scripted walks
     } else if (ctl) {
       move = (inp.down('right') ? 1 : 0) - (inp.down('left') ? 1 : 0);
       if (this.reversed) move = -move;
@@ -366,6 +367,7 @@ export class Npc {
       const d = this.goal - cx(this);
       if (Math.abs(d) < 4) this.goal = null;
       else move = Math.sign(d);
+      if (this.wall && this.ground && !this.fixed) this.vy = -620;
     } else if (this.follow) move = this.followMove(g);
     if (this.faceTo) this.facing = Math.sign(cx(this.faceTo) - cx(this)) || this.facing;
     if (move) this.facing = move;

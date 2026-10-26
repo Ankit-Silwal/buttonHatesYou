@@ -222,6 +222,7 @@
   font-size: 14px;
   font-weight: 700;
 }
+.reason-talk .line { white-space: pre-line; }
 .reason-talk .more { position: absolute; right: 16px; bottom: 10px; color: var(--who); animation: reason-blink 0.9s infinite; }
 .reason-talk.sys { background: rgba(40, 6, 10, 0.94); font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.02em; color: #ff8d84; }
 .reason-talk.whisper { background: rgba(10, 10, 14, 0.75); color: #d8d4e8; font-style: italic; }
