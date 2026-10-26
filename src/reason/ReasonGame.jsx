@@ -246,8 +246,15 @@ function Play({ n, save, muted, onMute, onDone, onExit }) {
         <canvas ref={canvas} />
       </div>
 
-      <header className="reason-top">
-        <div className="row">
+      {/* the hearts live in the top-left corner, so the episode name sits bottom-right */}
+      <header className="reason-top end">
+        <button className="chip icon" aria-label="Sound on/off" onClick={onMute}>
+          {muted ? '🔇' : '🔊'}
+        </button>
+      </header>
+
+      {!talk && !ui.choice && (
+        <div className={`reason-bottom ${touch ? 'touch' : ''}`}>
           <button className="chip icon" onClick={() => setPaused(true)} aria-label="Pause">
             ⏸
           </button>
@@ -256,10 +263,7 @@ function Play({ n, save, muted, onMute, onDone, onExit }) {
             <span>{EPISODES[n - 1].title}</span>
           </span>
         </div>
-        <button className="chip icon" aria-label="Sound on/off" onClick={onMute}>
-          {muted ? '🔇' : '🔊'}
-        </button>
-      </header>
+      )}
 
       {ui.objective && !talk && !ui.locked && <p className="reason-goal">{ui.objective}</p>}
 

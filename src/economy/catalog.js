@@ -70,15 +70,6 @@ export const REWARDS = {
 // Mini-games, as listed on the Games screen. `prize` is the line on the card.
 export const GAMES = [
   {
-    id: 'please-dont',
-    name: "Please Don't",
-    emoji: '🔴',
-    color: '#f6c9b8', // card background on the Games screen
-    blurb: 'Press the button 65 times. It really, really does not want you to.',
-    href: '/games/please-dont',
-    prize: '+20 🪙  +1 💎',
-  },
-  {
     id: 'desperate-for-love',
     name: 'Desperate for Love',
     emoji: '💘',
@@ -95,5 +86,14 @@ export const GAMES = [
     blurb: 'The prequel. A sword-swinging platformer about why the button hates you. 9 episodes, about 50 minutes. Bring tissues.',
     href: '/games/the-reason',
     prize: '+15 🪙 an episode',
+  },
+  {
+    id: 'please-dont',
+    name: "Please Don't",
+    emoji: '🔴',
+    color: '#f6c9b8', // card background on the Games screen
+    blurb: 'Press the button 65 times. It really, really does not want you to.',
+    href: '/games/please-dont',
+    prize: '+20 🪙  +1 💎',
   },
 ];
