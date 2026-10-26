@@ -112,6 +112,9 @@ export default function Hub() {
           <button className="pill big alt" onClick={() => setPanel('wardrobe')}>
             👕 Wardrobe
           </button>
+          <Link className="pill big story-btn" href="/story">
+            📖 Story
+          </Link>
         </nav>
       )}
 

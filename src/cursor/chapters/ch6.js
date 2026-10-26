@@ -289,7 +289,7 @@ export default async function play(g, p) {
 
 async function epilogue(g, p) {
   const f = g.flags;
-  g.load({ ...BEDROOM, deco: [...BEDROOM.deco.filter((d) => d.t !== 'photo'), { t: 'weddingPhoto', x: 300, y: 170 }, { t: 'bloomVase', x: 790, y: GROUND - 40 }] }, p);
+  g.load(BEDROOM, p); // the same room The Reason opens in, wedding photo and Forever Bloom included
   p.acc = [];
   p.x = 380;
   p.facing = 1;
