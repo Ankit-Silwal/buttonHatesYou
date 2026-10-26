@@ -65,9 +65,22 @@ export const REWARDS = {
   'love-finale': { coins: 50, diamonds: 3 }, // finishing Desperate for Love
   'reason-episode': { coins: 15, diamonds: 0 }, // each episode of The Reason
   'reason-finale': { coins: 80, diamonds: 5 }, // finishing The Reason
+  'adventure-goal': { coins: 8, diamonds: 0 }, // reaching an Adventure game's goal score
+  'adventure-first': { coins: 0, diamonds: 1 }, // ...for the very first time in that game
 };
 
+// The two shelves on the Games screen.
+export const CATEGORIES = [
+  { id: 'story', name: 'Story', blurb: 'Long games with a plot. The button has feelings, apparently.' },
+  { id: 'adventure', name: 'Adventure', blurb: 'Quick arcade games starring the button. Beat the goal score to get paid.' },
+];
+
+const ADVENTURE_PRIZE = '+8 🪙 at the goal';
+
 // Mini-games, as listed on the Games screen. `prize` is the line on the card.
+// Adventure games also carry what their title card needs: `howTo`, a `goal`
+// score in `unit`s, and two lines for the results card (`quips.goal` when
+// the player made it, `quips.fail` when the button got its way).
 export const GAMES = [
   {
     id: 'desperate-for-love',
@@ -76,6 +89,7 @@ export const GAMES = [
     color: '#ffc8dc',
     blurb: "Bobby the button has been single for 404 days. Be his wingman. 50 levels of terrible romance.",
     href: '/games/desperate-for-love',
+    category: 'story',
     prize: '+10 🪙 a chapter',
   },
   {
@@ -85,6 +99,7 @@ export const GAMES = [
     color: '#c9cde8',
     blurb: 'The prequel. A sword-swinging platformer about why the button hates you. 9 episodes, about 50 minutes. Bring tissues.',
     href: '/games/the-reason',
+    category: 'story',
     prize: '+15 🪙 an episode',
   },
   {
@@ -94,6 +109,110 @@ export const GAMES = [
     color: '#f6c9b8', // card background on the Games screen
     blurb: 'Press the button 65 times. It really, really does not want you to.',
     href: '/games/please-dont',
+    category: 'story',
     prize: '+20 🪙  +1 💎',
   },
+  ...[
+    {
+      id: 'flap',
+      name: 'Flappy Regret',
+      emoji: '🪽',
+      color: '#bfe3ff',
+      blurb: 'You strapped wings on the button. Tap to flap it through the pipes. It did not consent to this.',
+      howTo: 'Tap, click or press Space to flap.',
+      goal: 15,
+      unit: 'pipes',
+      quips: { goal: 'I am going to be sick.', fail: 'Gravity is my friend now.' },
+    },
+    {
+      id: 'pop',
+      name: 'Pop Tantrum',
+      emoji: '🫧',
+      color: '#ffd6f0',
+      blurb: "The button's cousins are stuck in a grid. Pop groups of the same color before you run out of taps.",
+      howTo: 'Tap a group of 2 or more same-colored buttons to pop them. 25 taps.',
+      goal: 1500,
+      unit: 'points',
+      quips: { goal: 'You popped my whole family.', fail: 'Family reunion: saved.' },
+    },
+    {
+      id: 'catch',
+      name: 'Snack Attack',
+      emoji: '🍩',
+      color: '#ffe3b3',
+      blurb: 'Snacks are falling. So are bombs. Move the button to catch one and not the other.',
+      howTo: 'Drag, or use ← → to move. Catch snacks, dodge bombs. 3 lives.',
+      goal: 40,
+      unit: 'snacks',
+      quips: { goal: 'I ate them out of spite.', fail: 'I was on a diet anyway.' },
+    },
+    {
+      id: 'simon',
+      name: 'Copy Me',
+      emoji: '🎵',
+      color: '#d8ccff',
+      blurb: 'The button plays a tune on its four friends. Repeat it. It gets longer. The button gets smugger.',
+      howTo: 'Watch the sequence, then tap the pads in the same order.',
+      goal: 8,
+      unit: 'rounds',
+      quips: { goal: 'You were supposed to forget.', fail: 'Goldfish memory. Classic.' },
+    },
+    {
+      id: 'hop',
+      name: 'Sky Hop',
+      emoji: '☁️',
+      color: '#c9f0e4',
+      blurb: 'The button bounces up and up on clouds, trying to get as far away from you as possible.',
+      howTo: 'Steer with ← →, or hold and drag where you want it to go.',
+      goal: 3000,
+      unit: 'meters',
+      quips: { goal: 'Still not far enough from you.', fail: 'Gravity: 1. Me: also fine.' },
+    },
+    {
+      id: 'whack',
+      name: 'Whack-a-Button',
+      emoji: '🔨',
+      color: '#f6d1b8',
+      blurb: 'The button and its clones peek out of holes. Bonk them. Do not bonk the ones holding a heart.',
+      howTo: 'Tap buttons as they pop up. Skip the ones with a heart. 45 seconds.',
+      goal: 30,
+      unit: 'bonks',
+      quips: { goal: 'My head is a pancake now.', fail: 'Too slow. We felt nothing.' },
+    },
+    {
+      id: 'run',
+      name: 'Run Away',
+      emoji: '🏃',
+      color: '#d4ecb0',
+      blurb: 'The button finally grew legs and is sprinting away from you. Help it jump the junk in its path.',
+      howTo: 'Tap or press Space to jump. Hold to jump higher. Down / swipe down to duck.',
+      goal: 1000,
+      unit: 'meters',
+      quips: { goal: 'You helped me escape you. Odd.', fail: 'Tripped. Do not look at me.' },
+    },
+    {
+      id: 'stack',
+      name: 'Tower of Regret',
+      emoji: '🗼',
+      color: '#ffe0c2',
+      blurb: 'Drop the button clones on top of each other to build a tower. Whatever hangs over the edge falls off, screaming.',
+      howTo: 'Tap or press Space to drop the swinging clone.',
+      goal: 20,
+      unit: 'floors',
+      quips: { goal: 'My back hurts. All of our backs.', fail: 'A short tower for a short attention span.' },
+    },
+    {
+      id: 'slice',
+      name: 'Slice Spree',
+      emoji: '🔪',
+      color: '#ffd0c9',
+      blurb: 'Fruit and junk fly up. Swipe to slice them. The button flies up too. Do NOT slice the button.',
+      howTo: 'Swipe across things to slice them. Missing 3 or slicing the button ends the run.',
+      goal: 50,
+      unit: 'slices',
+      quips: { goal: 'You were aiming for me. I saw that.', fail: 'Ha. Missed me. Literally.' },
+    },
+  ].map((g) => ({ ...g, category: 'adventure', href: `/games/adventure/${g.id}`, prize: ADVENTURE_PRIZE })),
 ];
+
+export const GAME = Object.fromEntries(GAMES.map((g) => [g.id, g]));

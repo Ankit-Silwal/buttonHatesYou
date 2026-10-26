@@ -5,10 +5,10 @@ import Avatar from './Avatar';
 import Account from './Account';
 import Wallet from './Wallet';
 import { useProfile } from '@/profile/useProfile';
-import { GAMES } from '@/economy/catalog';
+import { GAMES, CATEGORIES } from '@/economy/catalog';
 
-// Every mini-game, as one big card each. New games show up here as soon as
-// they are added to GAMES in the catalog.
+// Every mini-game, as one big card each, on its category's shelf. New games
+// show up here as soon as they are added to GAMES in the catalog.
 export default function Arcade() {
   const profile = useProfile();
 
@@ -32,36 +32,33 @@ export default function Arcade() {
         </div>
       </div>
 
-      <ul className="games">
-        {GAMES.map((g) => (
-          <li key={g.id}>
-            <Link href={g.href} className="game" style={{ '--art': g.color }}>
-              <span className="art" aria-hidden="true">
-                {g.emoji}
-              </span>
-              <span className="info">
-                <b>{g.name}</b>
-                <span className="blurb">{g.blurb}</span>
-                <span className="meta">
-                  <span className="prize">{g.prize}</span>
-                  <span className="pill">Play</span>
-                </span>
-              </span>
-            </Link>
-          </li>
-        ))}
-        <li>
-          <div className="game soon">
-            <span className="art" aria-hidden="true">
-              🚧
-            </span>
-            <span className="info">
-              <b>More games soon</b>
-              <span className="blurb">The button is reluctantly building more ways for you to bother it.</span>
-            </span>
+      {CATEGORIES.map((cat) => (
+        <section key={cat.id} className="shelf" aria-labelledby={`shelf-${cat.id}`}>
+          <div className="shelf-head">
+            <h2 id={`shelf-${cat.id}`}>{cat.name}</h2>
+            <p>{cat.blurb}</p>
           </div>
-        </li>
-      </ul>
+          <ul className="games">
+            {GAMES.filter((g) => g.category === cat.id).map((g) => (
+              <li key={g.id}>
+                <Link href={g.href} className="game" style={{ '--art': g.color }}>
+                  <span className="art" aria-hidden="true">
+                    {g.emoji}
+                  </span>
+                  <span className="info">
+                    <b>{g.name}</b>
+                    <span className="blurb">{g.blurb}</span>
+                    <span className="meta">
+                      <span className="prize">{g.prize}</span>
+                      <span className="pill">Play</span>
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </main>
   );
 }

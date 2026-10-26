@@ -80,6 +80,34 @@ E talk / use · Esc pause. Phones get an on-screen pad.
 - `src/reason/episodes/epN.js`: one file per episode; `index.js` lists them
   and what Bobby can already do when one is started from the menu
 
+## Adventure games
+
+The Games screen has two shelves: **Story** (Desperate for Love, The Reason,
+Please Don't) and **Adventure**, nine short arcade games starring the button
+in whatever it's wearing:
+
+| Game | What you do | Goal |
+| --- | --- | --- |
+| Flappy Regret | Tap to flap the button through pipes | 15 pipes |
+| Pop Tantrum | Pop groups of same-colored buttons in 25 taps | 1500 points |
+| Snack Attack | Catch falling snacks, dodge bombs | 40 snacks |
+| Copy Me | Repeat the button's growing tune | 8 rounds |
+| Sky Hop | Bounce up from cloud to cloud | 3000 meters |
+| Whack-a-Button | Bonk clones, spare the ones holding a heart | 30 bonks |
+| Run Away | Jump and duck while the button flees the cursor | 1000 meters |
+| Tower of Regret | Drop swinging clones to stack a tower | 20 floors |
+| Slice Spree | Swipe to slice what flies up, just not the button | 50 slices |
+
+Every run that reaches the goal pays 8 🪙, and the first time in each game
+also pays 1 💎. Best scores are kept on the device.
+
+- `src/adventure/AdventureGame.jsx`: title card, canvas loop, pause, results
+  and payouts, shared by all nine (routed from `/games/adventure/[id]`)
+- `src/adventure/kit.js`: the 480x800 canvas, the button drawn in its outfit,
+  speech bubbles and particles
+- `src/adventure/games/<id>.js`: one file per game; `index.js` describes
+  what a game has to export
+
 ## Please Don't: how it plays
 
 | Clicks | What happens |
@@ -119,4 +147,8 @@ To test a section, open `/games/please-dont?at=55` to jump to any click count (t
 
 ### Adding a mini-game
 
-Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, reward) and it shows up on the Games screen (`/games`). Give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
+Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, category, reward) and it shows up on its shelf of the Games screen (`/games`). Give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
+
+A quick arcade game is easier: write `src/adventure/games/<id>.js`, list it in
+`src/adventure/games/index.js`, and add an `adventure` entry to `GAMES` with its
+`howTo`, `goal`, `unit` and `quips`. The page, title card and payout come for free.

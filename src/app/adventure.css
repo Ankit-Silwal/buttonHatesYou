@@ -1,0 +1,86 @@
+/* ---------- games screen: Story and Adventure shelves ---------- */
+.shelf { max-width: 960px; margin: 0 auto 34px; }
+.shelf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 0 2px 14px; }
+.shelf-head h2 { margin: 0; font-size: 26px; }
+.shelf-head p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+/* ---------- one Adventure game ---------- */
+.adv {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.5), transparent 60%),
+    linear-gradient(var(--art, var(--wall)), var(--floor));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.adv .row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.adv .chip.icon { justify-content: center; width: 38px; padding: 0; cursor: pointer; font-size: 16px; }
+
+.adv-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px;
+  pointer-events: none;
+}
+.adv-top > * { pointer-events: auto; }
+.adv-top .row { justify-content: flex-start; }
+
+.adv-stage { position: absolute; inset: 0; background: var(--art, var(--floor)); }
+.adv-stage canvas { display: block; touch-action: none; }
+.adv-pause { position: absolute; top: 14px; right: 62px; z-index: 41; }
+
+.adv-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 70px 16px 24px;
+  overflow-y: auto;
+  background: rgba(74, 52, 40, 0.28);
+}
+.adv-stage .adv-overlay { background: rgba(20, 14, 10, 0.55); }
+.adv-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 400px);
+  padding: 26px 22px 24px;
+  border-radius: 24px;
+  background: var(--cream);
+  box-shadow: 0 20px 50px var(--shadow);
+  text-align: center;
+  animation: rise 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.adv-card h1 { margin: 6px 0 6px; font-size: 34px; line-height: 1.05; }
+.adv-card h2 { margin: 4px 0 4px; font-size: 44px; line-height: 1; }
+.adv-card h2 small { font-size: 18px; color: var(--ink-soft); }
+.adv-card p { margin: 6px 0; color: var(--ink-soft); line-height: 1.4; }
+.adv-card .how { color: var(--ink); font-weight: 600; }
+.adv-card .goal { font-size: 14px; }
+.adv-card .goal b { color: var(--ink); }
+.adv-card .kicker { margin-top: 10px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.adv-card .quip { font-style: italic; color: var(--ink); }
+.adv-card .prize { font-size: 22px; font-weight: 700; color: var(--ink); }
+.adv-card .row { margin-top: 16px; }
+.adv-card .pill { text-decoration: none; }
+.adv-card .pill.big { margin-top: 14px; padding: 14px 40px; font-size: 20px; }
+.adv-emoji {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  background: var(--art, var(--floor));
+  font-size: 54px;
+}
