@@ -41,7 +41,7 @@ export const LEVELS = [
   // Chapter 4
   L(16, 'Bobby Goes to the Gym', 'Click the dumbbells as fast as you can.', "New plan. Get huge. Women love huge buttons."),
   L(17, 'Become an Alpha Button', 'Pick the advice cards. Every one is terrible.', 'I paid 400 coins for this seminar. I will become ALPHA.'),
-  L(18, 'Delete Chad', 'Drag Chad into the recycle bin before he toggles back.', 'Chad must go. Respectfully. Into the bin.'),
+  L(18, 'Delete Chad', 'Drag Chad into the recycle bin, then empty it before he toggles back.', 'Chad must go. Respectfully. Into the bin.'),
   L(19, 'Evil Laugh Training', 'Hold and release to match the evil laugh wave.', 'Every villain needs a laugh. Mine is still in beta.'),
   L(20, 'The Revenge Plan', 'Build the trap for Chad out of UI parts.', 'The plan is perfect. Nothing can go wrong. Nothing.'),
   // Chapter 5

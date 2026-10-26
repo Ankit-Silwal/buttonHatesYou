@@ -1,0 +1,117 @@
+/* ---------- Chapter 5: Love Across the Internet ---------- */
+
+/* the checkbox girl */
+.c5-checkgirl {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--s);
+  height: var(--s);
+  border: calc(var(--s) * 0.07) solid var(--ink);
+  border-radius: calc(var(--s) * 0.2);
+  background: #fff;
+  box-shadow: 0 6px 16px var(--shadow);
+}
+.c5-checkgirl .c5-tick { position: absolute; color: #39c06b; font-size: calc(var(--s) * 0.8); font-weight: 700; opacity: 0; transition: opacity 0.2s, scale 0.2s; scale: 0.4; }
+.c5-checkgirl.checked .c5-tick { opacity: 0.35; scale: 1; }
+.c5-eyes { position: relative; display: flex; gap: calc(var(--s) * 0.16); }
+.c5-eyes i { width: calc(var(--s) * 0.12); height: calc(var(--s) * 0.17); border-radius: 50%; background: var(--face, #2b1d17); box-shadow: 0 calc(var(--s) * -0.035) 0 calc(var(--s) * -0.012) var(--face, #2b1d17); }
+.c5-bow { position: absolute; top: -26%; right: -14%; font-size: calc(var(--s) * 0.38); rotate: 18deg; }
+
+.c5-checkbox { gap: 16px; }
+.c5-her { position: relative; margin-top: 70px; }
+.c5-her .bubble { white-space: normal; width: max-content; max-width: min(320px, 80vw); }
+.c5-wants { margin: 0; color: var(--ink-soft); font-size: 14px; text-align: center; }
+.c5-wants b { color: var(--ink); }
+.c5-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: min(94vw, 440px); margin: 0; padding: 0; list-style: none; }
+.c5-options button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--cream);
+  box-shadow: 0 3px 10px var(--shadow);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.c5-options button.on { background: #fff; box-shadow: inset 0 0 0 2px var(--btn); }
+.c5-box { display: grid; flex: none; place-items: center; width: 22px; height: 22px; border: 3px solid var(--ink); border-radius: 6px; color: #39c06b; font-weight: 700; }
+
+/* slider */
+.c5-slider { gap: 18px; }
+.c5-approval { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(90vw, 420px); font-weight: 700; color: var(--btn-dark); }
+.c5-meter { width: 100%; height: 14px; overflow: hidden; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 2px var(--floor); }
+.c5-meter i { display: block; height: 100%; background: linear-gradient(90deg, #ff9ab8, var(--btn)); transition: width 0.1s linear; }
+.c5-standard { display: flex; flex-direction: column; gap: 6px; width: min(90vw, 420px); }
+.c5-label { display: flex; justify-content: space-between; font-weight: 600; }
+.c5-label b { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.c5-standard.ok .c5-label b { color: #2f9e57; }
+.c5-track { position: relative; display: block; height: 30px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 2px var(--floor); }
+.c5-band { position: absolute; top: 3px; bottom: 3px; border-radius: 99px; background: rgba(57, 192, 107, 0.3); box-shadow: inset 0 0 0 2px #39c06b; }
+.c5-track input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: none; appearance: none; -webkit-appearance: none; cursor: pointer; touch-action: none; }
+.c5-track input::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; border-radius: 50%; background: var(--btn); box-shadow: 0 3px 0 var(--btn-dark); }
+.c5-track input::-moz-range-thumb { width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--btn); box-shadow: 0 3px 0 var(--btn-dark); }
+
+/* spinner girl */
+.c5-spinnergirl { position: relative; display: inline-grid; flex: none; place-items: center; width: var(--s); height: var(--s); }
+.c5-ring { position: absolute; inset: 0; border: calc(var(--s) * 0.1) solid #ffd3e2; border-top-color: var(--btn); border-radius: 50%; }
+.c5-spinnergirl.spin .c5-ring { animation: spin 0.9s linear infinite; }
+.c5-spinnergirl .c5-bow { top: -16%; right: -6%; }
+
+.c5-spinner-lv { gap: 26px; }
+.c5-clocks { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(14px, 4vw, 30px); }
+.c5-clock {
+  position: relative;
+  width: clamp(84px, 24vw, 120px);
+  aspect-ratio: 1;
+  border: 6px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 16px var(--shadow);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.c5-clock.stopped { border-color: #39c06b; background: #eafff1; }
+.c5-clock.miss { animation: nudge 0.35s; border-color: #e0445a; }
+.c5-noon { position: absolute; left: 50%; top: 4px; width: 6px; height: 14px; margin-left: -3px; border-radius: 3px; background: #39c06b; }
+.c5-hand { position: absolute; left: 50%; top: 14%; bottom: 50%; width: 6px; margin-left: -3px; border-radius: 3px; background: var(--btn); transform-origin: 50% 100%; }
+.c5-clock.stopped .c5-hand { background: #39c06b; }
+
+/* popups */
+.c5-popups { overflow: hidden; }
+.c5-window {
+  position: absolute;
+  width: min(220px, 60vw);
+  overflow: hidden;
+  translate: -50% -50%;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(90, 34, 54, 0.28);
+  animation: rise 0.2s ease-out;
+}
+.c5-bar { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 6px 5px 10px; background: #6b7a99; color: #fff; font-size: 12px; font-weight: 700; }
+.c5-window.her .c5-bar { background: var(--btn); }
+.c5-window.her { z-index: 1; width: min(240px, 66vw); }
+.c5-window.her.found { box-shadow: 0 0 0 4px #ffd3e2, 0 10px 30px var(--shadow); }
+.c5-x { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 4px; background: rgba(255, 255, 255, 0.25); color: #fff; font-size: 11px; cursor: pointer; }
+.c5-body { padding: 10px 12px 12px; text-align: center; }
+.c5-body p { margin: 0 0 10px; font-size: 13px; }
+.c5-fake { width: 100%; padding: 9px; border: 0; border-radius: 8px; background: #39c06b; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+
+/* speed dating */
+.c5-speed { gap: 16px; }
+.c5-clockbar { display: flex; gap: 16px; padding: 6px 14px; border-radius: 99px; background: var(--cream); box-shadow: 0 3px 10px var(--shadow); font-weight: 700; font-variant-numeric: tabular-nums; }
+.c5-table { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px, 8vw, 60px); margin-top: 70px; padding: 0 20px 10px; border-bottom: 10px solid #c98b6a; border-radius: 4px; }
+.c5-candle { position: absolute; left: 50%; bottom: 4px; translate: -50% 0; font-size: 26px; }
+.c5-date { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.c5-date small { color: var(--ink-soft); font-weight: 700; }
+.c5-date .bubble { white-space: normal; width: max-content; max-width: min(220px, 56vw); }
+.c5-emoji { font-size: 60px; line-height: 1; }
+.c5-timer { width: min(80vw, 320px); height: 8px; overflow: hidden; border-radius: 99px; background: #fff; }
+.c5-timer i { display: block; height: 100%; background: var(--btn); transition: width 1s linear; }
+.c5-answers { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: min(94vw, 460px); }

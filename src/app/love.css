@@ -462,6 +462,10 @@
 @media (max-width: 520px) {
   .love-hero { flex-direction: column; text-align: center; margin-top: 70px; }
   .chip.title span { display: none; }
+  /* goals often wrap to two lines here; keep them clear of Bobby's line */
+  .love-goal { top: 58px; font-size: 12px; line-height: 1.25; }
+  .love-line { top: 96px; padding: 6px 10px; font-size: 14px; }
+  .love-stage { inset: 142px 0 0; }
   .zero { flex-direction: column; }
   .side-bobby { display: none; }
 }
