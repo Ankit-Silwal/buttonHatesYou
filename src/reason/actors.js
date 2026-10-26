@@ -857,7 +857,8 @@ export class Slime extends Enemy {
   }
 }
 
-// Security drone: hovers at a distance and shoots.
+// Security drone: hovers at a distance and shoots. Optional x0/x1 keep it
+// inside an arena, and minY keeps it low enough to reach with a double jump.
 export class Drone extends Enemy {
   constructor(o) {
     super({ w: 36, h: 22, hp: 2, fly: true, blood: '#ff5a5a', fire: 1.5 + Math.random(), ...o });
@@ -868,9 +869,11 @@ export class Drone extends Enemy {
     if (!p) return;
     this.fire -= dt;
     const tx = clamp(cx(p) + Math.sin(this.t * 0.8) * 160, this.home.x - (this.range ?? 260), this.home.x + (this.range ?? 260));
-    const ty = (this.hover ?? this.home.y) + Math.sin(this.t * 2) * 12;
+    const ty = Math.max(this.minY ?? -Infinity, (this.hover ?? this.home.y) + Math.sin(this.t * 2) * 12);
     this.x += (tx - cx(this)) * dt * 1.4 + this.vx * dt;
     this.y += (ty - this.y) * dt * 2;
+    // drones fly through walls, so an arena keeps them inside its bounds
+    if (this.x0 != null) this.x = clamp(this.x, this.x0, this.x1 - this.w);
     this.vx *= 0.9;
     this.facing = Math.sign(cx(p) - cx(this)) || 1;
     if (this.fire <= 0 && Math.abs(cx(p) - cx(this)) < 520) {

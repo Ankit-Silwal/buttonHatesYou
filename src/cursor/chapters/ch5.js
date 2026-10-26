@@ -111,7 +111,7 @@ export default async function play(g, p) {
 
   /* ---------- Room 2: the pit ---------- */
   g.objective('Room 2: Cursor can wake the old mine carts. Click the switches.');
-  const carts = [movingPlatform(1030, 400, 110, 220, 1, { kind: 'wood' }), movingPlatform(2420, 400, 110, 180, 1.2, { kind: 'wood', phase: 1 })];
+  const carts = [movingPlatform(1030, 400, 110, 270, 1, { kind: 'wood' }), movingPlatform(2420, 400, 110, 180, 1.2, { kind: 'wood', phase: 1 })];
   carts.forEach((c) => {
     c.off = true;
     g.addSolid(c);
@@ -121,11 +121,11 @@ export default async function play(g, p) {
   g.add(new PaperclipWorm({ x: 1800, y: GROUND - 14 }));
   g.add(new CaptchaGuard({ x: 2000, y: 230 }));
   heartAt(g, 1640, 290);
-  await g.reach(2720);
-  checkpointPost(g, 2730);
+  await g.reach(2760);
 
   /* ---------- Room 3: the arena ---------- */
   g.objective('Room 3: clear the room.');
+  g.checkpoint(2800, GROUND - 60); // inside the room, so a respawn isn't behind its walls
   const walls = [g.addSolid({ x: 2700, y: -400, w: 20, h: 860, kind: 'dirt' }), g.addSolid({ x: 3600, y: -400, w: 20, h: 860, kind: 'dirt' })];
   g.cam.fixed = { x: 3160, y: 270 };
   const wave = [

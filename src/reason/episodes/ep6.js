@@ -86,13 +86,22 @@ export default async function play(g, p) {
     g.addSolid({ x: ARENA[1], y: -400, w: 20, h: 860, kind: 'metal' }),
   ];
   sfx.door();
+  // respawn inside the locked arena, never behind its doors
+  g.checkpoint(ARENA[0] + 80, GROUND - 60);
   g.cam.fixed = { x: (ARENA[0] + ARENA[1]) / 2, y: 270 };
-  const wave1 = [g.add(new Drone({ x: 1800, y: 200 })), g.add(new Drone({ x: 2250, y: 220 })), g.add(new Slime({ x: 2100, y: GROUND - 24 }))];
-  await g.cleared(wave1);
+  // arena drones stay between the walls and low enough to hit with a double jump
+  const guard = (x, y) => g.add(new Drone({ x, y, x0: ARENA[0] + 10, x1: ARENA[1] - 10, minY: 215 }));
+  const remaining = (list) => {
+    const n = list.filter((e) => !e.dead).length;
+    g.objective(`Security wave: ${n} left. Double jump to reach the drones, or Q for Tabby’s stun.`);
+    return n === 0;
+  };
+  const wave1 = [guard(1800, 215), guard(2250, 225), g.add(new Slime({ x: 2100, y: GROUND - 24 }))];
+  await g.until(() => remaining(wave1));
   bark(g, tabby, 'More coming!', 1.6);
   heartAt(g, 2040, 380);
-  const wave2 = [g.add(new Drone({ x: 1750, y: 180 })), g.add(new Drone({ x: 2050, y: 160 })), g.add(new Drone({ x: 2320, y: 200 })), g.add(new Crab({ x: 1900, y: 300 })), g.add(new Crab({ x: 2200, y: 300 }))];
-  await g.cleared(wave2);
+  const wave2 = [guard(1750, 215), guard(2050, 220), guard(2320, 215), g.add(new Crab({ x: 1900, y: 300 })), g.add(new Crab({ x: 2200, y: 300 }))];
+  await g.until(() => remaining(wave2));
   sfx.door();
   walls.forEach((w) => (w.off = true));
   g.cam.fixed = null;
