@@ -202,11 +202,17 @@ export function drawSky(c, g) {
 }
 
 function cloud(c, x, y, s) {
+  blobs(c, [[x, y, 22 * s], [x + 26 * s, y - 10 * s, 28 * s], [x + 56 * s, y, 22 * s]]);
+  c.fillRect(x, y, 56 * s, 22 * s);
+}
+
+// Several circles filled as one shape, without stray connecting edges.
+function blobs(c, list) {
   c.beginPath();
-  c.arc(x, y, 22 * s, 0, Math.PI * 2);
-  c.arc(x + 26 * s, y - 10 * s, 28 * s, 0, Math.PI * 2);
-  c.arc(x + 56 * s, y, 22 * s, 0, Math.PI * 2);
-  c.rect(x, y, 56 * s, 22 * s);
+  for (const [x, y, r] of list) {
+    c.moveTo(x + r, y);
+    c.arc(x, y, r, 0, Math.PI * 2);
+  }
   c.fill();
 }
 
@@ -573,19 +579,11 @@ const DECO = {
       return;
     }
     c.fillStyle = d.color ?? '#5fae5b';
-    c.beginPath();
-    c.arc(d.x, d.y - 110 * s, 44 * s, 0, Math.PI * 2);
-    c.arc(d.x - 34 * s, d.y - 86 * s, 30 * s, 0, Math.PI * 2);
-    c.arc(d.x + 34 * s, d.y - 86 * s, 30 * s, 0, Math.PI * 2);
-    c.fill();
+    blobs(c, [[d.x, d.y - 110 * s, 44 * s], [d.x - 34 * s, d.y - 86 * s, 30 * s], [d.x + 34 * s, d.y - 86 * s, 30 * s]]);
   },
   bush(c, d) {
     c.fillStyle = d.color ?? '#69b85e';
-    c.beginPath();
-    c.arc(d.x, d.y - 14, 20, 0, Math.PI * 2);
-    c.arc(d.x + 22, d.y - 18, 24, 0, Math.PI * 2);
-    c.arc(d.x + 44, d.y - 12, 18, 0, Math.PI * 2);
-    c.fill();
+    blobs(c, [[d.x, d.y - 14, 20], [d.x + 22, d.y - 18, 24], [d.x + 44, d.y - 12, 18]]);
   },
   flower(c, d, g) {
     if (d.dead) {
@@ -1089,7 +1087,7 @@ export function drawHud(c, g) {
       text(c, `${g.flags.coins ?? 0}`, 44, 59, { size: 15, color: '#fff', align: 'left' });
       c.lineWidth = 3;
     }
-    if (p.tabby && !p.tabby.dead && p.tabby.stunReady != null) {
+    if (p.tabby && !p.tabby.dead && g.flags.slam && !g.locked) {
       const k = p.tabby.stunReady;
       c.fillStyle = 'rgba(0,0,0,0.35)';
       rr(c, 18, 74, 96, 22, 11);

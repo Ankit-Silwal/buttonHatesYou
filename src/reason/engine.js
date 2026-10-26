@@ -511,6 +511,7 @@ export class Game {
 
   lock(on = true) {
     this.locked = on;
+    this.ui.locked = on;
     if (this.player && on) this.player.vx *= 0.5;
     this.dirty = true;
   }

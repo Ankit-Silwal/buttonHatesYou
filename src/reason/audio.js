@@ -166,6 +166,13 @@ const THEMES = {
     ],
     drums: 'k . h k s . h . | k . h k s . h h',
   },
+  ruins: {
+    bpm: 76,
+    parts: [
+      { notes: 'A4 C5 E5 A5 G5 E5 C5 E5 | F4 A4 C5 F5 E5 C5 A4 C5 | D4 F4 A4 D5 C5 A4 F4 A4 | E4 G#4 B4 E5 D5 B4 G#4 B4', wave: 'sine', vol: 0.3 },
+      { notes: 'A2 _ _ _ _ _ _ _ | F2 _ _ _ _ _ _ _ | D2 _ _ _ _ _ _ _ | E2 _ _ _ _ _ _ _', wave: 'triangle', vol: 0.45 },
+    ],
+  },
   music_box: {
     bpm: 84,
     parts: [{ notes: VILLAGE_A, wave: 'sine', vol: 0.4 }],

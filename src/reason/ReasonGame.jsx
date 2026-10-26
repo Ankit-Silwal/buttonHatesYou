@@ -261,7 +261,7 @@ function Play({ n, save, muted, onMute, onDone, onExit }) {
         </button>
       </header>
 
-      {ui.objective && !talk && <p className="reason-goal">{ui.objective}</p>}
+      {ui.objective && !talk && !ui.locked && <p className="reason-goal">{ui.objective}</p>}
 
       {ui.prompt && !talk && !ui.choice && (
         <button

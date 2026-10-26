@@ -134,7 +134,8 @@ export class Bobby {
     if (ctl && this.can.sword && inp.hit('attack') && !this.atk && this.dashT <= 0) this.startAttack(g);
     if (this.atk) this.updateAttack(g, dt);
 
-    if (ctl && inp.hit('special') && this.tabby && !this.tabby.dead) this.tabby.slam(g);
+    if (ctl && inp.hit('special') && this.tabby && !this.tabby.dead && this.flags.slam) this.tabby.slam(g);
+    if (ctl && inp.hit('special')) this.onSpecial?.(g);
 
     // fell off the world
     if (this.y > g.level.h + 80) {
