@@ -1,6 +1,7 @@
 import { cx, cy, pick } from '@/reason/engine';
 import { sfx } from '@/reason/audio';
 import { rr, text } from '@/reason/draw';
+import { motion, ripple, drawPal } from './pal';
 import { Npc, Thing, bark } from '@/reason/actors';
 
 // Cursor: Bobby's best friend, and the Player's hand in the world. He floats
@@ -23,6 +24,8 @@ export function makeCursor(g, p, x, y) {
         this.task = null;
         if (!t.dead) {
           sfx.select();
+          this.pressT = 0.3;
+          ripple(this, tx + 4, ty + 10);
           g.parts.push({ x: tx + 4, y: ty + 10, vx: 0, vy: 0, grav: 0, life: 0.3, max: 0.3, color: 'rgba(223,241,255,0.9)', size: 18 });
           if (t.onPress) t.onPress(g);
           else if (t.hurt) t.hurt(g, 1, 1, this);
@@ -44,8 +47,11 @@ export function makeCursor(g, p, x, y) {
       }
     }
     const speed = this.task ? 9 : 5;
+    const ox = this.x;
     this.x += (tx - this.x) * Math.min(1, dt * speed);
     this.y += (ty - this.y) * Math.min(1, dt * speed);
+    this.look = this.task ?? p;
+    motion(this, g, dt, ox);
     this.facing = tx > this.x ? 1 : -1;
     // R: press the nearest glowing thing
     if (g.input.hit('point') && !g.locked && !g.ui.talk) {
@@ -61,6 +67,9 @@ export function makeCursor(g, p, x, y) {
       this.trollT = 35 + Math.random() * 30;
       bark(g, this, pick(TROLLS), 2.6);
     }
+  };
+  c.draw = function (ctx, g) {
+    drawPal(ctx, this, g);
   };
   c.press = (t) => {
     c.task = t;
