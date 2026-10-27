@@ -13,7 +13,7 @@ import { checkpointPost, heartAt, coins } from '@/reason/episodes/common';
 
 const W = 4700;
 const ARENA = [3700, 4660];
-const MINE = {
+export const MINE = {
   w: W,
   theme: 'mine',
   coins: true,
@@ -44,7 +44,7 @@ const MINE = {
 const HILL_W = 3000;
 const RIVER = 2760;
 const steps = [[0, 600, 300], [600, 380, 330], [980, 360, 360], [1340, 380, 390], [1720, 360, 420], [2080, 680, 460]];
-const HILL = {
+export const HILL = {
   w: HILL_W,
   theme: 'sunset',
   coins: false,

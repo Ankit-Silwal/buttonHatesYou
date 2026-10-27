@@ -10,7 +10,7 @@ import { begin, confidence, bellaAt, hearts, flowerShot as flower, mixHex } from
 // an earpiece, soup, a bill, and a popup who wants the manager.
 
 const W = 2900;
-const ROOM = {
+export const ROOM = {
   w: W,
   theme: 'bedroom',
   coins: true,
@@ -29,7 +29,7 @@ const ROOM = {
   spawn: { x: 140, y: GROUND - 60 },
 };
 
-const FOUNTAIN = {
+export const FOUNTAIN = {
   w: 960,
   theme: 'night',
   coins: false,

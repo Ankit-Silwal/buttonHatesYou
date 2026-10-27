@@ -12,7 +12,7 @@ import { makeTabby } from '@/reason/actors';
 
 const W = 4500;
 const ARENA = [2560, 3480];
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'village',
   solids: [

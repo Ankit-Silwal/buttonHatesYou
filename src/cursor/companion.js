@@ -1,6 +1,8 @@
 import { cx, cy, pick } from '@/reason/engine';
 import { sfx } from '@/reason/audio';
 import { rr, text } from '@/reason/draw';
+import { motion, ripple, drawPal } from './pal';
+import { shine } from './look';
 import { Npc, Thing, bark } from '@/reason/actors';
 
 // Cursor: Bobby's best friend, and the Player's hand in the world. He floats
@@ -23,6 +25,8 @@ export function makeCursor(g, p, x, y) {
         this.task = null;
         if (!t.dead) {
           sfx.select();
+          this.pressT = 0.3;
+          ripple(this, tx + 4, ty + 10);
           g.parts.push({ x: tx + 4, y: ty + 10, vx: 0, vy: 0, grav: 0, life: 0.3, max: 0.3, color: 'rgba(223,241,255,0.9)', size: 18 });
           if (t.onPress) t.onPress(g);
           else if (t.hurt) t.hurt(g, 1, 1, this);
@@ -44,8 +48,11 @@ export function makeCursor(g, p, x, y) {
       }
     }
     const speed = this.task ? 9 : 5;
+    const ox = this.x;
     this.x += (tx - this.x) * Math.min(1, dt * speed);
     this.y += (ty - this.y) * Math.min(1, dt * speed);
+    this.look = this.task ?? p;
+    motion(this, g, dt, ox);
     this.facing = tx > this.x ? 1 : -1;
     // R: press the nearest glowing thing
     if (g.input.hit('point') && !g.locked && !g.ui.talk) {
@@ -61,6 +68,9 @@ export function makeCursor(g, p, x, y) {
       this.trollT = 35 + Math.random() * 30;
       bark(g, this, pick(TROLLS), 2.6);
     }
+  };
+  c.draw = function (ctx, g) {
+    drawPal(ctx, this, g);
   };
   c.press = (t) => {
     c.task = t;
@@ -90,6 +100,21 @@ export function clickSwitch(g, x, y, onPress, opts = {}) {
     },
     look(c, g) {
       const on = this.used && !opts.repeat;
+      const cxx = this.x + 15;
+      const cyy = this.y + 15;
+      shine(c, on ? '141,255,200' : '127,220,255', cxx, cyy, 52, on ? 0.35 : 0.55 + 0.25 * Math.sin(g.time * 5));
+      if (!on) {
+        // a slowly turning dashed ring: "click me"
+        c.save();
+        c.strokeStyle = 'rgba(190,240,255,0.85)';
+        c.lineWidth = 1.5;
+        c.setLineDash([5, 4]);
+        c.lineDashOffset = -g.time * 14;
+        c.beginPath();
+        c.arc(cxx, cyy, 24 + Math.sin(g.time * 5) * 1.5, 0, Math.PI * 2);
+        c.stroke();
+        c.restore();
+      }
       c.fillStyle = 'rgba(0,0,0,0.25)';
       rr(c, this.x - 3, this.y - 3, 36, 36, 9);
       c.fill();

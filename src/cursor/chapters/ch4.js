@@ -13,7 +13,7 @@ import { checkpointPost, heartAt, coins } from '@/reason/episodes/common';
 
 const W = 4600;
 const ARENA = [3600, 4560];
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'forest',
   solids: [

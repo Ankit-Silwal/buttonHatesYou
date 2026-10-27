@@ -10,7 +10,7 @@ import { begin, petals, trashCan, bellaAt, floatingText, hearts } from '../commo
 
 const W = 3600;
 const WALL_X = 1180;
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'village',
   solids: [

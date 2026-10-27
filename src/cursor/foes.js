@@ -3,6 +3,7 @@ import { sfx } from '@/reason/audio';
 import { rr, text, heart, popupWindow, drawButton, drawKey } from '@/reason/draw';
 import { Enemy, Bug, Crab, Bat, Slime, Drone, Shot, Thing, Pickup, bark } from '@/reason/actors';
 import { GROUND } from '@/reason/build';
+import { shadow, lit, ball, gloss, shine, glowEyes } from './look';
 
 // Everything that fights Bobby in How I Met Your Cursor. Most enemies reuse
 // a brain from The Reason and just wear a different face.
@@ -15,17 +16,21 @@ export class Wallet extends Bug {
   }
   draw(c, g) {
     const { x, y } = this;
-    c.fillStyle = this.flash ? '#fff' : '#7a4a2a';
-    rr(c, x, y, 30, 20, 4);
+    shadow(c, x + 15, y + 20, 38);
+    c.fillStyle = this.flash ? '#fff' : lit(c, y, 20, '#9a6038', '#5e3519');
+    rr(c, x, y, 30, 20, 5);
     c.fill();
-    c.fillStyle = '#5a3218';
-    c.fillRect(x + (this.facing > 0 ? 18 : 2), y + 6, 10, 8);
-    c.fillStyle = '#fff';
-    c.fillRect(x + 6, y + 4, 5, 4);
-    c.fillRect(x + 15, y + 4, 5, 4);
-    c.fillStyle = '#e83b3b';
-    c.fillRect(x + 8, y + 5, 2, 2);
-    c.fillRect(x + 17, y + 5, 2, 2);
+    c.strokeStyle = 'rgba(255,220,170,0.45)';
+    c.setLineDash([2, 2]);
+    c.lineWidth = 1;
+    rr(c, x + 2.5, y + 2.5, 25, 15, 4);
+    c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = lit(c, y + 6, 8, '#ffd76a', '#b8861e');
+    rr(c, x + (this.facing > 0 ? 18 : 2), y + 6, 10, 8, 2);
+    c.fill();
+    glowEyes(c, x + 9, x + 18, y + 6, 1.6, '255,70,60');
+    gloss(c, x + 8, y + 3, 6, 1.5, 0.35);
     this.drawStun(c, g);
   }
 }
@@ -36,10 +41,12 @@ export class TaxGoblin extends Crab {
   }
   draw(c, g) {
     const { x, y } = this;
-    c.fillStyle = this.flash ? '#fff' : '#6fae5a';
+    shadow(c, x + 13, y + 28, 34);
+    c.fillStyle = this.flash ? '#fff' : lit(c, y + 4, 24, '#8fd078', '#4a8a3c');
     rr(c, x, y + 4, 26, 24, 8);
     c.fill();
-    c.fillStyle = '#6fae5a';
+    gloss(c, x + 8, y + 9, 5, 2, 0.35);
+    c.fillStyle = '#5e9e4a';
     c.beginPath();
     c.moveTo(x, y + 8);
     c.lineTo(x - 7, y);
@@ -48,9 +55,7 @@ export class TaxGoblin extends Crab {
     c.lineTo(x + 33, y);
     c.lineTo(x + 20, y + 6);
     c.fill();
-    c.fillStyle = '#111';
-    c.fillRect(x + 7, y + 11, 3, 3);
-    c.fillRect(x + 16, y + 11, 3, 3);
+    glowEyes(c, x + 8.5, x + 17.5, y + 12.5, 1.7, '255,230,90', '#fff6c0');
     c.fillStyle = '#c62f3a';
     c.fillRect(x + 11, y + 18, 4, 9);
     text(c, 'TAX', x + 13, y - 4, { size: 9, color: '#2d4a1f' });
@@ -101,10 +106,20 @@ export class RunCoin extends Enemy {
     c.moveTo(x + 12, y + 15);
     c.lineTo(x + 12 - k, y + 22);
     c.stroke();
-    c.fillStyle = '#f2c14e';
+    shadow(c, x + 9, y + 22, 22, 0.25);
+    shine(c, '255,210,90', x + 9, y + 8, 22, 0.45);
+    c.fillStyle = ball(c, x + 9, y + 8, 8, '#fff3b0', '#f2c14e', '#b8861e');
     c.beginPath();
     c.arc(x + 9, y + 8, 8, 0, Math.PI * 2);
     c.fill();
+    c.strokeStyle = 'rgba(140,96,10,0.6)';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.arc(x + 9, y + 8, 6, 0, Math.PI * 2);
+    c.stroke();
+    // a shine that sweeps across now and then
+    const sw = (this.t * 0.8) % 2;
+    if (sw < 1) gloss(c, x + 3 + sw * 12, y + 8, 1.4, 6, 0.6 * Math.sin(sw * Math.PI));
     c.fillStyle = '#111';
     c.fillRect(x + 5 + this.facing * 2, y + 6, 2, 2);
     c.fillRect(x + 10 + this.facing * 2, y + 6, 2, 2);
@@ -155,6 +170,7 @@ export class LagSpider extends Bug {
   }
   draw(c, g) {
     const { x, y } = this;
+    shadow(c, x + 14, y + 18, 40, 0.3);
     c.strokeStyle = '#2a2a33';
     c.lineWidth = 2;
     for (let i = 0; i < 4; i++) {
@@ -166,10 +182,11 @@ export class LagSpider extends Bug {
       c.lineTo(x + 30 - i * 2, y + 18 - k);
       c.stroke();
     }
-    c.fillStyle = this.flash ? '#fff' : '#3a3a46';
+    c.fillStyle = this.flash ? '#fff' : ball(c, x + 14, y + 8, 9, '#6a6a7a', '#3a3a46', '#1a1a22');
     c.beginPath();
     c.arc(x + 14, y + 8, 9, 0, Math.PI * 2);
     c.fill();
+    shine(c, '141,255,200', x + 14, y + 8, 20, 0.5);
     c.strokeStyle = '#8dffc8';
     c.lineWidth = 2;
     c.beginPath();
@@ -197,14 +214,19 @@ export class SpamBee extends Enemy {
     this.vx *= 0.9;
   }
   draw(c, g) {
-    c.fillStyle = this.flash ? '#fff' : '#ffd84d';
+    shine(c, '255,216,77', this.x + 7, this.y + 6, 16, 0.35);
+    c.fillStyle = 'rgba(220,240,255,0.45)';
+    c.beginPath();
+    c.ellipse(this.x + 5, this.y - 2 + Math.sin(this.t * 40) * 2, 5, 3, -0.5, 0, Math.PI * 2);
+    c.ellipse(this.x + 10, this.y - 2 - Math.sin(this.t * 40) * 2, 5, 3, 0.5, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = this.flash ? '#fff' : lit(c, this.y, 12, '#ffe98a', '#e0a91c');
     rr(c, this.x, this.y, 14, 12, 5);
     c.fill();
     c.fillStyle = '#222';
     c.fillRect(this.x + 4, this.y, 2, 12);
     c.fillRect(this.x + 9, this.y, 2, 12);
-    c.fillStyle = 'rgba(255,255,255,0.7)';
-    c.fillRect(this.x + 3, this.y - 4 + Math.sin(this.t * 40) * 2, 8, 4);
+    gloss(c, this.x + 4, this.y + 3, 3, 1.2, 0.6);
     if (Math.sin(this.t * 2 + this.ph) > 0.97) text(c, 'SPAM', cx(this), this.y - 8, { size: 8, color: '#a37f00' });
   }
 }
@@ -214,10 +236,17 @@ export class GoldCoinCrab extends Crab {
     super({ w: 24, h: 24, hp: 2, blood: '#f2c14e', ...o });
   }
   draw(c, g) {
-    c.fillStyle = this.flash ? '#fff' : '#f2c14e';
+    shadow(c, cx(this), this.y + this.h, 30);
+    shine(c, '255,200,80', cx(this), cy(this), 30, 0.35);
+    c.fillStyle = this.flash ? '#fff' : ball(c, cx(this), cy(this), 12, '#fff3b0', '#f2c14e', '#a87a14');
     c.beginPath();
     c.arc(cx(this), cy(this), 12, 0, Math.PI * 2);
     c.fill();
+    c.strokeStyle = 'rgba(140,96,10,0.55)';
+    c.lineWidth = 1.2;
+    c.beginPath();
+    c.arc(cx(this), cy(this), 9.5, 0, Math.PI * 2);
+    c.stroke();
     c.fillStyle = '#c99a2e';
     text(c, '$', cx(this), cy(this) + 1, { size: 13, color: '#a37f00' });
     c.fillStyle = '#c62f3a';
@@ -232,7 +261,8 @@ export class PaperclipWorm extends Bug {
     super({ w: 40, h: 14, hp: 3, speed: 50, blood: '#c9ccd6', ...o });
   }
   draw(c, g) {
-    c.strokeStyle = this.flash ? '#fff' : '#b8bcc8';
+    shadow(c, this.x + 20, this.y + 14, 46, 0.25);
+    c.strokeStyle = this.flash ? '#fff' : lit(c, this.y, 14, '#eef1f8', '#8a8f9c');
     c.lineWidth = 3;
     const k = Math.sin(this.t * 8) * 3;
     rr(c, this.x, this.y + 2 + k * 0.3, 40, 12, 6);
@@ -248,7 +278,11 @@ export class PaperclipWorm extends Bug {
 export class CaptchaGuard extends Drone {
   draw(c, g) {
     const { x, y } = this;
-    c.fillStyle = this.flash ? '#fff' : '#f4f6fb';
+    shine(c, '74,116,217', x + this.w / 2, y + this.h / 2, this.w, 0.35);
+    c.fillStyle = 'rgba(10,20,50,0.25)';
+    rr(c, x + 2, y + 3, this.w, this.h, 4);
+    c.fill();
+    c.fillStyle = this.flash ? '#fff' : lit(c, y, this.h, '#ffffff', '#dfe6f5');
     rr(c, x, y, this.w, this.h, 4);
     c.fill();
     c.strokeStyle = '#4a74d9';
@@ -271,6 +305,8 @@ export class PopupGoblin extends Crab {
     super({ w: 30, h: 26, hp: 1, blood: '#5a74ff', ...o });
   }
   draw(c, g) {
+    shadow(c, cx(this), this.y + this.h, 38);
+    shine(c, '255,122,89', cx(this), cy(this), 30, 0.3);
     popupWindow(c, this.x, this.y, this.w, this.h, '>:(', this.flash ? '#fff' : '#ff7a59');
     this.drawStun(c, g);
   }
@@ -293,15 +329,22 @@ export class CakeAnt extends Enemy {
   }
   draw(c, g) {
     const { x, y } = this;
-    c.fillStyle = '#ffe8f0';
-    c.fillRect(x + 6, y - 14, 22, 12);
+    shadow(c, x + 17, y + 20, 44, 0.3);
+    c.fillStyle = lit(c, y - 14, 12, '#fff6f9', '#f2d2dc');
+    rr(c, x + 6, y - 14, 22, 12, 2);
+    c.fill();
     c.fillStyle = '#ff8fb1';
     c.fillRect(x + 6, y - 14, 22, 4);
-    c.fillStyle = this.flash ? '#fff' : '#2a1a14';
+    c.fillStyle = '#d23c5e';
+    c.beginPath();
+    c.arc(x + 17, y - 16, 3, 0, Math.PI * 2);
+    c.fill();
     for (const [dx, r] of [[6, 6], [17, 7], [28, 6]]) {
+      c.fillStyle = this.flash ? '#fff' : ball(c, x + dx, y + 10, r, '#6a4a3a', '#2a1a14', '#120a06');
       c.beginPath();
       c.arc(x + dx, y + 10, r, 0, Math.PI * 2);
       c.fill();
+      gloss(c, x + dx - 2, y + 7, 2, 1, 0.4);
     }
     c.strokeStyle = '#2a1a14';
     c.lineWidth = 2;
@@ -337,6 +380,7 @@ export class TaxCollector extends Enemy {
         bark(g, boss, pick(['MY LEDGER!', 'AUDIT ME GENTLY.', 'THAT IS TAX EVASION.']), 2);
       },
       look(c, g) {
+        shine(c, '141,255,200', this.x + 15, this.y + 15, 46, 0.6 + 0.3 * Math.sin(g.time * 8));
         c.fillStyle = Math.sin(g.time * 8) > 0 ? '#8dffc8' : '#2bb27a';
         rr(c, this.x, this.y, 30, 30, 6);
         c.fill();
@@ -412,9 +456,10 @@ export class TaxCollector extends Enemy {
   draw(c, g) {
     const { x, y, w, h } = this;
     const f = this.facing;
-    c.fillStyle = '#d97a92';
+    shadow(c, cx(this), y + h, w * 1.1, 0.35);
+    c.fillStyle = lit(c, y + h - 22, 22, '#e48aa2', '#b45a74');
     for (const lx of [x + 25, x + 55, x + w - 55, x + w - 25]) c.fillRect(lx - 8, y + h - 22, 16, 22);
-    c.fillStyle = this.flash ? '#fff' : '#f4a6b8';
+    c.fillStyle = this.flash ? '#fff' : ball(c, cx(this), y + h / 2, w / 2, '#ffd2dc', '#f4a6b8', '#c46a84');
     c.beginPath();
     c.ellipse(cx(this), y + h / 2, w / 2, h / 2 - 8, 0, 0, Math.PI * 2);
     c.fill();
@@ -427,8 +472,10 @@ export class TaxCollector extends Enemy {
     c.fillRect(cx(this) + f * (w / 2 - 6) + 2, y + h / 2 - 2, 4, 7);
     c.fillStyle = '#111';
     c.fillRect(cx(this) + f * 30, y + 30, 6, 6);
+    gloss(c, cx(this) - f * 30, y + 26, 22, 7, 0.35);
     c.fillStyle = '#5a2a36';
     c.fillRect(cx(this) - 18, y + 8, 36, 5);
+    shine(c, '255,214,100', cx(this), y + 10, 26, 0.45);
     // monocle
     c.strokeStyle = '#f2c14e';
     c.lineWidth = 2;
@@ -437,9 +484,12 @@ export class TaxCollector extends Enemy {
     c.stroke();
     // armour plates
     for (let i = 0; i < this.plates; i++) {
-      c.fillStyle = '#b8bcc8';
+      c.fillStyle = lit(c, y + 44, 40, '#e6e9f2', '#7d8291');
       rr(c, x + 20 + i * 38, y + 44, 32, 40, 6);
       c.fill();
+      c.fillStyle = '#5c616e';
+      for (const [rx, ry] of [[4, 4], [26, 4], [4, 34], [26, 34]]) c.fillRect(x + 20 + i * 38 + rx, y + 44 + ry, 2, 2);
+      gloss(c, x + 28 + i * 38, y + 50, 5, 2, 0.5);
       c.fillStyle = '#8a8f9c';
       text(c, '%', x + 36 + i * 38, y + 64, { size: 16, color: '#6d7280' });
     }
@@ -518,16 +568,18 @@ export class KarenPopup extends Enemy {
   }
   draw(c, g) {
     const { x, y, w, h } = this;
-    c.save();
-    c.shadowColor = 'rgba(0,0,0,0.3)';
-    c.shadowBlur = 18;
+    shadow(c, x + w / 2, GROUND, w * (0.6 + 0.4 * ((y + h) / GROUND)), 0.3);
+    shine(c, this.state === 'swoop' ? '255,60,40' : '255,122,89', x + w / 2, y + h / 2, w * 0.9, this.state === 'swoop' ? 0.7 : 0.35);
+    c.fillStyle = 'rgba(20,10,30,0.28)';
+    rr(c, x + 6, y + 10, w, h, 8);
+    c.fill();
     popupWindow(c, x, y, w, h, '', this.flash ? '#fff' : '#ff7a59');
-    c.restore();
     // the haircut
-    c.fillStyle = '#e6c06a';
+    c.fillStyle = lit(c, y - 20, 26, '#fbe3a0', '#c99a3e');
     c.beginPath();
     c.ellipse(x + 40, y + 6, 46, 22, -0.3, Math.PI, 0);
     c.fill();
+    gloss(c, x + 30, y - 6, 16, 3, 0.4);
     c.fillStyle = '#111';
     const angry = this.state !== 'tired';
     c.fillRect(x + w / 2 - 40, y + 50, 16, 6);
@@ -623,12 +675,33 @@ export class Lord404 {
     c.globalAlpha = shown ? (real ? 1 : 0.18) : 0.55 + 0.15 * Math.sin(g.time * 6 + b.idx);
     const x = b.x;
     const y = b.y + Math.sin(g.time * 2 + b.idx) * 4;
-    c.fillStyle = b.flash ? '#fff' : '#7a3fc4';
+    const found = shown && real;
+    shine(c, found ? '141,255,200' : '181,124,255', x + 20, y + 32, 70, found ? 0.9 : 0.55);
+    // chromatic ghosts, jittering
+    const j = Math.sin(g.time * 23 + b.idx * 5) > 0.6 ? 4 : 1.5;
+    const op = c.globalCompositeOperation;
+    c.globalCompositeOperation = 'lighter';
+    for (const [dx, col] of [[-j, 'rgba(255,40,160,0.5)'], [j, 'rgba(40,220,255,0.5)']]) {
+      c.fillStyle = col;
+      c.beginPath();
+      c.moveTo(x + 20 + dx, y);
+      c.lineTo(x + 40 + dx, y + 60);
+      c.lineTo(x + dx, y + 60);
+      c.fill();
+    }
+    c.globalCompositeOperation = op;
+    c.fillStyle = b.flash ? '#fff' : lit(c, y, 60, '#a36aea', '#4a1f86');
     c.beginPath();
     c.moveTo(x + 20, y);
     c.lineTo(x + 40, y + 60);
     c.lineTo(x, y + 60);
     c.fill();
+    // scanlines
+    c.fillStyle = 'rgba(20,0,40,0.25)';
+    for (let sy = y + 4 + ((g.time * 30) % 4); sy < y + 60; sy += 4) {
+      const half = ((sy - y) / 60) * 20;
+      c.fillRect(x + 20 - half, sy, half * 2, 1);
+    }
     c.fillStyle = '#2a1040';
     c.fillRect(x + 8, y + 20, 24, 18);
     text(c, '404', x + 20, y + 29, { size: 11, color: '#e6c8ff' });
@@ -691,6 +764,10 @@ export class CaptchaGolem extends Enemy {
         onPress: (g) => this.pickTile(g, t),
         hurt: (g) => (this.pickTile(g, t), true),
         look(c, g) {
+          if (this.star && !this.picked) shine(c, '255,200,80', this.x + 31, this.y + 31, 50, 0.25 + 0.15 * Math.sin(g.time * 5));
+          c.fillStyle = 'rgba(10,20,50,0.25)';
+          rr(c, this.x + 3, this.y + 4, this.w, this.h, 6);
+          c.fill();
           c.fillStyle = this.picked ? '#4a74d9' : '#f4f6fb';
           rr(c, this.x, this.y, this.w, this.h, 6);
           c.fill();
@@ -779,14 +856,21 @@ export class CaptchaGolem extends Enemy {
   }
   draw(c, g) {
     const { x, y, w, h } = this;
+    shadow(c, cx(this), y + h, w * 1.2, 0.35);
     for (let r = 0; r < 5; r++) {
       for (let k = 0; k < 4; k++) {
         if ((r === 0 && (k === 0 || k === 3)) || (r === 4 && (k === 1 || k === 2))) continue;
-        c.fillStyle = this.flash ? '#fff' : (r + k) % 2 ? '#e8edf8' : '#cfd9ef';
-        rr(c, x + k * (w / 4) + 2, y + r * (h / 5) + 2, w / 4 - 4, h / 5 - 4, 4);
+        const ty = y + r * (h / 5) + 2;
+        c.fillStyle = this.flash ? '#fff' : (r + k) % 2 ? lit(c, ty, h / 5 - 4, '#ffffff', '#cdd6ea') : lit(c, ty, h / 5 - 4, '#e2e9f8', '#aebcdc');
+        rr(c, x + k * (w / 4) + 2, ty, w / 4 - 4, h / 5 - 4, 4);
         c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.6)';
+        c.fillRect(x + k * (w / 4) + 5, ty + 2, w / 4 - 10, 1.5);
       }
     }
+    const eye = this.dazed > 0 ? '255,224,102' : '90,140,255';
+    shine(c, eye, cx(this) - 16, y + 18, 26, 0.8);
+    shine(c, eye, cx(this) + 16, y + 18, 26, 0.8);
     c.fillStyle = this.dazed > 0 ? '#ffe066' : '#4a74d9';
     c.fillRect(cx(this) - 22, y + 14, 12, 8);
     c.fillRect(cx(this) + 10, y + 14, 12, 8);
@@ -859,17 +943,30 @@ export class Error500 extends Enemy {
   }
   draw(c, g) {
     const { x, y, w, h } = this;
-    c.fillStyle = this.flash ? '#fff' : '#f4f0ea';
+    shadow(c, cx(this), y + h, w * 1.2, 0.4);
+    // an angry red glow, flickering like a broken server
+    shine(c, '255,60,60', cx(this), y + h * 0.5, w * 0.9, 0.35 + (Math.sin(g.time * 17) > 0.7 ? 0.25 : 0));
     // a tiered cake body
-    rr(c, x + 10, y + h * 0.55, w - 20, h * 0.45, 10);
-    c.fill();
-    rr(c, x + 35, y + h * 0.25, w - 70, h * 0.32, 10);
-    c.fill();
-    rr(c, x + 65, y, w - 130, h * 0.27, 10);
-    c.fill();
-    c.fillStyle = '#ff8fb1';
-    for (const yy of [y + h * 0.55, y + h * 0.25, y]) c.fillRect(x + 10, yy, w - 20, 5);
-    c.fillStyle = '#c62f3a';
+    const tiers = [[x + 10, y + h * 0.55, w - 20, h * 0.45], [x + 35, y + h * 0.25, w - 70, h * 0.32], [x + 65, y, w - 130, h * 0.27]];
+    for (const [tx, ty, tw, th] of tiers) {
+      c.fillStyle = this.flash ? '#fff' : lit(c, ty, th, '#fffdf8', '#d9cfc2');
+      rr(c, tx, ty, tw, th, 10);
+      c.fill();
+      // pink frosting with drips
+      c.fillStyle = '#ff8fb1';
+      c.fillRect(tx + 4, ty, tw - 8, 5);
+      for (let dx = 12; dx < tw - 8; dx += 18) {
+        const dl = 4 + ((dx * 7) % 9);
+        c.beginPath();
+        c.arc(tx + dx, ty + 4 + dl, 3, 0, Math.PI * 2);
+        c.fill();
+        c.fillRect(tx + dx - 3, ty + 4, 6, dl);
+      }
+      gloss(c, tx + tw * 0.25, ty + th * 0.4, tw * 0.12, 3, 0.35);
+    }
+    shine(c, '255,50,50', x + 73, y + h * 0.36 + 5, 30, 0.8);
+    shine(c, '255,50,50', x + w - 73, y + h * 0.36 + 5, 30, 0.8);
+    c.fillStyle = '#ff3a3a';
     c.fillRect(x + 60, y + h * 0.36, 26, 10);
     c.fillRect(x + w - 86, y + h * 0.36, 26, 10);
     text(c, '500', cx(this), y + h * 0.78, { size: 30, color: '#c62f3a' });
@@ -883,6 +980,7 @@ export class Error500 extends Enemy {
     c.stroke();
     if (this.scan > 0) {
       for (const [kx, ky] of this.weak) {
+        shine(c, '141,255,200', x + kx * w, y + ky * h, 40, 0.6 + 0.3 * Math.sin(g.time * 10));
         c.strokeStyle = `rgba(141,255,200,${0.6 + 0.4 * Math.sin(g.time * 10)})`;
         c.lineWidth = 3;
         c.beginPath();
