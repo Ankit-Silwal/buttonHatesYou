@@ -3,6 +3,7 @@ import { Pickup, Thing } from '../actors';
 import { cx, overlap } from '../engine';
 import { sfx } from '../audio';
 import { adminFace, rr, text } from '../draw';
+import { glow, shadow } from '../fx';
 
 // An old monitor THE ADMIN talks through. Static when off.
 export function adminMonitor(g, x, y, w = 150, h = 100, opts = {}) {
@@ -40,11 +41,7 @@ export function coreFragment(g, x, y, n) {
   const f = g.add(new Pickup({
     kind: 'fragment', x, y, w: 26, h: 30, z: 6,
     look(c, g, px, py) {
-      const glow = c.createRadialGradient(px + 13, py + 15, 2, px + 13, py + 15, 46);
-      glow.addColorStop(0, 'rgba(120, 255, 220, 0.55)');
-      glow.addColorStop(1, 'rgba(120, 255, 220, 0)');
-      c.fillStyle = glow;
-      c.fillRect(px - 40, py - 40, 110, 110);
+      glow(c, px + 13, py + 15, 56 + Math.sin(g.time * 3) * 4, '#78ffdc', 0.6);
       c.fillStyle = '#7dffe0';
       c.beginPath();
       c.moveTo(px + 13, py);
@@ -54,8 +51,26 @@ export function coreFragment(g, x, y, n) {
       c.lineTo(px, py + 12);
       c.closePath();
       c.fill();
-      c.fillStyle = 'rgba(255,255,255,0.6)';
-      c.fillRect(px + 9, py + 8, 4, 12);
+      // facets: a lit left face, a shaded right face
+      c.fillStyle = '#c8fff2';
+      c.beginPath();
+      c.moveTo(px + 13, py);
+      c.lineTo(px, py + 12);
+      c.lineTo(px + 8, py + 30);
+      c.lineTo(px + 13, py + 12);
+      c.closePath();
+      c.fill();
+      c.fillStyle = 'rgba(20,120,110,0.35)';
+      c.beginPath();
+      c.moveTo(px + 13, py + 12);
+      c.lineTo(px + 26, py + 12);
+      c.lineTo(px + 18, py + 30);
+      c.closePath();
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.8)';
+      c.fillRect(px + 7, py + 9, 3, 8);
+      const k = (g.time * 0.8) % 1.6;
+      if (k < 0.3) glow(c, px + 20, py + 6, 10, '#ffffff', Math.sin((k / 0.3) * Math.PI));
       text(c, `${n}/3`, px + 13, py - 12, { size: 12, color: '#bfffee' });
     },
     onGet() {
@@ -79,14 +94,32 @@ export function checkpointPost(g, x, y = GROUND) {
         g.floatText(this.x + 6, this.y - 6, 'Checkpoint', '#bfffee', 14);
       }
     },
-    look(c) {
+    look(c, g) {
+      shadow(c, this.x + 6, this.y + this.h, 12, 0.3, 4);
+      if (this.lit) glow(c, this.x + 20, this.y + 10, 34, '#7dffe0', 0.45 + 0.1 * Math.sin(g.time * 3));
       c.fillStyle = '#6b5a4a';
       c.fillRect(this.x + 4, this.y, 4, this.h);
+      c.fillStyle = 'rgba(255,255,255,0.25)';
+      c.fillRect(this.x + 4, this.y, 1.5, this.h);
+      c.fillStyle = '#4a3e34';
+      c.fillRect(this.x, this.y + this.h - 5, 12, 5);
+      // the flag ripples
+      const w = Math.sin(g.time * 5 + this.x) * 2.5;
       c.fillStyle = this.lit ? '#7dffe0' : '#8a8a96';
       c.beginPath();
       c.moveTo(this.x + 8, this.y);
-      c.lineTo(this.x + 34, this.y + 10);
-      c.lineTo(this.x + 8, this.y + 20);
+      c.quadraticCurveTo(this.x + 20, this.y + 3 + w, this.x + 34, this.y + 10 + w * 0.5);
+      c.quadraticCurveTo(this.x + 20, this.y + 16 - w, this.x + 8, this.y + 20);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.3)';
+      c.beginPath();
+      c.moveTo(this.x + 8, this.y);
+      c.quadraticCurveTo(this.x + 20, this.y + 3 + w, this.x + 34, this.y + 10 + w * 0.5);
+      c.lineTo(this.x + 8, this.y + 7);
+      c.fill();
+      c.fillStyle = '#e8e2d8';
+      c.beginPath();
+      c.arc(this.x + 6, this.y - 2, 3, 0, Math.PI * 2);
       c.fill();
     },
   }));

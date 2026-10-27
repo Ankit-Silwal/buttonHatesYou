@@ -6,6 +6,7 @@ import ch5, * as m5 from './ch5';
 import ch6, * as m6 from './ch6';
 import { installArt } from '../art';
 import * as foes from '../foes';
+import * as common from '../common';
 
 // Every chapter gets the Cursor lighting/atmosphere layers first.
 const lit = (n, play) => (g, p) => {
@@ -14,6 +15,7 @@ const lit = (n, play) => (g, p) => {
   if (process.env.NODE_ENV !== 'production') {
     window.__cursorLevels = { 1: m1, 2: m2, 3: m3, 4: m4, 5: m5, 6: m6 };
     window.__cursorFoes = foes;
+    window.__cursorCommon = common;
   }
   return play(g, p);
 };

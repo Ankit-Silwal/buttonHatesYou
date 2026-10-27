@@ -317,7 +317,7 @@ export function drawSky(c, g) {
       }
     }
     // light pooling on the floor
-    glow(c, W / 2, H - 70, 420, '#1d6a8a', 0.35);
+    glow(c, W / 2, H - 150, 380, '#1d6a8a', 0.3);
   }
   if (s.grid) {
     // a glowing floor that recedes to a horizon, and a slow pulse in the dark
@@ -469,6 +469,8 @@ export function drawSky(c, g) {
     }
     c.globalAlpha = 1;
   }
+  // indoors, a gap in the floor drops into darkness rather than more wall
+  if (s.inside) c.drawImage(fadeStrip('#000000', 0, 0.9, 0.5), 0, H - 120, W, 120);
 }
 
 // Several circles (and an optional base rectangle) filled as one shape, so
@@ -1126,14 +1128,22 @@ const DECO = {
       c.arc(80, -12, 12, 0, Math.PI * 2);
       c.fill();
     }
+    c.fillStyle = 'rgba(255,255,255,0.25)';
+    c.fillRect(0, 0, 110, 2);
+    c.fillStyle = 'rgba(0,0,0,0.2)';
+    c.fillRect(0, 8, 110, 2);
     c.restore();
+    if (!d.broken) c.drawImage(fadeStrip('#2a1608', 0.25, 0), d.x + 4, d.y + 10, 102, 10);
     c.fillStyle = '#6b4528';
     c.fillRect(d.x + 8, d.y + 10, 6, 14);
     if (!d.broken) c.fillRect(d.x + 96, d.y + 10, 6, 14);
   },
   photo(c, d) {
+    boxShadow(c, d.x, d.y, 60, 48, 0.3, 7, 4);
     c.fillStyle = '#8a6040';
     c.fillRect(d.x, d.y, 60, 48);
+    c.fillStyle = 'rgba(255,220,180,0.3)';
+    c.fillRect(d.x, d.y, 60, 2);
     c.fillStyle = d.dark ? '#555' : '#ffeacc';
     c.fillRect(d.x + 5, d.y + 5, 50, 38);
     c.fillStyle = '#e2674f';
@@ -1840,8 +1850,15 @@ const DECO = {
     c.save();
     c.translate(d.x, d.y);
     if (d.fallen) c.rotate(1.45);
+    boxShadow(c, 0, 0, 76, 56, 0.35, 8, 4);
     c.fillStyle = '#c9a43a';
     c.fillRect(0, 0, 76, 56);
+    c.fillStyle = 'rgba(255,240,180,0.5)';
+    c.fillRect(0, 0, 76, 2);
+    c.fillRect(0, 0, 2, 56);
+    c.fillStyle = 'rgba(90,60,10,0.35)';
+    c.fillRect(0, 54, 76, 2);
+    c.fillRect(74, 0, 2, 56);
     c.fillStyle = d.cracked ? '#6a6670' : '#ffeacc';
     c.fillRect(5, 5, 66, 46);
     const people = [['#e2674f', 18], ['#f39ac0', 34]];
