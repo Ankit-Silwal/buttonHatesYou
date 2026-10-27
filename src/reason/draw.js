@@ -2487,15 +2487,30 @@ export function drawEffects(c, g) {
     }
   }
   if (f.letterbox > 0) {
+    const bh = 50 * f.letterbox;
     c.fillStyle = '#000';
-    c.fillRect(0, 0, W, 50 * f.letterbox);
-    c.fillRect(0, H - 50 * f.letterbox, W, 50 * f.letterbox);
+    c.fillRect(0, 0, W, bh);
+    c.fillRect(0, H - bh, W, bh);
+    // the bars cast a little shade onto the picture
+    c.globalAlpha = Math.min(1, f.letterbox);
+    c.drawImage(fadeStrip('#000000', 0.45, 0), 0, bh, W, 18);
+    c.drawImage(fadeStrip('#000000', 0, 0.45), 0, H - bh - 18, W, 18);
+    c.globalAlpha = 1;
   }
   if (f.flash > 0) {
-    c.fillStyle = `rgba(255,255,255,${Math.min(1, f.flash)})`;
+    // a bright bloom from the middle rather than a flat white sheet
+    const k = Math.min(1, f.flash);
+    glow(c, W / 2, H / 2, W * 0.9, '#fff4e0', k * 0.8);
+    c.fillStyle = `rgba(255,255,255,${k * 0.75})`;
     c.fillRect(0, 0, W, H);
   }
   if (f.fade > 0) {
+    // the edges go dark first, like a camera iris closing
+    if (f.fade < 1) {
+      c.globalAlpha = Math.min(1, f.fade * 1.8);
+      c.drawImage(vignetteSprite(1), 0, 0, W, H);
+      c.globalAlpha = 1;
+    }
     c.fillStyle = `rgba(0,0,0,${f.fade})`;
     c.fillRect(0, 0, W, H);
   }
