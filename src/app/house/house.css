@@ -1,0 +1,789 @@
+/* =====================================================================
+   The button's house (/house): the room, its wallpapers, floors and
+   furniture, the needs meters and the shop. Everything is scoped under
+   .house. Inside the room, sizes are in cqw (the room's width), so the
+   same layout works on a phone and a desktop.
+   ===================================================================== */
+
+.house {
+  --panel: #fffaf2;
+  --line: rgba(74, 52, 40, 0.1);
+  --gold: #f0c36d;
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(120% 70% at 30% 0%, #fff6ea 0%, rgba(255, 246, 234, 0) 60%),
+    linear-gradient(180deg, #f3e6d4, #e9d6bf);
+  color: var(--ink);
+}
+.house[data-asleep] { background: radial-gradient(120% 70% at 30% 0%, #3b3a5c 0%, rgba(59, 58, 92, 0) 60%), linear-gradient(180deg, #2a2840, #1d1b2e); }
+.house[data-asleep] .house-top .chip { background-color: #fffaf2; }
+
+/* ---------- top bar ---------- */
+.house-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+}
+.house-top .row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.house-top .wallet { display: flex; gap: 8px; }
+.house-top .chip { text-decoration: none; }
+
+/* ---------- layout ---------- */
+.house-main { padding: 0 16px 150px; }
+.house-stage {
+  position: sticky;
+  top: 62px;
+  z-index: 10;
+  margin: 0 -16px;
+  padding: 0 16px 12px;
+  background: linear-gradient(180deg, #f1e3d0 85%, rgba(241, 227, 208, 0));
+}
+.house[data-asleep] .house-stage { background: linear-gradient(180deg, #24223a 85%, rgba(36, 34, 58, 0)); }
+.house-top { background: rgba(243, 230, 212, 0.86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.house[data-asleep] .house-top { background: rgba(36, 34, 58, 0.86); }
+@media (min-width: 900px) { .house-top, .house[data-asleep] .house-top { background: none; backdrop-filter: none; } }
+.house-panel { display: flex; flex-direction: column; gap: 14px; }
+
+@media (min-width: 900px) {
+  .house { overflow: hidden; display: flex; flex-direction: column; }
+  .house-main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 20px;
+    padding: 0 20px 20px;
+  }
+  .house-stage { position: relative; top: 0; display: grid; place-items: center; min-height: 0; margin: 0; padding: 0; background: none !important; }
+  .house-stage .hs-room { width: min(100%, calc((100dvh - 110px) * 4 / 3)); }
+  .house-panel { min-height: 0; overflow-y: auto; padding: 2px 4px 200px; scrollbar-width: thin; }
+}
+
+/* =====================================================================
+   The room
+   ===================================================================== */
+.house .hs-room {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 26px;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 1px rgba(74, 52, 40, 0.08),
+    0 2px 6px rgba(74, 52, 40, 0.12),
+    0 24px 50px -20px rgba(74, 52, 40, 0.55);
+  user-select: none;
+}
+.house .hs-room .hs-wall { position: absolute; left: 0; right: 0; top: 0; height: 62%; overflow: hidden; }
+.house .hs-room .hs-floor { position: absolute; left: 0; right: 0; top: 62%; bottom: 0; overflow: hidden; perspective: 40cqw; perspective-origin: 50% 0; }
+.house .hs-room .hs-floor .plane {
+  position: absolute;
+  left: -80%;
+  right: -80%;
+  top: 0;
+  height: 330%;
+  transform-origin: 50% 0;
+  transform: rotateX(64deg);
+  background: var(--floor-bg);
+}
+/* light falls off toward the back of the floor; a pool of light where he stands */
+.house .hs-room .hs-floor::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 70% at 52% 55%, rgba(255, 244, 220, 0.28), rgba(255, 244, 220, 0) 70%),
+    linear-gradient(180deg, rgba(40, 20, 10, 0.3), rgba(40, 20, 10, 0) 35%, rgba(40, 20, 10, 0.12));
+  pointer-events: none;
+}
+/* the wall: a lit top, a skirting board where it meets the floor */
+.house .hs-room .hs-wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0 calc(100% - 3.2cqw), var(--skirt, #f4ebdc) calc(100% - 3.2cqw) calc(100% - 0.5cqw), rgba(0, 0, 0, 0.18) calc(100% - 0.5cqw)),
+    radial-gradient(90% 60% at 50% -10%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(90deg, rgba(40, 20, 10, 0.16), rgba(40, 20, 10, 0) 18%, rgba(40, 20, 10, 0) 82%, rgba(40, 20, 10, 0.16));
+  pointer-events: none;
+}
+.house .hs-room .hs-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: inset 0 0 8cqw rgba(30, 15, 5, 0.22);
+  border-radius: inherit;
+}
+
+/* ---------- wallpapers ---------- */
+.house [data-wall='wall-cozy'] {
+  --skirt: #f7efe2;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.28) 0 0.4cqw, rgba(255, 255, 255, 0) 0.4cqw 6cqw),
+    radial-gradient(circle at 3cqw 3cqw, rgba(196, 140, 90, 0.14) 0 0.35cqw, transparent 0.45cqw) 0 0 / 6cqw 6cqw,
+    linear-gradient(180deg, #f8e9d3, #efd7b8);
+}
+.house [data-wall='wall-mint'] {
+  --skirt: #ffffff;
+  background:
+    repeating-linear-gradient(90deg, #cdebdc 0 3cqw, #bde2cf 3cqw 6cqw),
+    #cdebdc;
+}
+.house [data-wall='wall-candy'] {
+  --skirt: #fff3f8;
+  background:
+    radial-gradient(circle, #ffffff 0 0.7cqw, transparent 0.8cqw) 0 0 / 5cqw 5cqw,
+    radial-gradient(circle, rgba(255, 255, 255, 0.6) 0 0.45cqw, transparent 0.55cqw) 2.5cqw 2.5cqw / 5cqw 5cqw,
+    linear-gradient(180deg, #ffc9de, #f7a9c8);
+}
+.house [data-wall='wall-beach'] {
+  --skirt: #fbf6ea;
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0) 0 4.4cqw, rgba(40, 90, 110, 0.18) 4.4cqw 4.6cqw),
+    linear-gradient(180deg, #d7f0f2, #b6dfe4);
+}
+.house [data-wall='wall-city'] {
+  --skirt: #2b3157;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 0.3cqw, rgba(255, 255, 255, 0) 0.3cqw 9cqw),
+    linear-gradient(180deg, #2c3561, #1e2546);
+}
+.house [data-wall='wall-gamer'] {
+  --skirt: #15151c;
+  background:
+    conic-gradient(from 45deg, #2f2f3b 0 25%, #22222c 0 50%, #2a2a35 0 75%, #1b1b23 0) 0 0 / 4.4cqw 4.4cqw,
+    #22222c;
+}
+.house [data-wall='wall-space'] {
+  --skirt: #3a4256;
+  background:
+    radial-gradient(circle, #9aa6bf 0 0.25cqw, transparent 0.35cqw) 1cqw 1cqw / 12cqw 10cqw,
+    linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0 0.25cqw, transparent 0.25cqw) 0 0 / 12cqw 100%,
+    linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0 0.25cqw, transparent 0.25cqw) 0 0 / 100% 10cqw,
+    linear-gradient(180deg, #4b556d, #333b50);
+}
+
+/* ---------- windows and views ---------- */
+.house .window {
+  position: absolute;
+  left: 50%;
+  top: 11%;
+  width: 26cqw;
+  height: 56%;
+  transform: translateX(-50%);
+}
+.house .win-wall-city { width: 46cqw; top: 8%; height: 66%; }
+.house .win-wall-beach { width: 34cqw; }
+.house .win-view {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 1.2cqw;
+  background: linear-gradient(180deg, #8fd0f5, #d9f1ff 75%);
+  box-shadow: inset 0 0.6cqw 1.6cqw rgba(0, 30, 60, 0.3);
+}
+.house .win-frame {
+  position: absolute;
+  inset: -1cqw;
+  border-radius: 1.6cqw;
+  border: 1cqw solid #fffaf2;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 0.45cqw), #fffaf2 calc(50% - 0.45cqw) calc(50% + 0.45cqw), transparent calc(50% + 0.45cqw)),
+    linear-gradient(180deg, transparent calc(45% - 0.45cqw), #fffaf2 calc(45% - 0.45cqw) calc(45% + 0.45cqw), transparent calc(45% + 0.45cqw));
+  box-shadow: 0 0.6cqw 1.4cqw rgba(60, 30, 10, 0.25), inset 0 0 0 0.2cqw rgba(0, 0, 0, 0.06);
+}
+.house .win-wall-city .win-frame { border-color: #151a33; background: linear-gradient(90deg, transparent calc(33% - 0.3cqw), #151a33 calc(33% - 0.3cqw) calc(33% + 0.3cqw), transparent calc(33% + 0.3cqw) calc(66% - 0.3cqw), #151a33 calc(66% - 0.3cqw) calc(66% + 0.3cqw), transparent calc(66% + 0.3cqw)); }
+.house .sill { position: absolute; left: -3cqw; right: -3cqw; bottom: -2.2cqw; height: 1.6cqw; border-radius: 0.5cqw; background: linear-gradient(180deg, #fffdf7, #e7dccb); box-shadow: 0 0.8cqw 1.2cqw rgba(60, 30, 10, 0.25); }
+.house .win-wall-city .sill { background: linear-gradient(180deg, #2e3660, #151a33); }
+.house .curtain {
+  position: absolute;
+  top: -2.4cqw;
+  bottom: -4cqw;
+  width: 6cqw;
+  border-radius: 0 0 2cqw 2cqw;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 0.5cqw, rgba(255, 255, 255, 0.08) 0.5cqw 1.5cqw), var(--curtain, #e88f6f);
+  box-shadow: 0 0.6cqw 1.4cqw rgba(60, 30, 10, 0.25);
+}
+.house .curtain.left { left: -5cqw; transform: skewX(2deg); }
+.house .curtain.right { right: -5cqw; transform: skewX(-2deg); }
+.house .win-wall-beach { --curtain: #f6f0e3; }
+.house .win-wall-city { --curtain: #6f3d78; }
+.house .win-view .sun { position: absolute; right: 16%; top: 14%; width: 6cqw; height: 6cqw; border-radius: 50%; background: radial-gradient(circle, #fff7d0, #ffd76b 60%, rgba(255, 215, 107, 0) 72%); }
+.house .win-view .cloud { position: absolute; height: 2.4cqw; border-radius: 99px; background: #fff; box-shadow: 1.6cqw -1cqw 0 0.4cqw #fff; opacity: 0.9; animation: hsCloud 40s linear infinite; }
+.house .win-view .cloud.c1 { width: 7cqw; top: 26%; left: 10%; }
+.house .win-view .cloud.c2 { width: 5cqw; top: 12%; left: 52%; animation-duration: 55s; animation-delay: -20s; }
+.house .win-view .hill { position: absolute; bottom: -30%; border-radius: 50%; }
+.house .win-view .hill.h1 { left: -20%; width: 90%; height: 60%; background: linear-gradient(180deg, #9ccf7a, #6faa55); }
+.house .win-view .hill.h2 { right: -30%; width: 100%; height: 50%; background: linear-gradient(180deg, #b6dc8c, #86bf66); }
+.house .win-wall-beach .win-view { background: linear-gradient(180deg, #7cc8f2, #e1f5ff 60%); }
+.house .win-wall-beach .sun { right: auto; left: 18%; top: 20%; }
+.house .win-view .sea { position: absolute; left: 0; right: 0; top: 54%; bottom: 0; background: linear-gradient(180deg, #2f9bd0, #57c3e3 60%, #9fe0ea); }
+.house .win-view .wave { position: absolute; left: -10%; right: -10%; top: 70%; height: 3cqw; background: radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.75) 0 0.6cqw, transparent 0.7cqw) 0 0 / 4cqw 2cqw; animation: hsWave 6s ease-in-out infinite alternate; }
+.house .win-view .sand { position: absolute; left: -10%; right: -10%; bottom: -14%; height: 30%; border-radius: 50%; background: linear-gradient(180deg, #f6dfaa, #e4c27d); }
+.house .win-view .palm { position: absolute; right: 2%; bottom: 0; width: 10cqw; animation: hsPalm 5s ease-in-out infinite alternate; transform-origin: 60% 100%; }
+.house .win-wall-city .win-view { background: linear-gradient(180deg, #0c1230, #2a2f6b 70%, #5a3f7a); }
+.house .win-view .moon { position: absolute; right: 14%; top: 12%; width: 5cqw; height: 5cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fffbe8, #f1e2b0); box-shadow: 0 0 3cqw rgba(255, 240, 190, 0.6); }
+.house .win-view .stars {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle, #fff 0 0.12cqw, transparent 0.2cqw) 0 0 / 5cqw 4cqw,
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 0.1cqw, transparent 0.18cqw) 2.2cqw 1.6cqw / 7cqw 5cqw;
+  animation: hsTwinkle 3s ease-in-out infinite alternate;
+}
+.house .win-view .skyline { position: absolute; left: 0; bottom: 0; width: 100%; height: 62%; }
+.house .win-view .lit { fill: #ffd678; opacity: 0.85; animation: hsTwinkle 4s steps(3) infinite alternate; }
+.house .porthole {
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  width: 24cqw;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  padding: 1.6cqw;
+  background: radial-gradient(circle at 35% 30%, #e7ecf5, #8d97ad 60%, #545d72);
+  box-shadow: 0 1cqw 2cqw rgba(0, 0, 0, 0.4), inset 0 0 0 0.3cqw rgba(255, 255, 255, 0.4);
+}
+.house .porthole .win-view { position: relative; inset: auto; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 70% 30%, #3b2a6b, #0b0b22 70%); }
+.house .porthole .planet { position: absolute; left: 22%; top: 30%; width: 44%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffd2a1, #e77d5b 55%, #6a2c4a); box-shadow: inset -1.4cqw -1cqw 2cqw rgba(0, 0, 0, 0.5); animation: hsFloat 9s ease-in-out infinite alternate; }
+.house .porthole .ring { position: absolute; left: 10%; top: 46%; width: 68%; height: 12%; border-radius: 50%; border: 0.5cqw solid rgba(255, 220, 170, 0.75); transform: rotate(-16deg); animation: hsFloat 9s ease-in-out infinite alternate; }
+.house .rgb-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1cqw;
+  background: linear-gradient(90deg, #ff3d6e, #ffb13d, #3dff8b, #3dc4ff, #b13dff, #ff3d6e) 0 0 / 200% 100%;
+  box-shadow: 0 0 3cqw 1.4cqw rgba(160, 80, 255, 0.45);
+  animation: hsRgb 6s linear infinite;
+}
+.house [data-wall='wall-gamer']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3.2cqw;
+  height: 0.6cqw;
+  z-index: 1;
+  background: linear-gradient(90deg, #3dc4ff, #b13dff, #ff3d6e, #ffb13d, #3dff8b, #3dc4ff) 0 0 / 200% 100%;
+  box-shadow: 0 0 2.4cqw 0.8cqw rgba(61, 196, 255, 0.5);
+  animation: hsRgb 6s linear infinite reverse;
+}
+
+/* ---------- floors ---------- */
+.house [data-floor='floor-oak'] {
+  --floor-bg:
+    repeating-linear-gradient(90deg, rgba(80, 40, 15, 0.35) 0 0.25cqw, transparent 0.25cqw 9cqw),
+    repeating-linear-gradient(180deg, transparent 0 30cqw, rgba(80, 40, 15, 0.25) 30cqw 30.3cqw),
+    repeating-linear-gradient(90deg, #cf9862 0 9cqw, #c48b55 9cqw 18cqw, #d7a36d 18cqw 27cqw, #be844f 27cqw 36cqw);
+}
+.house [data-floor='floor-carpet'] {
+  --floor-bg:
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 0 0.2cqw, transparent 0.3cqw) 0 0 / 1.4cqw 1.4cqw,
+    linear-gradient(180deg, #5f9e9a, #4d8a86);
+}
+.house [data-floor='floor-checker'] {
+  --floor-bg: conic-gradient(#f4efe6 0 25%, #2e2a33 0 50%, #f4efe6 0 75%, #2e2a33 0) 0 0 / 14cqw 14cqw;
+}
+.house [data-floor='floor-bamboo'] {
+  --floor-bg:
+    repeating-linear-gradient(90deg, rgba(90, 80, 30, 0.3) 0 0.2cqw, transparent 0.2cqw 1.2cqw),
+    linear-gradient(90deg, #4f5a2c 0 0.8cqw, transparent 0.8cqw) 0 0 / 24cqw 100%,
+    linear-gradient(180deg, #4f5a2c 0 0.8cqw, transparent 0.8cqw) 0 0 / 100% 48cqw,
+    linear-gradient(90deg, #d9cf8f, #cbbf7a);
+}
+.house [data-floor='floor-marble'] {
+  --floor-bg:
+    linear-gradient(90deg, rgba(160, 150, 140, 0.5) 0 0.15cqw, transparent 0.15cqw) 0 0 / 20cqw 100%,
+    linear-gradient(180deg, rgba(160, 150, 140, 0.5) 0 0.15cqw, transparent 0.15cqw) 0 0 / 100% 20cqw,
+    linear-gradient(115deg, transparent 0 40%, rgba(150, 140, 135, 0.35) 41%, transparent 43% 70%, rgba(150, 140, 135, 0.25) 71%, transparent 72%) 0 0 / 20cqw 20cqw,
+    linear-gradient(180deg, #f6f3ee, #e6e0d8);
+}
+.house [data-floor='floor-neon'] {
+  --floor-bg:
+    linear-gradient(90deg, #ff4fd8 0 0.3cqw, transparent 0.3cqw) 0 0 / 8cqw 100%,
+    linear-gradient(180deg, #4fe3ff 0 0.3cqw, transparent 0.3cqw) 0 0 / 100% 8cqw,
+    linear-gradient(180deg, #1c0f33, #2a1250);
+}
+.house [data-floor='floor-neon'] .plane { filter: drop-shadow(0 0 0.6cqw rgba(255, 79, 216, 0.7)); }
+
+/* =====================================================================
+   Furniture spots
+   ===================================================================== */
+.house .spot {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--w) * 1cqw);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.house .spot .art { display: block; width: 100%; height: 100%; overflow: visible; }
+.house .spot[data-spot='ceiling'] { left: 50%; top: 0; }
+.house .spot[data-spot='ceiling'][data-item='lights-fairy'] { left: 0; top: 0.6%; transform: none; }
+.house .spot[data-spot='wall-left'] { left: 18%; top: 12%; }
+.house .spot[data-spot='wall-right'] { left: 82%; top: 12%; }
+.house .spot[data-spot='corner'] { left: 92%; bottom: 33%; }
+.house .spot[data-spot='bed'] { left: 23%; bottom: 17%; }
+.house .spot[data-spot='rug'] { left: 52%; bottom: 3%; z-index: 1; }
+.house .spot[data-spot='floor-right'] { left: 80%; bottom: 5%; z-index: 4; }
+.house .spot[data-spot='floor-left'] { left: 7%; bottom: 3%; z-index: 4; }
+.house .spot[data-spot='wall-left'] .art,
+.house .spot[data-spot='wall-right'] .art { filter: drop-shadow(0 0.6cqw 0.8cqw rgba(40, 20, 10, 0.25)); }
+.house .spot[data-spot='ceiling'][data-item='disco-ball'] .art,
+.house .spot[data-spot='ceiling'][data-item='lamp-pendant'] .art { filter: drop-shadow(0 1cqw 1cqw rgba(40, 20, 10, 0.25)); }
+
+/* the preview: a glowing dashed outline and a tag */
+.house .spot.is-preview { z-index: 6; }
+.house .spot.is-preview::before {
+  content: '';
+  position: absolute;
+  inset: -1.2cqw;
+  border-radius: 1.6cqw;
+  border: 0.3cqw dashed var(--gold);
+  background: rgba(240, 195, 109, 0.12);
+  box-shadow: 0 0 0 0.4cqw rgba(240, 195, 109, 0.18);
+  animation: hsPreview 1.4s ease-in-out infinite alternate;
+}
+.house .spot.is-preview .art { animation: hsDrop 0.5s cubic-bezier(0.34, 1.5, 0.64, 1); }
+.house .preview-tag,
+.house .preview-banner {
+  position: absolute;
+  z-index: 3;
+  padding: 0.5cqw 1.4cqw;
+  border-radius: 99px;
+  background: #3b2a20;
+  color: #ffe9b8;
+  font-size: max(11px, 1.6cqw);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 0.4cqw 1cqw rgba(0, 0, 0, 0.25);
+}
+.house .preview-tag { left: 50%; top: -1.2cqw; transform: translate(-50%, -100%); }
+.house .spot[data-spot='ceiling'] .preview-tag,
+.house .spot[data-spot^='wall'] .preview-tag { top: auto; bottom: -1.2cqw; transform: translate(-50%, 100%); }
+.house .preview-banner { left: 50%; bottom: 2.4cqw; transform: translateX(-50%); z-index: 20; animation: hsDrop 0.4s ease-out; }
+.house .hs-wall.is-preview,
+.house .hs-floor.is-preview { animation: hsSwap 0.5s ease-out; }
+.house .hs-room:has(.hs-wall.is-preview)::after,
+.house .hs-room:has(.hs-floor.is-preview)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 0.5cqw var(--gold);
+  pointer-events: none;
+  animation: hsPreview 1.4s ease-in-out infinite alternate;
+}
+
+/* ---------- light ---------- */
+.house .glow-spot { z-index: 8; }
+.house .glow {
+  position: absolute;
+  width: calc(var(--r) * 1cqw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--gc) 75%, transparent), color-mix(in srgb, var(--gc) 22%, transparent) 40%, transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.45;
+  transition: opacity 1.2s ease;
+  animation: hsGlow 3s ease-in-out infinite alternate;
+}
+.house .glow-spot[data-item='tv-retro'] .glow { animation: hsTv 0.9s steps(2) infinite; }
+.house .hs-room.asleep .glow { opacity: 1; }
+.house .hs-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: radial-gradient(80% 80% at 50% 40%, rgba(20, 22, 60, 0.55), rgba(8, 8, 30, 0.82));
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  pointer-events: none;
+}
+.house .hs-room.asleep .hs-dim { opacity: 1; }
+.house .disco-specks {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 0.25cqw, transparent 0.45cqw) 0 0 / 9cqw 7cqw,
+    radial-gradient(circle, rgba(140, 220, 255, 0.8) 0 0.2cqw, transparent 0.4cqw) 3cqw 2cqw / 11cqw 9cqw,
+    radial-gradient(circle, rgba(255, 150, 230, 0.8) 0 0.2cqw, transparent 0.4cqw) 6cqw 4cqw / 13cqw 8cqw;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  animation: hsSpecks 7s linear infinite;
+}
+
+/* ---------- animated furniture ---------- */
+.house .lava { animation: hsLava 7s ease-in-out infinite alternate; }
+.house .lava.b2 { animation-duration: 9s; animation-delay: -3s; }
+.house .lava.b3 { animation-duration: 6s; animation-delay: -5s; }
+.house .fish { animation: hsFish 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.house .bubble { animation: hsBubble 2.6s ease-in infinite; }
+.house .tv-bars { animation: hsHue 4s linear infinite; }
+.house .tv-scan { animation: hsScan 2.2s linear infinite; }
+.house .tv-face { animation: hsBob 1.6s ease-in-out infinite alternate; }
+.house .twinkle { animation: hsTwinkle 1.8s ease-in-out infinite alternate; }
+.house .disco-facets { animation: hsFacets 3s linear infinite; }
+.house .sparkle { transform-box: fill-box; transform-origin: center; animation: hsSparkle 1.6s ease-in-out infinite; }
+.house .hand { transform-box: view-box; transform-origin: 44px 46px; animation-name: hsTurn; animation-timing-function: linear; animation-iteration-count: infinite; }
+.house .neon-flicker { animation: hsNeon 5s linear infinite; }
+.house .hs-room.asleep .tv-show { opacity: 0.4; }
+/* things that make their own light stay bright when the room goes dark */
+.house .hs-room.asleep .spot:is([data-item='lights-fairy'], [data-item='neon-sign'], [data-item='lamp-lava'], [data-item='disco-ball']) { z-index: 8; }
+.house .hs-room.asleep .spot[data-item='lamp-lava'] { filter: brightness(0.85); }
+
+/* =====================================================================
+   The button
+   ===================================================================== */
+.house .resident {
+  --res-s: 17cqw;
+  position: absolute;
+  z-index: 3;
+  left: 52%;
+  bottom: 14%;
+  width: var(--res-s);
+  height: var(--res-s);
+  transform: translateX(-50%);
+  cursor: pointer;
+  transition: left 0.9s cubic-bezier(0.45, 0, 0.3, 1), bottom 0.9s cubic-bezier(0.45, 0, 0.3, 1), width 0.9s, height 0.9s;
+}
+.house .resident .char { display: block; transform-origin: 50% 100%; animation: hsBreathe 3.6s ease-in-out infinite; cursor: pointer; }
+.house .resident .res-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -26%;
+  width: 110%;
+  height: 22%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(40, 20, 10, 0.4), rgba(40, 20, 10, 0));
+}
+.house .resident .eyes i { animation: hsBlink 4.2s infinite; }
+.house .resident [data-mood='sleep'] .eyes i::before { height: 100%; }
+.house .resident [data-mood='sleep'] .mouth { width: calc(var(--s) * 0.12); height: calc(var(--s) * 0.08); border: 0; border-radius: 50%; background: var(--face); top: 64%; }
+.house .resident [data-mood='tired'] .eyes i::before { height: 55%; }
+
+/* asleep: tucked into bed, smaller, breathing slowly */
+.house .hs-room.asleep .resident { --res-s: 12cqw; left: 21%; bottom: 25%; z-index: 2; }
+.house .hs-room.asleep[data-bed='bed-cozy'] .resident { bottom: 28%; left: 18%; }
+.house .hs-room.asleep[data-bed='bed-cloud'] .resident { bottom: 30%; }
+.house .hs-room.asleep .resident .char { animation: hsSnore 4.5s ease-in-out infinite; }
+.house .hs-room.asleep .resident .legs,
+.house .hs-room.asleep .resident .res-shadow { display: none; }
+.house .blanket {
+  position: absolute;
+  left: -40%;
+  right: -90%;
+  bottom: -18%;
+  height: 52%;
+  border-radius: 40% 40% 12% 12% / 70% 70% 20% 20%;
+  background: linear-gradient(180deg, var(--quilt, #8a9cc0), var(--quilt-d, #64769a));
+  box-shadow: inset 0 0.5cqw 0 rgba(255, 255, 255, 0.25), 0 0.6cqw 1cqw rgba(0, 0, 0, 0.2);
+  animation: hsSnoreB 4.5s ease-in-out infinite;
+}
+.house .hs-room[data-bed='bed-cozy'] .blanket { --quilt: #e98a6c; --quilt-d: #c25d44; }
+.house .hs-room[data-bed='bed-cloud'] .blanket { --quilt: #b9a8f5; --quilt-d: #8b74e0; }
+.house .zzz { position: absolute; z-index: 12; left: 30%; bottom: 44%; width: 10cqw; height: 18cqw; pointer-events: none; }
+.house .zzz i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 3cqw;
+  color: #d8d2ff;
+  text-shadow: 0 0 1.2cqw rgba(160, 150, 255, 0.8);
+  opacity: 0;
+  animation: hsZ 3.6s ease-out infinite;
+}
+.house .zzz i:nth-child(2) { animation-delay: 1.2s; font-size: 4cqw; }
+.house .zzz i:nth-child(3) { animation-delay: 2.4s; font-size: 5.2cqw; }
+
+/* eating */
+.house .resident.chomp .char { animation: hsChomp 0.26s ease-in-out infinite alternate; }
+.house .bite { position: absolute; z-index: 4; left: 30%; top: 46%; width: 40%; aspect-ratio: 1; animation: hsBite 1.3s cubic-bezier(0.5, 0, 0.5, 1) forwards; pointer-events: none; }
+.house .bite .art { width: 100%; height: 100%; filter: drop-shadow(0 0.5cqw 0.6cqw rgba(0, 0, 0, 0.25)); }
+.house .bite::after { /* crumbs */
+  content: '';
+  position: absolute;
+  left: 20%;
+  top: 60%;
+  width: 60%;
+  height: 40%;
+  background:
+    radial-gradient(circle, #c98b45 0 0.4cqw, transparent 0.5cqw) 0 0 / 2.4cqw 2cqw,
+    radial-gradient(circle, #f1c27d 0 0.3cqw, transparent 0.4cqw) 1cqw 1cqw / 3cqw 2.4cqw;
+  opacity: 0;
+  animation: hsCrumbs 1.3s ease-out forwards;
+}
+
+/* a food being previewed floats next to him */
+.house .offer { position: absolute; z-index: 4; left: 112%; top: 6%; width: 44%; aspect-ratio: 1; animation: hsOffer 1.8s ease-in-out infinite alternate; pointer-events: none; }
+.house .offer .art { width: 100%; height: 100%; filter: drop-shadow(0 0.8cqw 0.8cqw rgba(0, 0, 0, 0.25)); }
+.house .offer .preview-tag { top: auto; bottom: -1cqw; transform: translate(-50%, 100%); font-style: normal; }
+@keyframes hsOffer { from { translate: 0 0; rotate: -6deg; } to { translate: 0 -12%; rotate: 6deg; } }
+
+/* side effects */
+.house .hs-room[data-fx='sugar'] .resident .char { animation: hsSugar 0.3s ease-in-out infinite alternate; }
+.house .fx-sparks {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(circle, #ffe36b 0 0.4cqw, transparent 0.5cqw) 0 0 / 5cqw 4cqw,
+    radial-gradient(circle, #ff8fd0 0 0.35cqw, transparent 0.45cqw) 2cqw 2cqw / 6cqw 5cqw;
+  animation: hsSpark 0.8s linear infinite;
+  pointer-events: none;
+}
+.house .hs-room[data-fx='hiccup'] .resident .char { animation: hsHic 1.1s ease-out infinite; }
+.house .fx-hic {
+  position: absolute;
+  right: -40%;
+  top: -10%;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 2.6cqw;
+  color: #fff;
+  background: #7c6bd6;
+  padding: 0.3cqw 1cqw;
+  border-radius: 99px;
+  animation: hsHicTag 1.1s ease-out infinite;
+}
+.house .hs-room[data-fx='glow'] .resident .char { animation: hsGlowFx 0.8s ease-in-out infinite alternate; }
+.house .hs-room[data-fx='glitch'] .resident .char { animation: hsGlitch 0.35s steps(2) infinite; }
+
+/* what he says */
+.house .hs-line {
+  position: absolute;
+  z-index: 15;
+  left: 50%;
+  top: 3.5%;
+  max-width: 78%;
+  margin: 0;
+  padding: 1.1cqw 2.2cqw;
+  transform: translateX(-50%);
+  border-radius: 2cqw;
+  background: rgba(255, 250, 242, 0.96);
+  box-shadow: 0 0.4cqw 1.6cqw rgba(40, 20, 10, 0.25);
+  font-size: max(13px, 2.2cqw);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  animation: hsLine 0.35s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+/* =====================================================================
+   The panel: needs and the shop
+   ===================================================================== */
+.house .needs-card,
+.house .shop {
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fffdf8, var(--panel));
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(74, 52, 40, 0.1), 0 14px 30px -18px rgba(74, 52, 40, 0.5);
+}
+.house .needs-card { padding: 14px 16px; display: grid; gap: 10px; }
+.house .meter-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-weight: 600; }
+.house .meter-ico { font-size: 16px; }
+.house .meter-num { margin-left: auto; font-variant-numeric: tabular-nums; }
+.house .meter-plus { color: #3f9a55; font-weight: 700; }
+.house .meter-track {
+  position: relative;
+  height: 14px;
+  border-radius: 99px;
+  background: #efe3d3;
+  box-shadow: inset 0 1px 3px rgba(74, 52, 40, 0.25);
+  overflow: hidden;
+}
+.house .meter-fill,
+.house .meter-ghost { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; transition: width 0.6s cubic-bezier(0.34, 1.2, 0.64, 1); }
+.house .meter-fill { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 0 rgba(0, 0, 0, 0.08); }
+.house .meter-hunger .meter-fill { background: linear-gradient(180deg, #ffb07a, #e8703f); }
+.house .meter-energy .meter-fill { background: linear-gradient(180deg, #ffe07a, #f0a13a); }
+.house .meter.low .meter-fill { background: linear-gradient(180deg, #ff8f8f, #d94848); animation: hsLow 1s ease-in-out infinite alternate; }
+.house .meter-ghost {
+  background: repeating-linear-gradient(135deg, rgba(63, 154, 85, 0.55) 0 6px, rgba(63, 154, 85, 0.3) 6px 12px);
+  animation: hsGhost 1s ease-in-out infinite alternate;
+}
+.house .needs-row { display: flex; align-items: center; gap: 12px; }
+.house .needs-note { flex: 1; margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.3; }
+.house .sleep-btn { --edge: #3f3580; background-color: #6a5cc7; white-space: nowrap; }
+.house .sleep-btn.awake { --edge: #b07a1c; background-color: #f0b440; }
+
+.house .shop { padding: 8px 10px 12px; }
+.house .shop-tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 10px; border-radius: 16px; background: #f1e6d6; }
+.house .shop-tabs button {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.house .shop-tabs button[aria-selected='true'] { background: #fffdf8; color: var(--ink); box-shadow: 0 1px 2px rgba(74, 52, 40, 0.12), 0 4px 10px -4px rgba(74, 52, 40, 0.3); }
+.house .shop-tabs button:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+.house .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; padding: 2px; }
+.house .shop-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 6px 10px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #fbf4ea);
+  box-shadow: inset 0 0 0 1px rgba(74, 52, 40, 0.08), 0 2px 4px rgba(74, 52, 40, 0.06), 0 8px 16px -10px rgba(74, 52, 40, 0.35);
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1), box-shadow 0.18s;
+}
+.house .shop-tile:hover { transform: translateY(-3px); }
+.house .shop-tile:active { transform: scale(0.97); }
+.house .shop-tile:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.house .shop-tile[aria-pressed='true'] { box-shadow: inset 0 0 0 2.5px var(--ink), 0 8px 18px -8px rgba(74, 52, 40, 0.45); }
+.house .shop-tile.trying { box-shadow: inset 0 0 0 2.5px var(--gold), 0 0 0 4px rgba(240, 195, 109, 0.3), 0 12px 24px -8px rgba(200, 140, 40, 0.45); }
+.house .shop-tile .check { position: absolute; top: 6px; right: 8px; font-size: 12px; font-weight: 700; }
+.house .shop-tile .thumb {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 64px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 40%, #fff, #f3e8d8);
+  overflow: hidden;
+  container-type: inline-size;
+}
+.house .shop-tile .thumb .art { max-width: 82%; max-height: 56px; }
+.house .shop-tile .thumb[data-kind='food'] .art { width: 54px; height: 54px; }
+.house .shop-tile .swatch { display: block; width: 100%; height: 100%; position: relative; }
+.house .shop-tile .swatch.hs-floor { background: var(--floor-bg); }
+.house .shop-tile .name { font-size: 13px; font-weight: 600; line-height: 1.15; }
+.house .shop-tile .cost { font-size: 12px; color: var(--ink-soft); }
+.house .shop-tile .cost em { font-style: normal; display: block; color: #6a8f5a; font-weight: 600; }
+
+/* the preview bar: what it is, what it costs, Buy or Cancel */
+.house-buybar {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: min(600px, calc(100% - 24px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: rgba(255, 250, 242, 0.97);
+  box-shadow: 0 0 0 2px var(--gold, #f0c36d), 0 20px 40px -14px rgba(40, 20, 10, 0.55);
+  backdrop-filter: blur(8px);
+  animation: hsBar 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+@media (min-width: 900px) {
+  /* on wide screens it sits at the bottom of the shop, so the room stays clear */
+  .house-buybar { left: auto; right: 20px; width: 390px; transform: none; flex-direction: column; align-items: stretch; }
+  .house-buybar .bb-actions { justify-content: flex-end; }
+  @keyframes hsBar { from { opacity: 0; translate: 0 20px; } }
+}
+.house-buybar .bb-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.house-buybar .bb-tag { align-self: flex-start; padding: 2px 8px; border-radius: 99px; background: #3b2a20; color: #ffe9b8; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.house-buybar b { font-size: 17px; }
+.house-buybar .bb-note { font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
+.house-buybar .bb-short { color: #c0392b; font-weight: 600; }
+.house-buybar .bb-spots { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.house-buybar .bb-spots button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 99px;
+  background: #f1e6d6;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.house-buybar .bb-spots button[aria-checked='true'] { background: var(--ink, #4a3428); color: #fff; }
+.house-buybar .bb-actions { display: flex; gap: 8px; flex: none; }
+.house-buybar .pill { white-space: nowrap; }
+.house-buybar .pill:disabled { opacity: 0.5; cursor: not-allowed; }
+.house-buybar .pill.alt { --edge: #6b5446; background-color: #8a6f5e; }
+@media (max-width: 520px) {
+  .house-buybar { flex-direction: column; align-items: stretch; }
+  .house-buybar .bb-actions { justify-content: flex-end; }
+  .house-top .label { display: none; }
+}
+
+/* =====================================================================
+   Motion
+   ===================================================================== */
+@keyframes hsBreathe { 0%, 100% { scale: 1 1; } 50% { scale: 1.025 0.975; } }
+@keyframes hsSnore { 0%, 100% { scale: 1 1; } 50% { scale: 1.05 0.94; } }
+@keyframes hsSnoreB { 0%, 100% { translate: 0 0; } 50% { translate: 0 -0.3cqw; } }
+@keyframes hsBlink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+@keyframes hsZ { 0% { opacity: 0; transform: translate(0, 0) scale(0.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(5cqw, -14cqw) scale(1.1) rotate(10deg); } }
+@keyframes hsChomp { from { scale: 1.06 0.92; } to { scale: 0.96 1.05; } }
+@keyframes hsBite {
+  0% { transform: translate(260%, -160%) scale(1.3) rotate(-20deg); opacity: 0; }
+  20% { opacity: 1; }
+  55% { transform: translate(0, 0) scale(0.9) rotate(0); opacity: 1; }
+  100% { transform: translate(0, 10%) scale(0); opacity: 0; }
+}
+@keyframes hsCrumbs { 0%, 50% { opacity: 0; transform: translateY(0); } 60% { opacity: 1; } 100% { opacity: 0; transform: translateY(160%); } }
+@keyframes hsSugar { from { translate: -4% 0; rotate: -6deg; } to { translate: 4% -12%; rotate: 6deg; } }
+@keyframes hsSpark { to { background-position: 0 -4cqw, 2cqw -3cqw; opacity: 0.6; } }
+@keyframes hsHic { 0%, 60%, 100% { translate: 0 0; } 10% { translate: 0 -16%; scale: 1.05 0.95; } 25% { translate: 0 0; } }
+@keyframes hsHicTag { 0%, 50%, 100% { opacity: 0; transform: translateY(0); } 10% { opacity: 1; } 40% { opacity: 1; transform: translateY(-40%); } }
+@keyframes hsGlowFx { from { filter: drop-shadow(0 0 1cqw rgba(255, 240, 120, 0.8)) brightness(1.1); } to { filter: drop-shadow(0 0 3cqw rgba(140, 255, 120, 0.95)) brightness(1.3); } }
+@keyframes hsGlitch { 0% { translate: 2% 0; filter: drop-shadow(-0.6cqw 0 0 #ff2fa0) drop-shadow(0.6cqw 0 0 #2fd6ff); } 50% { translate: -2% 1%; filter: hue-rotate(90deg) drop-shadow(0.6cqw 0 0 #ff2fa0); } 100% { translate: 0 0; filter: none; } }
+@keyframes hsLine { from { opacity: 0; transform: translate(-50%, 8px) scale(0.95); } }
+@keyframes hsPreview { from { opacity: 0.6; } to { opacity: 1; } }
+@keyframes hsDrop { from { opacity: 0; transform: translateY(-8%) scale(0.95); } }
+@keyframes hsSwap { from { filter: brightness(1.3) saturate(0.6); } }
+@keyframes hsGlow { from { opacity: var(--o1, 0.4); } to { opacity: var(--o2, 0.55); } }
+@keyframes hsTv { 50% { filter: hue-rotate(60deg); } }
+@keyframes hsSpecks { to { background-position: 9cqw 7cqw, -8cqw 11cqw, 13cqw -8cqw; } }
+@keyframes hsLava { from { transform: translateY(0) scale(1); } to { transform: translateY(-38px) scale(0.85, 1.15); } }
+@keyframes hsFish { 0% { transform: translateX(-10px) scaleX(1); } 45% { transform: translateX(12px) scaleX(1); } 50% { transform: translateX(12px) scaleX(-1); } 95% { transform: translateX(-10px) scaleX(-1); } 100% { transform: translateX(-10px) scaleX(1); } }
+@keyframes hsBubble { from { transform: translateY(20px); opacity: 0; } 30% { opacity: 1; } to { transform: translateY(-14px); opacity: 0; } }
+@keyframes hsHue { to { filter: hue-rotate(360deg); } }
+@keyframes hsScan { from { transform: translateY(0); } to { transform: translateY(56px); } }
+@keyframes hsBob { to { transform: translateY(-3px); } }
+@keyframes hsTwinkle { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes hsFacets { to { transform: translateX(7px); } }
+@keyframes hsSparkle { 0%, 100% { transform: scale(0.3); opacity: 0.2; } 50% { transform: scale(1.3); opacity: 1; } }
+@keyframes hsTurn { to { transform: rotate(360deg); } }
+@keyframes hsNeon { 0%, 18%, 22%, 62%, 64%, 100% { opacity: 1; } 20%, 63% { opacity: 0.35; } }
+@keyframes hsCloud { from { transform: translateX(-30cqw); } to { transform: translateX(30cqw); } }
+@keyframes hsWave { to { transform: translateX(2cqw); } }
+@keyframes hsPalm { from { transform: rotate(-2deg); } to { transform: rotate(3deg); } }
+@keyframes hsFloat { to { transform: translateY(-6%) rotate(-16deg); } }
+@keyframes hsRgb { to { background-position: 200% 0; } }
+@keyframes hsLow { to { opacity: 0.7; } }
+@keyframes hsGhost { from { opacity: 0.6; } to { opacity: 1; } }
+@keyframes hsBar { from { opacity: 0; transform: translate(-50%, 20px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .house *, .house *::before, .house *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; }
+}
