@@ -338,8 +338,9 @@
 .house .spot[data-spot='corner'] { left: 92%; bottom: 33%; }
 .house .spot[data-spot='bed'] { left: 23%; bottom: 17%; }
 .house .spot[data-spot='rug'] { left: 52%; bottom: 3%; z-index: 1; }
-.house .spot[data-spot='floor-right'] { left: 80%; bottom: 5%; z-index: 4; }
-.house .spot[data-spot='floor-left'] { left: 7%; bottom: 3%; z-index: 4; }
+/* floor spots keep wide pieces inside the room */
+.house .spot[data-spot='floor-right'] { left: min(80%, calc(99cqw - var(--w) * 0.5cqw)); bottom: 5%; z-index: 4; }
+.house .spot[data-spot='floor-left'] { left: max(7%, calc(1cqw + var(--w) * 0.5cqw)); bottom: 3%; z-index: 4; }
 .house .spot[data-spot='wall-left'] .art,
 .house .spot[data-spot='wall-right'] .art { filter: drop-shadow(0 0.6cqw 0.8cqw rgba(40, 20, 10, 0.25)); }
 .house .spot[data-spot='ceiling'][data-item='disco-ball'] .art,
