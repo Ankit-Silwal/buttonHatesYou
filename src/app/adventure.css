@@ -6,16 +6,37 @@
 
 /* ---------- one Adventure game ---------- */
 .adv {
+  --art-hi: color-mix(in srgb, var(--art, var(--btn)) 55%, #ffffff);
+  --art-lo: color-mix(in srgb, var(--art, var(--btn)) 45%, #140a22);
   position: fixed;
   inset: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.5), transparent 60%),
-    linear-gradient(var(--art, var(--wall)), var(--floor));
+    radial-gradient(ellipse 90% 60% at 50% 18%, color-mix(in srgb, var(--art-hi) 70%, transparent), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 110%, color-mix(in srgb, var(--art, var(--btn)) 45%, transparent), transparent 70%),
+    linear-gradient(170deg, var(--art-lo), #150c22 85%);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
+/* slow drifting bokeh behind the cards: two blurred blobs, moved by transform only */
+.adv::before,
+.adv::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--art-hi) 55%, transparent), transparent 65%);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: advDrift 18s ease-in-out infinite alternate;
+}
+.adv::before { top: -20vmax; left: -22vmax; }
+.adv::after { bottom: -26vmax; right: -24vmax; animation-duration: 23s; animation-direction: alternate-reverse; opacity: 0.4; }
+@keyframes advDrift { to { transform: translate(14vmax, 10vmax) scale(1.15); } }
+
 .adv .row { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .adv .chip.icon { justify-content: center; width: 38px; padding: 0; cursor: pointer; font-size: 16px; }
 
@@ -34,8 +55,14 @@
 }
 .adv-top > * { pointer-events: auto; }
 .adv-top .row { justify-content: flex-start; }
+.adv-top .chip,
+.adv-pause {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(10, 4, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
 
-.adv-stage { position: absolute; inset: 0; background: var(--art, var(--floor)); }
+.adv-stage { position: absolute; inset: 0; z-index: 1; background: var(--art-lo, var(--floor)); }
 .adv-stage canvas { display: block; touch-action: none; }
 .adv-pause { position: absolute; top: 14px; right: 62px; z-index: 41; }
 
@@ -47,40 +74,162 @@
   place-items: center;
   padding: 70px 16px 24px;
   overflow-y: auto;
-  background: rgba(74, 52, 40, 0.28);
+  background: radial-gradient(ellipse at 50% 40%, rgba(20, 10, 30, 0.05), rgba(20, 10, 30, 0.35));
 }
-.adv-stage .adv-overlay { background: rgba(20, 14, 10, 0.55); }
+.adv-stage .adv-overlay {
+  background: radial-gradient(ellipse at 50% 45%, rgba(18, 8, 28, 0.45), rgba(10, 4, 18, 0.78));
+  backdrop-filter: blur(5px) saturate(1.15);
+  -webkit-backdrop-filter: blur(5px) saturate(1.15);
+  animation: advFade 0.25s ease-out;
+}
+@keyframes advFade { from { opacity: 0; } }
+
 .adv-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: min(100%, 400px);
-  padding: 26px 22px 24px;
-  border-radius: 24px;
-  background: var(--cream);
-  box-shadow: 0 20px 50px var(--shadow);
+  padding: 28px 22px 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 0%, color-mix(in srgb, var(--art-hi) 30%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cream) 94%, #ffffff), var(--cream));
+  border: 1px solid color-mix(in srgb, var(--cream) 60%, #ffffff);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.04) inset,
+    0 30px 70px -18px color-mix(in srgb, var(--art-lo) 85%, #000000),
+    0 0 90px -20px color-mix(in srgb, var(--art, var(--btn)) 70%, transparent);
   text-align: center;
-  animation: rise 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+  animation: advRise 0.55s cubic-bezier(0.22, 1.4, 0.36, 1);
 }
-.adv-card h1 { margin: 6px 0 6px; font-size: 34px; line-height: 1.05; }
-.adv-card h2 { margin: 4px 0 4px; font-size: 44px; line-height: 1; }
-.adv-card h2 small { font-size: 18px; color: var(--ink-soft); }
+/* a thin luminous accent along the card's top edge */
+.adv-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 18%;
+  right: 18%;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--art, var(--btn)), var(--art-hi), var(--art, var(--btn)), transparent);
+  box-shadow: 0 0 14px var(--art, var(--btn));
+}
+@keyframes advRise { from { transform: translateY(26px) scale(0.94); opacity: 0; } }
+.adv-card > * { animation: advIn 0.5s ease-out backwards; }
+.adv-card > :nth-child(2) { animation-delay: 0.05s; }
+.adv-card > :nth-child(3) { animation-delay: 0.1s; }
+.adv-card > :nth-child(4) { animation-delay: 0.15s; }
+.adv-card > :nth-child(5) { animation-delay: 0.2s; }
+.adv-card > :nth-child(n + 6) { animation-delay: 0.25s; }
+@keyframes advIn { from { opacity: 0; transform: translateY(8px); } }
+
+.adv-card h1 { margin: 10px 0 6px; font-size: 36px; line-height: 1.05; letter-spacing: -0.01em; }
+.adv-card h2 {
+  margin: 4px 0 4px;
+  font-size: 56px;
+  line-height: 1;
+  background: linear-gradient(180deg, var(--ink) 30%, color-mix(in srgb, var(--art, var(--btn)) 60%, var(--ink)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.adv-card h2 small { font-size: 18px; color: var(--ink-soft); -webkit-text-fill-color: var(--ink-soft); }
 .adv-card p { margin: 6px 0; color: var(--ink-soft); line-height: 1.4; }
-.adv-card .how { color: var(--ink); font-weight: 600; }
+.adv-card .how {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--art, var(--btn)) 12%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
 .adv-card .goal { font-size: 14px; }
 .adv-card .goal b { color: var(--ink); }
-.adv-card .kicker { margin-top: 10px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.adv-card .kicker {
+  margin-top: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--art, var(--btn)) 18%, transparent);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 .adv-card .quip { font-style: italic; color: var(--ink); }
-.adv-card .prize { font-size: 22px; font-weight: 700; color: var(--ink); }
-.adv-card .row { margin-top: 16px; }
+.adv-card .prize {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff3c4, #ffd76a);
+  box-shadow: 0 0 0 1px rgba(180, 120, 20, 0.25) inset, 0 6px 22px -4px rgba(255, 190, 40, 0.75);
+  color: #6a4210;
+  font-size: 22px;
+  font-weight: 700;
+  animation: advPrize 1.8s ease-in-out 0.6s infinite;
+}
+@keyframes advPrize { 50% { box-shadow: 0 0 0 1px rgba(180, 120, 20, 0.25) inset, 0 8px 34px 0 rgba(255, 190, 40, 0.95); transform: scale(1.04); } }
+.adv-card .row { margin-top: 18px; }
 .adv-card .pill { text-decoration: none; }
-.adv-card .pill.big { margin-top: 14px; padding: 14px 40px; font-size: 20px; }
+.adv-card .pill:not(.ghost) {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--btn) 70%, #ffffff), var(--btn) 55%, color-mix(in srgb, var(--btn) 85%, #000000));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 4px 0 var(--btn-dark),
+    0 10px 26px -6px color-mix(in srgb, var(--btn) 80%, transparent);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.adv-card .pill:not(.ghost):hover { filter: brightness(1.06); transform: translateY(-1px); }
+.adv-card .pill:not(.ghost):active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 1px 0 var(--btn-dark), 0 4px 12px -6px var(--btn); }
+/* a sheen that sweeps across the main button now and then */
+.adv-card .pill:not(.ghost)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: advSheen 3.2s ease-in-out 1s infinite;
+  pointer-events: none;
+}
+@keyframes advSheen { 0%, 60% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+.adv-card .pill.big { margin-top: 18px; padding: 15px 52px; font-size: 21px; letter-spacing: 0.02em; }
+.adv-card .pill.ghost { background: color-mix(in srgb, var(--cream) 80%, #ffffff); }
+
 .adv-emoji {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 96px;
-  height: 96px;
-  border-radius: 28px;
-  background: var(--art, var(--floor));
-  font-size: 54px;
+  width: 104px;
+  height: 104px;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.75), transparent 45%),
+    linear-gradient(160deg, var(--art-hi), var(--art, var(--floor)) 60%, color-mix(in srgb, var(--art, var(--floor)) 75%, #000000));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 -6px 14px -6px rgba(0, 0, 0, 0.25) inset,
+    0 14px 30px -10px color-mix(in srgb, var(--art, var(--btn)) 90%, #000000),
+    0 0 50px -6px color-mix(in srgb, var(--art, var(--btn)) 80%, transparent);
+  font-size: 58px;
+  animation: advFloat 3.4s ease-in-out infinite;
+}
+.adv-emoji::after {
+  content: '';
+  position: absolute;
+  inset: 6px 10px auto;
+  height: 38%;
+  border-radius: 26px 26px 50% 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+@keyframes advFloat { 50% { transform: translateY(-6px) rotate(-2deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .adv::before, .adv::after, .adv-emoji, .adv-card .prize, .adv-card .pill::after { animation: none; }
 }
