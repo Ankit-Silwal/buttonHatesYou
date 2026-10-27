@@ -2,7 +2,7 @@
 // kept only to fold a guest's old event queue into a plain wallet once, so
 // nothing they earned or bought changes when prices go up. See store.js.
 
-import { ITEM } from './catalog';
+import { applyEvent, normalize } from './rules';
 
 const OLD_PRICES = {
   'color-ocean': { coins: 40 },
@@ -48,19 +48,15 @@ function legacyApply(w, ev) {
     const r = OLD_REWARDS[ev.game];
     return { ...w, coins: w.coins + r.coins, diamonds: w.diamonds + r.diamonds };
   }
-  if (ev?.type === 'buy') {
-    const price = has(OLD_PRICES, ev.item) ? OLD_PRICES[ev.item] : null;
-    const c = price?.coins ?? 0;
-    const d = price?.diamonds ?? 0;
-    if (!price || w.owned.includes(ev.item) || w.coins < c || w.diamonds < d) return w;
+  if (ev?.type === 'buy' && has(OLD_PRICES, ev.item)) {
+    const price = OLD_PRICES[ev.item];
+    const c = price.coins ?? 0;
+    const d = price.diamonds ?? 0;
+    if (w.owned.includes(ev.item) || w.coins < c || w.diamonds < d) return w;
     return { ...w, coins: w.coins - c, diamonds: w.diamonds - d, owned: [...w.owned, ev.item] };
   }
-  if (ev?.type === 'equip' && typeof ev.slot === 'string' && typeof ev.item === 'string') {
-    const free = !has(OLD_PRICES, ev.item);
-    if (ITEM[ev.item]?.slot !== ev.slot || !(free || w.owned.includes(ev.item))) return w;
-    return { ...w, equipped: { ...w.equipped, [ev.slot]: ev.item } };
-  }
-  return w;
+  // anything else (outfit changes, the house, needs) works as it does today
+  return applyEvent(w, ev) ?? w;
 }
 
-export const legacyReplay = (wallet, events) => events.reduce(legacyApply, wallet);
+export const legacyReplay = (wallet, events) => events.reduce(legacyApply, normalize(wallet));

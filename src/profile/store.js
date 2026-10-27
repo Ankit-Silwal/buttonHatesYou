@@ -1,4 +1,4 @@
-import { START, applyEvent, replay } from '@/economy/rules';
+import { START, applyEvent, replay, normalize } from '@/economy/rules';
 import { legacyReplay } from '@/economy/legacy';
 
 // The player's profile, offline first.
@@ -34,6 +34,10 @@ let again = false;
 const listeners = new Set();
 
 const SERVER_VIEW = Object.freeze({ ready: false, user: null, wallet: START, pending: 0, status: 'guest' });
+
+// Only the last change per outfit slot or house spot matters.
+const sameSlot = (a, b) =>
+  a.type === b.type && ((a.type === 'equip' && a.slot === b.slot) || (a.type === 'decor' && a.spot === b.spot));
 
 const uid = () => crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2);
 const online = () => typeof navigator === 'undefined' || navigator.onLine;
@@ -111,11 +115,11 @@ export function subscribe(fn) {
 function record(ev) {
   init();
   const event = { id: uid(), ...ev };
-  if (ev.type === 'equip') {
-    // Only the last outfit change per slot matters; don't let the queue grow
-    // every time someone tries things on while offline. Events already on
-    // their way to the server stay.
-    data.outbox = data.outbox.filter((e) => e.inflight || !(e.type === 'equip' && e.slot === ev.slot));
+  if (ev.type === 'equip' || ev.type === 'decor') {
+    // Only the last outfit change per slot (or furniture per spot) matters;
+    // don't let the queue grow every time someone tries things on while
+    // offline. Events already on their way to the server stay.
+    data.outbox = data.outbox.filter((e) => e.inflight || !sameSlot(e, ev));
   }
   data.outbox.push(event);
   commit();
@@ -151,6 +155,14 @@ export const isClaimed = (wallet, claim) => !!wallet.claimed?.includes(claim);
 export const buy = (item) => tryRecord({ type: 'buy', item });
 export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 
+// The house and the button's needs (see economy/house.js and needs.js).
+export const decorate = (spot, item) => tryRecord({ type: 'decor', spot, item });
+export const feed = (item) => tryRecord({ type: 'feed', item, at: Date.now() });
+export const sleep = () => tryRecord({ type: 'sleep', at: Date.now() });
+export const wake = () => tryRecord({ type: 'wake', at: Date.now() });
+// Starting a game: spends energy, or returns false when he's too tired/asleep.
+export const play = (kind) => tryRecord({ type: 'play', kind, at: Date.now() });
+
 /* ---------- talking to the server ---------- */
 export function sync() {
   init();
@@ -185,7 +197,7 @@ async function push() {
     if (!res.ok) throw new Error(res.status);
     const { state } = await res.json();
     const sent = new Set(batch.map((e) => e.id));
-    data.base = state;
+    data.base = normalize(state);
     data.outbox = data.outbox.filter((e) => !sent.has(e.id));
     net = 'idle';
     commit();
@@ -215,7 +227,7 @@ function adopt(user, state) {
   }
   data.user = user;
   data.owner = user.id;
-  data.base = state;
+  data.base = normalize(state);
   commit();
   return sync();
 }

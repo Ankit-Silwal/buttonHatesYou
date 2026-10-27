@@ -1,4 +1,6 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
+import { HOUSE_ITEM, DEFAULT_HOUSE, SPOT, FOOD } from './house';
+import { DEFAULT_NEEDS, PLAY_COST, needsAt, normalizeNeeds } from './needs';
 
 // A wallet only ever changes through events, and the browser and the server
 // run the very same `applyEvent`. The browser applies them right away (so it
@@ -23,12 +25,17 @@ import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './
 //   runs     { [game]: best payout of a single run } (for the diamonds)
 //   day      { n: day number (UTC), coins: run coins earned that day, ms: play time }
 //   legacy   { [REWARDS id]: times paid } (old events are paid a limited number of times)
+//
+// The house and the button's needs have their own events, handled by
+// applyHouseEvent below.
 
 export const START = Object.freeze({
   coins: 300, // a little welcome money: enough for one cheap item, so the wardrobe isn't just a window
   diamonds: 0,
   owned: [],
   equipped: DEFAULT_LOOK,
+  house: DEFAULT_HOUSE, // see house.js
+  needs: DEFAULT_NEEDS, // see needs.js
 });
 
 const pick = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
@@ -40,9 +47,12 @@ export const canAfford = (wallet, item) =>
 
 // Returns the new wallet, or null when the event is not allowed.
 // Events can come straight from a request body, so trust nothing in them.
-// `now` caps event times (the server passes its own clock).
+// `now` caps event times: runs and needs events (the server passes its own clock).
 export function applyEvent(wallet, ev, now = Infinity) {
   if (!ev || typeof ev !== 'object') return null;
+  wallet = normalize(wallet);
+  const house = applyHouseEvent(wallet, ev, now);
+  if (house !== undefined) return house;
 
   /* ---------- earning (economy) ---------- */
   if (ev.type === 'run') return applyRun(wallet, ev, now);
@@ -70,7 +80,8 @@ export function applyEvent(wallet, ev, now = Infinity) {
   return null;
 }
 
-export const replay = (wallet, events, now) => events.reduce((w, ev) => applyEvent(w, ev, now) ?? w, wallet);
+export const replay = (wallet, events, now) =>
+  events.reduce((w, ev) => applyEvent(w, ev, now) ?? w, normalize(wallet));
 
 export const isEventId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 64;
 
@@ -169,4 +180,106 @@ function applyLegacyReward(wallet, ev) {
   const times = num(wallet.legacy?.[ev.game]);
   if (!prize || times >= prize.max) return null;
   return { ...add(wallet, prize), legacy: { ...wallet.legacy, [ev.game]: times + 1 } };
+}
+
+/* =====================================================================
+   The house and the button's needs
+   =====================================================================
+   { id, type: 'buy', item }           bought a house item (wallpaper, floor, furniture)
+   { id, type: 'decor', spot, item }   put an owned wallpaper/floor up (spot 'wall' /
+                                       'floor') or a piece of furniture in a spot
+                                       (item null takes it down; the bed stays)
+   Needs events carry `at`, when they happened (ms). Hunger and energy drift
+   with the clock between events (see needs.js).
+   { id, type: 'feed', item, at }      bought a food and ate it
+   { id, type: 'sleep', at }           went to bed
+   { id, type: 'wake', at }            got up
+   { id, type: 'play', kind, at }      started a game: costs PLAY_COST[kind] energy */
+
+const own = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
+const r2 = (v) => Math.round(v * 100) / 100;
+const pay = (wallet, price) => ({
+  ...wallet,
+  coins: wallet.coins - (price.coins ?? 0),
+  diamonds: wallet.diamonds - (price.diamonds ?? 0),
+});
+
+// Wallets saved before the house existed have no `house` or `needs`.
+export function normalize(w) {
+  if (!w || typeof w !== 'object') return START;
+  if (w.house?.place && w.needs && w.equipped && Array.isArray(w.owned)) return w;
+  return {
+    ...START,
+    ...w,
+    owned: Array.isArray(w.owned) ? w.owned : [],
+    equipped: { ...DEFAULT_LOOK, ...w.equipped },
+    house: { ...DEFAULT_HOUSE, ...w.house, place: { ...DEFAULT_HOUSE.place, ...w.house?.place } },
+    needs: normalizeNeeds(w.needs),
+  };
+}
+
+// The needs at the event's time. Time only moves forward: an event can't be
+// earlier than the last one, nor (on the server) later than `now`.
+function needsFor(wallet, ev, now) {
+  let t = Number(ev.at);
+  if (!Number.isFinite(t) || t <= 0) return null;
+  t = Math.max(Math.min(t, now), wallet.needs.at);
+  return { ...needsAt(wallet.needs, t), at: t }; // a new player's clock starts here
+}
+
+// The new wallet, null when the event is not allowed, or undefined when it
+// isn't a house/needs event at all.
+function applyHouseEvent(wallet, ev, now) {
+  if (ev.type === 'buy') {
+    const item = own(HOUSE_ITEM, ev.item);
+    if (!item) return undefined; // an outfit
+    if (owns(wallet, item) || !canAfford(wallet, item)) return null;
+    return { ...pay(wallet, item.price), owned: [...wallet.owned, item.id] };
+  }
+
+  if (ev.type === 'decor') {
+    const { house } = wallet;
+    if (ev.spot === 'wall' || ev.spot === 'floor') {
+      const item = own(HOUSE_ITEM, ev.item);
+      if (!item || item.kind !== ev.spot || !owns(wallet, item)) return null;
+      return { ...wallet, house: { ...house, [ev.spot]: item.id } };
+    }
+    if (!own(SPOT, ev.spot)) return null;
+    const place = { ...house.place };
+    if (ev.item == null) {
+      delete place[ev.spot];
+    } else {
+      const item = own(HOUSE_ITEM, ev.item);
+      if (!item || item.kind !== 'furniture' || !item.spots.includes(ev.spot) || !owns(wallet, item)) return null;
+      for (const s of Object.keys(place)) if (place[s] === item.id) delete place[s]; // only one of each
+      place[ev.spot] = item.id;
+    }
+    if (!place.bed) return null; // there's always a bed
+    return { ...wallet, house: { ...house, place } };
+  }
+
+  if (ev.type === 'feed') {
+    const food = own(FOOD, ev.item);
+    const needs = food && needsFor(wallet, ev, now);
+    if (!needs || needs.asleep || !canAfford(wallet, food)) return null;
+    return {
+      ...pay(wallet, food.price),
+      needs: { ...needs, hunger: r2(Math.min(100, needs.hunger + food.hunger)), energy: r2(Math.min(100, needs.energy + food.energy)) },
+    };
+  }
+
+  if (ev.type === 'sleep' || ev.type === 'wake') {
+    const needs = needsFor(wallet, ev, now);
+    if (!needs || needs.asleep === (ev.type === 'sleep')) return null;
+    return { ...wallet, needs: { ...needs, asleep: ev.type === 'sleep' } };
+  }
+
+  if (ev.type === 'play') {
+    const cost = own(PLAY_COST, ev.kind);
+    const needs = cost && needsFor(wallet, ev, now);
+    if (!needs || needs.asleep || needs.energy < cost) return null;
+    return { ...wallet, needs: { ...needs, energy: r2(needs.energy - cost) } };
+  }
+
+  return undefined;
 }

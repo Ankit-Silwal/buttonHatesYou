@@ -84,19 +84,20 @@ export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
       {tryItem && (
         <div className="buybar">
           <div>
+            <span className="try-tag">Trying on</span>
             <b>{tryItem.name}</b>
             <span className="note">
               {canAfford(wallet, tryItem)
-                ? ` · ${price(tryItem.price)}`
+                ? ''
                 : ` · need ${short.coins ? `${short.coins} more 🪙` : `${short.diamonds} more 💎`}`}
             </span>
           </div>
           <div className="row">
             <button className="pill ghost" onClick={() => setTrying(null)}>
-              Nah
+              Cancel
             </button>
             <button className="pill" onClick={purchase} disabled={!canAfford(wallet, tryItem)}>
-              Buy
+              Buy · {price(tryItem.price)}
             </button>
           </div>
         </div>

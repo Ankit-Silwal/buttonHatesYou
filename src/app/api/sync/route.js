@@ -1,6 +1,6 @@
 import { currentUser } from '@/server/auth';
 import { updateUser, newUser } from '@/server/db';
-import { applyEvent, isEventId } from '@/economy/rules';
+import { applyEvent, isEventId, normalize } from '@/economy/rules';
 
 const MAX_EVENTS = 200;
 const SEEN_KEEP = 1000;
@@ -11,6 +11,8 @@ const CLOCK_SKEW = 5 * 60_000; // how far ahead of ours a browser's clock may be
 // was already applied is skipped, so retrying a sync is always safe. An
 // Adventure run sends its score and play time, never its payout: applyEvent
 // works the payout out again and caps it (see applyRun in rules.js).
+// Needs events (food, sleep, games) are timed by the browser, but never later
+// than the server's clock, and never earlier than the last one (see rules.js).
 export async function POST(req) {
   const me = await currentUser();
   if (!me) return Response.json({ error: 'Not signed in' }, { status: 401 });
@@ -23,7 +25,7 @@ export async function POST(req) {
     u ??= newUser(me);
     const seen = new Set(u.seen);
     const now = Date.now() + CLOCK_SKEW;
-    let wallet = u.wallet;
+    let wallet = normalize(u.wallet); // profiles from before the house get defaults
     for (const ev of events) {
       if (!isEventId(ev?.id) || seen.has(ev.id)) continue;
       seen.add(ev.id);

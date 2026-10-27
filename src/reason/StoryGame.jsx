@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Wallet from '@/components/Wallet';
 import { useProfile } from '@/profile/useProfile';
+import { useEnergyGate } from '@/house/EnergyGate';
 import { claimStory } from '@/profile/store';
 import { Game } from './engine';
 import { Bobby } from './actors';
@@ -29,6 +30,7 @@ const nextUp = (cfg, save) => cfg.episodes.find((e) => !save.done[e.n])?.n ?? 1;
 export default function StoryGame({ cfg }) {
   const LAST = cfg.episodes.length;
   const profile = useProfile();
+  const gate = useEnergyGate('story'); // each episode start costs energy
   const [save, setSave] = useState(null);
   const [playing, setPlaying] = useState(null); // episode number
   const [finished, setFinished] = useState(null); // { n, prize, skipped }
@@ -79,7 +81,7 @@ export default function StoryGame({ cfg }) {
       {playing ? (
         <Play key={playing} cfg={cfg} n={playing} save={save} muted={save.muted} onMute={toggleMute} onDone={complete} onExit={() => setPlaying(null)} />
       ) : (
-        <Menu cfg={cfg} save={save} profile={profile} onPlay={(n) => { setFinished(null); setPlaying(n); }} onMute={toggleMute} />
+        <Menu cfg={cfg} save={save} profile={profile} onPlay={(n) => { if (!gate.spend()) return; setFinished(null); setPlaying(n); }} onMute={toggleMute} />
       )}
       {finished && !playing && (
         <Finished
@@ -87,11 +89,13 @@ export default function StoryGame({ cfg }) {
           {...finished}
           onClose={() => setFinished(null)}
           onNext={() => {
+            if (!gate.spend()) return;
             setFinished(null);
             setPlaying(finished.n + 1);
           }}
         />
       )}
+      {gate.refusal}
     </main>
   );
 }
