@@ -227,7 +227,7 @@ const STORY = {
 // moment, and draw one frame from `top` down.
 const QUIET = new Proxy({}, { get: () => () => {} });
 const ADVENTURE = {
-  flap: { sec: 1.2, top: 40, taps: [0.1, 0.45, 0.8, 1.1] },
+  flap: { sec: 1.2, top: 70, taps: [0.1, 0.45, 0.8] },
   pop: { sec: 0.5, top: 300 },
   catch: { sec: 2.4, top: 520 },
   simon: { sec: 0.4, top: 230 },
