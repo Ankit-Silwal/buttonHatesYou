@@ -68,7 +68,9 @@ const storyRewards = (story, parts, each, finale) =>
 export const STORY_REWARDS = {
   ...storyRewards('reason', 9, { coins: 200, diamonds: 0 }, { coins: 1500, diamonds: 10 }),
   ...storyRewards('cursor', 6, { coins: 200, diamonds: 0 }, { coins: 1200, diamonds: 8 }),
-  'please-dont': { coins: 800, diamonds: 5 },
+  // Please Don't pays nothing: finishing it is its own (mysterious) reward.
+  // The claim still records that it was finished.
+  'please-dont': { coins: 0, diamonds: 0 },
 };
 
 // Adventure runs pay by performance (see adventurePayout in rules.js). Each
@@ -151,7 +153,7 @@ export const GAMES = [
     blurb: 'Press the button 65 times. It really, really does not want you to.',
     href: '/games/please-dont',
     category: 'story',
-    prize: '+800 🪙  +5 💎, once',
+    prize: '??? Mystery prize',
   },
   ...[
     {

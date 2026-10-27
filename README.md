@@ -162,7 +162,7 @@ nothing, on the server too:
 | --- | --- | --- | --- |
 | The Reason (9 episodes) | 200 🪙 | 1500 🪙 + 10 💎 | 3100 🪙 + 10 💎 |
 | How I Met Your Cursor (6 chapters) | 200 🪙 | 1200 🪙 + 8 💎 | 2200 🪙 + 8 💎 |
-| Please Don't | | 800 🪙 + 5 💎 | 800 🪙 + 5 💎 |
+| Please Don't | | ??? (nothing: the prize is a mystery) | — |
 
 **Prices** (outfits; coins about ×8, diamonds ×2, so a new player starts with
 300 🪙, enough for one cheap item):
