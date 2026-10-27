@@ -6,6 +6,7 @@ import Avatar from './Avatar';
 import Account from './Account';
 import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
+import EnergyChip from '@/house/EnergyChip';
 import { useProfile } from '@/profile/useProfile';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -100,7 +101,10 @@ export default function Hub() {
       </div>
 
       <header className="hub-top">
-        <Wallet profile={profile} />
+        <div className="hub-left">
+          <Wallet profile={profile} />
+          <EnergyChip />
+        </div>
         <Account user={user} ready={ready} />
       </header>
 
@@ -133,6 +137,9 @@ export default function Hub() {
           </button>
           <Link className="pill big story-btn" href="/story" style={{ '--i': 2 }}>
             <span className="ico">📖</span> Story
+          </Link>
+          <Link className="pill big house-btn" href="/house" style={{ '--i': 3 }}>
+            <span className="ico">🏠</span> House
           </Link>
         </nav>
       )}
