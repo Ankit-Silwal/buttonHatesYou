@@ -1,4 +1,5 @@
-import { W, H, rand, pick, clamp, rr, text, heart, drawBobby, drawScore, backdrop, bubble, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, text, heart, drawBobby, drawScore, bubble, Mouth, Sparks } from '../kit';
+import { Fx, sprite, glow, shadow, vignette, hash } from '../fx';
 
 // Slice Spree: fruit and junk are tossed up from the bottom. Swipe across them
 // to slice them. Sometimes the button is tossed up too. Do NOT slice it.
@@ -31,7 +32,10 @@ export default function slice({ look, sound }) {
   const trail = []; // { x, y, life }
   const queue = []; // tosses waiting to happen, { at, bobby }
   const mouth = new Mouth();
-  const sparks = new Sparks();
+  const sparks = new Sparks(); // floating words
+  const fx = new Fx();
+  const splats = []; // juice left on the board: { x, y, color, angle, size, life }
+  const slashes = []; // bright cut lines: { x, y, angle, life }
   let started = false;
   let t = 0;
   let lives = LIVES;
@@ -88,8 +92,9 @@ export default function slice({ look, sound }) {
     mouth.line = null; // the big shout below says it all
     sound.crack();
     sound.hit();
-    sparks.burst(it.x, it.y, look.color, 26, 320);
-    sparks.burst(it.x, it.y, '#fff', 12, 200);
+    fx.burst(it.x, it.y, look.color, 30, 380);
+    fx.burst(it.x, it.y, '#ffffff', 14, 260, { size: 2 });
+    fx.ring(it.x, it.y, '#ff8a7a', 120, 0.5, 10);
   };
 
   const cut = (it, angle) => {
@@ -111,7 +116,11 @@ export default function slice({ look, sound }) {
         glyph: it.glyph,
       });
     }
-    sparks.burst(it.x, it.y, kind.juice, 14, 260);
+    fx.burst(it.x, it.y, kind.juice, 16, 320, { gravity: 700 });
+    fx.burst(it.x, it.y, '#ffffff', 5, 200, { size: 1.6, life: 0.3 });
+    if (splats.length > 20) splats.shift();
+    splats.push({ x: it.x, y: it.y, color: kind.juice, angle: rand(0, Math.PI * 2), size: it.r * rand(1.6, 2.2), life: 3 });
+    slashes.push({ x: it.x, y: it.y, angle, life: 0.22, r: it.r * 1.9 });
     sound.pop();
     g.score++;
     hits++;
@@ -187,6 +196,11 @@ export default function slice({ look, sound }) {
       t += dt;
       mouth.update(dt);
       sparks.update(dt);
+      fx.update(dt);
+      for (const sp of splats) sp.life -= dt;
+      while (splats.length && splats[0].life <= 0) splats.shift();
+      for (const sl of slashes) sl.life -= dt;
+      while (slashes.length && slashes[0].life <= 0) slashes.shift();
       flash = Math.max(0, flash - dt);
       for (const p of trail) p.life -= dt;
       while (trail.length && trail[0].life <= 0) trail.shift();
@@ -229,16 +243,21 @@ export default function slice({ look, sound }) {
     },
 
     draw(c) {
-      backdrop(c, '#7a4b2a', '#4a2c18');
-      // planks on the chopping board
-      c.strokeStyle = 'rgba(0,0,0,0.18)';
-      c.lineWidth = 3;
-      for (let x = 80; x < W; x += 80) {
-        c.beginPath();
-        c.moveTo(x, 0);
-        c.lineTo(x, H);
-        c.stroke();
+      c.drawImage(board(), 0, 0);
+      // juice soaks into the board and fades
+      for (const sp of splats) {
+        c.globalAlpha = clamp(sp.life / 3, 0, 1) * 0.5;
+        c.save();
+        c.translate(sp.x, sp.y);
+        c.rotate(sp.angle);
+        c.drawImage(splatSprite(sp.color), -sp.size, -sp.size, sp.size * 2, sp.size * 2);
+        c.restore();
       }
+      c.globalAlpha = 1;
+
+      // everything in the air casts a soft shadow on the board below
+      for (const it of items) shadow(c, it.x + 14, it.y + 26, it.r * 1.05, 0.4, it.r * 0.6);
+      for (const h of halves) shadow(c, h.x + 14, h.y + 26, KINDS[h.kind].r * 0.9, 0.3, KINDS[h.kind].r * 0.45);
 
       for (const h of halves) half(c, h);
       for (const it of items) {
@@ -255,23 +274,46 @@ export default function slice({ look, sound }) {
         }
       }
 
-      // the blade trail: thick and bright at the tip, thin where it fades
+      // the blade trail: a glowing ribbon, thick and bright at the tip
       c.lineCap = 'round';
+      c.lineJoin = 'round';
+      const op = c.globalCompositeOperation;
+      c.globalCompositeOperation = 'lighter';
       for (let i = 1; i < trail.length; i++) {
         const a = trail[i - 1];
         const b = trail[i];
         const k = clamp(b.life / TRAIL, 0, 1);
-        c.strokeStyle = `rgba(190,230,255,${0.35 * k})`;
-        c.lineWidth = 4 + 14 * k;
         c.beginPath();
         c.moveTo(a.x, a.y);
         c.lineTo(b.x, b.y);
+        c.strokeStyle = `rgba(80,170,255,${0.22 * k})`;
+        c.lineWidth = 6 + 22 * k;
+        c.stroke();
+        c.strokeStyle = `rgba(170,225,255,${0.5 * k})`;
+        c.lineWidth = 3 + 9 * k;
         c.stroke();
         c.strokeStyle = `rgba(255,255,255,${k})`;
-        c.lineWidth = 1 + 6 * k;
+        c.lineWidth = 1 + 4 * k;
         c.stroke();
       }
+      const tip = trail[trail.length - 1];
+      if (tip && held) glow(c, tip.x, tip.y, 26, '#9fd8ff', clamp(tip.life / TRAIL, 0, 1));
+      // a white-hot line where something was just cut
+      for (const sl of slashes) {
+        const k = sl.life / 0.22;
+        const dx = Math.cos(sl.angle) * sl.r * (1.4 - k * 0.4);
+        const dy = Math.sin(sl.angle) * sl.r * (1.4 - k * 0.4);
+        c.strokeStyle = `rgba(255,255,255,${k})`;
+        c.lineWidth = 2 + 5 * k;
+        c.beginPath();
+        c.moveTo(sl.x - dx, sl.y - dy);
+        c.lineTo(sl.x + dx, sl.y + dy);
+        c.stroke();
+        glow(c, sl.x, sl.y, sl.r * 1.2, '#ffffff', k * 0.6);
+      }
+      c.globalCompositeOperation = op;
 
+      fx.draw(c);
       sparks.draw(c);
 
       // the button peeks up from the corner, unless it is the one in the air
@@ -284,7 +326,11 @@ export default function slice({ look, sound }) {
       }
       if (hurt) bubble(c, clamp(hurt.x, 60, W - 60), clamp(hurt.y - BOBBY * 0.6, 220, H - 120), shout, { size: 30, bg: '#ffe9e6', color: '#b3202a' });
 
-      for (let i = 0; i < LIVES; i++) heart(c, W / 2 + (i - 1) * 30, 150, 10, i < lives ? '#ff4f7b' : 'rgba(255,255,255,0.25)');
+      for (let i = 0; i < LIVES; i++) {
+        if (i < lives) glow(c, W / 2 + (i - 1) * 30, 150, 22, '#ff4f7b', 0.5);
+        heart(c, W / 2 + (i - 1) * 30, 150, 10, i < lives ? '#ff4f7b' : 'rgba(255,255,255,0.25)');
+      }
+      if (flash > 0 || hurt) vignette(c, hurt ? 0.35 + flash * 2 : flash * 3, '#d01a20');
 
       if (started) drawScore(c, g.score);
       else drawScore(c, 'Swipe to start', 'Slice everything. Except me.');
@@ -293,64 +339,250 @@ export default function slice({ look, sound }) {
   return g;
 }
 
-// One item, centered on the origin, already rotated.
-function drawItem(c, kind, glyph) {
-  const r = KINDS[kind].r;
-  if (kind === 'melon') {
-    c.fillStyle = '#3f9a3c';
-    c.beginPath();
-    c.arc(0, 0, r, 0, Math.PI * 2);
-    c.fill();
-    c.strokeStyle = '#2a6e2a';
-    c.lineWidth = 5;
-    for (const k of [-0.55, 0, 0.55]) {
-      c.beginPath();
-      c.ellipse(k * r, 0, r * 0.18, r * 0.92, 0, 0, Math.PI * 2);
-      c.stroke();
+/* ---------- art ---------- */
+
+// The chopping board: dark oiled planks with grain, a warm pool of light
+// from above and deep corners. Painted once.
+function board() {
+  return sprite('slice:board', W, H, (c) => {
+    const base = c.createLinearGradient(0, 0, W, H);
+    base.addColorStop(0, '#5a3520');
+    base.addColorStop(1, '#3a2213');
+    c.fillStyle = base;
+    c.fillRect(0, 0, W, H);
+    for (let p = 0; p < 6; p++) {
+      const x0 = p * 80;
+      // each plank a slightly different tone
+      c.fillStyle = `rgba(${p % 2 ? '255,200,150' : '0,0,0'},${0.03 + hash(p) * 0.05})`;
+      c.fillRect(x0, 0, 80, H);
+      // wavy grain lines
+      c.lineWidth = 1;
+      for (let i = 0; i < 16; i++) {
+        const gx = x0 + 4 + hash(p * 20 + i) * 72;
+        c.strokeStyle = hash(p * 31 + i) > 0.5 ? 'rgba(20,8,2,0.28)' : 'rgba(255,190,130,0.08)';
+        c.beginPath();
+        for (let y = 0; y <= H; y += 20) c.lineTo(gx + Math.sin(y * 0.012 + i + p) * 3 + Math.sin(y * 0.05 + i) * 0.8, y);
+        c.stroke();
+      }
+      // a knot or two
+      for (let k = 0; k < 2; k++) {
+        if (hash(p * 7 + k) < 0.5) continue;
+        const kx = x0 + 20 + hash(p + k * 3) * 40;
+        const ky = hash(p * 3 + k) * H;
+        for (let r = 3; r < 14; r += 3) {
+          c.strokeStyle = 'rgba(20,8,2,0.25)';
+          c.beginPath();
+          c.ellipse(kx, ky, r * 0.7, r * 1.6, 0, 0, Math.PI * 2);
+          c.stroke();
+        }
+      }
+      // knife scratches
+      for (let i = 0; i < 5; i++) {
+        const sx = x0 + hash(p * 9 + i) * 80;
+        const sy = hash(p * 13 + i) * H;
+        const a = hash(p + i * 5) * Math.PI;
+        c.strokeStyle = 'rgba(255,220,180,0.07)';
+        c.beginPath();
+        c.moveTo(sx, sy);
+        c.lineTo(sx + Math.cos(a) * 40, sy + Math.sin(a) * 40);
+        c.stroke();
+      }
+      // the seam between planks: a dark gap with a lit edge
+      c.fillStyle = 'rgba(10,4,0,0.55)';
+      c.fillRect(x0 - 1.5, 0, 3, H);
+      c.fillStyle = 'rgba(255,200,150,0.08)';
+      c.fillRect(x0 + 1.5, 0, 1.5, H);
     }
-  } else if (kind === 'orange') {
-    c.fillStyle = '#ff9a1f';
+    // a warm overhead light
+    const light = c.createRadialGradient(W / 2, H * 0.4, 20, W / 2, H * 0.45, H * 0.65);
+    light.addColorStop(0, 'rgba(255,200,140,0.32)');
+    light.addColorStop(0.5, 'rgba(255,170,110,0.1)');
+    light.addColorStop(1, 'rgba(255,170,110,0)');
+    c.fillStyle = light;
+    c.fillRect(0, 0, W, H);
+    const v = c.createRadialGradient(W / 2, H * 0.45, H * 0.25, W / 2, H / 2, H * 0.75);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(8,3,0,0.7)');
+    c.fillStyle = v;
+    c.fillRect(0, 0, W, H);
+  });
+}
+
+// A juice splat left on the board.
+function splatSprite(color) {
+  return sprite(`slice:splat:${color}`, 128, 128, (c) => {
+    c.translate(64, 64);
+    c.fillStyle = color;
     c.beginPath();
-    c.arc(0, 0, r, 0, Math.PI * 2);
+    for (let i = 0; i <= 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      const r = 26 + hash(i + color.length) * 14;
+      c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
     c.fill();
-    c.fillStyle = 'rgba(160,80,0,0.35)';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 9; i++) {
+      const a = hash(i * 3) * Math.PI * 2;
+      const d = 40 + hash(i * 5) * 20;
       c.beginPath();
-      c.arc(Math.cos(i * 2.1) * r * 0.55, Math.sin(i * 2.1) * r * 0.5, 1.6, 0, Math.PI * 2);
+      c.arc(Math.cos(a) * d, Math.sin(a) * d, 2 + hash(i * 7) * 5, 0, Math.PI * 2);
       c.fill();
     }
-    c.fillStyle = '#4f9a3c';
+    // wet highlight
+    c.fillStyle = 'rgba(255,255,255,0.18)';
     c.beginPath();
-    c.ellipse(5, -r + 2, 8, 4, -0.4, 0, Math.PI * 2);
+    c.ellipse(-8, -10, 12, 6, -0.5, 0, Math.PI * 2);
     c.fill();
+  });
+}
+
+const IRES = 2; // item sprites are painted at twice the size, for crisp edges
+const IPAD = 10;
+
+// An item's sprite, centered, unrotated (cached per kind and glyph).
+function itemSprite(kind, glyph) {
+  const r = KINDS[kind].r;
+  const size = (r * 2 + IPAD * 2) * (kind === 'banana' ? 1.5 : 1);
+  return sprite(`slice:item:${kind}:${kind === 'key' ? glyph : ''}`, size * IRES, size * IRES, (c) => {
+    c.scale(IRES, IRES);
+    c.translate(size / 2, size / 2);
+    paintItem(c, kind, glyph);
+  });
+}
+
+function drawItem(c, kind, glyph) {
+  const spr = itemSprite(kind, glyph);
+  const s = spr.width / IRES;
+  c.drawImage(spr, -s / 2, -s / 2, s, s);
+}
+
+// A round body with a lit side, a dark side and a soft specular spot.
+function ball(c, r, hi, mid, lo) {
+  const g = c.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.05);
+  g.addColorStop(0, hi);
+  g.addColorStop(0.55, mid);
+  g.addColorStop(1, lo);
+  c.fillStyle = g;
+  c.beginPath();
+  c.arc(0, 0, r, 0, Math.PI * 2);
+  c.fill();
+}
+
+function shine(c, x, y, rx, ry, a = 0.6) {
+  const g = c.createRadialGradient(x, y, 0, x, y, rx);
+  g.addColorStop(0, `rgba(255,255,255,${a})`);
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = g;
+  c.beginPath();
+  c.ellipse(x, y, rx, ry, -0.6, 0, Math.PI * 2);
+  c.fill();
+}
+
+// a warm rim light along the lower right edge
+function rim(c, r, color = 'rgba(255,190,120,0.5)') {
+  c.strokeStyle = color;
+  c.lineWidth = 2;
+  c.beginPath();
+  c.arc(0, 0, r - 1, -0.3, 1.6);
+  c.stroke();
+}
+
+function paintItem(c, kind, glyph) {
+  const r = KINDS[kind].r;
+  if (kind === 'melon') {
+    ball(c, r, '#7fd36a', '#3a9a38', '#174a1a');
+    c.save();
+    c.beginPath();
+    c.arc(0, 0, r, 0, Math.PI * 2);
+    c.clip();
+    c.strokeStyle = 'rgba(16,60,20,0.75)';
+    c.lineWidth = 5;
+    for (const k of [-0.75, -0.25, 0.25, 0.75]) {
+      c.beginPath();
+      for (let y = -r; y <= r; y += 4) c.lineTo(k * r * Math.sqrt(1 - (y / r) ** 2) + Math.sin(y * 0.5) * 1.5, y);
+      c.stroke();
+    }
+    c.restore();
+    shine(c, -r * 0.38, -r * 0.42, r * 0.4, r * 0.24, 0.55);
+    rim(c, r, 'rgba(190,255,170,0.35)');
+  } else if (kind === 'orange') {
+    ball(c, r, '#ffd08a', '#ff9418', '#b44a00');
+    c.fillStyle = 'rgba(150,60,0,0.3)';
+    for (let i = 0; i < 26; i++) {
+      const a = hash(i) * Math.PI * 2;
+      const d = Math.sqrt(hash(i + 9)) * r * 0.85;
+      c.beginPath();
+      c.arc(Math.cos(a) * d, Math.sin(a) * d, 1.1, 0, Math.PI * 2);
+      c.fill();
+    }
+    shine(c, -r * 0.35, -r * 0.4, r * 0.42, r * 0.26, 0.65);
+    rim(c, r);
+    const lg = c.createLinearGradient(0, -r - 4, 0, -r + 6);
+    lg.addColorStop(0, '#8fd06a');
+    lg.addColorStop(1, '#2f7a2c');
+    c.fillStyle = lg;
+    c.beginPath();
+    c.ellipse(6, -r + 2, 9, 4.5, -0.4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#5a3a1a';
+    c.fillRect(-1.5, -r - 1, 3, 5);
   } else if (kind === 'banana') {
     c.save();
     c.translate(0, -r * 0.2);
-    c.fillStyle = '#ffd93b';
-    c.strokeStyle = '#c9a321';
-    c.lineWidth = 2;
-    c.beginPath();
-    c.arc(0, -r, r * 1.6, Math.PI * 0.22, Math.PI * 0.78);
-    c.arc(0, -r * 1.35, r * 1.5, Math.PI * 0.76, Math.PI * 0.24, true);
-    c.closePath();
+    const path = () => {
+      c.beginPath();
+      c.arc(0, -r, r * 1.6, Math.PI * 0.22, Math.PI * 0.78);
+      c.arc(0, -r * 1.35, r * 1.5, Math.PI * 0.76, Math.PI * 0.24, true);
+      c.closePath();
+    };
+    const g = c.createLinearGradient(0, r * 0.1, 0, r * 0.7);
+    g.addColorStop(0, '#fff3a0');
+    g.addColorStop(0.5, '#ffd52a');
+    g.addColorStop(1, '#c99a12');
+    c.fillStyle = g;
+    path();
     c.fill();
+    c.strokeStyle = '#a07a10';
+    c.lineWidth = 1.5;
     c.stroke();
-    c.fillStyle = '#6b4a1e';
+    c.strokeStyle = 'rgba(255,255,230,0.75)';
+    c.lineWidth = 2.5;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(0, -r * 1.35, r * 1.5 + 3, Math.PI * 0.35, Math.PI * 0.62);
+    c.stroke();
+    c.fillStyle = '#4e3414';
     c.beginPath();
     c.arc(Math.cos(Math.PI * 0.22) * r * 1.6, -r + Math.sin(Math.PI * 0.22) * r * 1.6, 3, 0, Math.PI * 2);
     c.arc(Math.cos(Math.PI * 0.78) * r * 1.6, -r + Math.sin(Math.PI * 0.78) * r * 1.6, 3, 0, Math.PI * 2);
     c.fill();
     c.restore();
   } else if (kind === 'key') {
-    c.fillStyle = '#9da1b0';
+    // a keycap: dark sides, a dished top face, the letter
+    const side = c.createLinearGradient(0, -r * 0.7, 0, r * 0.9);
+    side.addColorStop(0, '#b9bdcb');
+    side.addColorStop(1, '#5f6372');
+    c.fillStyle = side;
     rr(c, -r * 0.8, -r * 0.7, r * 1.6, r * 1.6, 8);
     c.fill();
-    c.fillStyle = '#f1f1f4';
+    const top = c.createLinearGradient(0, -r * 0.8, 0, r * 0.5);
+    top.addColorStop(0, '#ffffff');
+    top.addColorStop(1, '#d9dce6');
+    c.fillStyle = top;
     rr(c, -r * 0.65, -r * 0.8, r * 1.3, r * 1.3, 7);
     c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.9)';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(-r * 0.5, -r * 0.78);
+    c.lineTo(r * 0.5, -r * 0.78);
+    c.stroke();
     text(c, glyph, 0, -r * 0.15, { size: 22, color: '#3a3d4a' });
   } else if (kind === 'duck') {
-    c.fillStyle = '#ffd21f';
+    const g = c.createRadialGradient(-r * 0.4, -r * 0.5, 2, 0, 0, r * 1.2);
+    g.addColorStop(0, '#fff6a0');
+    g.addColorStop(0.5, '#ffd21f');
+    g.addColorStop(1, '#d99a00');
+    c.fillStyle = g;
     c.beginPath();
     c.ellipse(0, r * 0.3, r, r * 0.6, 0, 0, Math.PI * 2);
     c.arc(-r * 0.35, -r * 0.35, r * 0.48, 0, Math.PI * 2);
@@ -363,10 +595,16 @@ function drawItem(c, kind, glyph) {
     c.beginPath();
     c.arc(-r * 0.45, -r * 0.45, 3, 0, Math.PI * 2);
     c.fill();
-    c.fillStyle = '#f2b400';
+    c.fillStyle = '#fff';
+    c.beginPath();
+    c.arc(-r * 0.48, -r * 0.5, 1, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#eaa800';
     c.beginPath();
     c.ellipse(r * 0.25, r * 0.2, r * 0.4, r * 0.2, 0.3, 0, Math.PI * 2);
     c.fill();
+    shine(c, -r * 0.5, -r * 0.55, r * 0.22, r * 0.14, 0.8);
+    shine(c, r * 0.1, r * 0.05, r * 0.3, r * 0.12, 0.45);
   }
 }
 
@@ -383,7 +621,13 @@ function half(c, h) {
   c.rotate(h.inner);
   drawItem(c, h.kind, h.glyph);
   c.restore();
-  c.fillStyle = KINDS[h.kind].inner;
+  // the juicy cut face
+  const inner = KINDS[h.kind].inner;
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, r * 0.85);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(0.25, inner);
+  g.addColorStop(1, inner);
+  c.fillStyle = g;
   c.beginPath();
   c.ellipse(0, 0, r * 0.85, r * 0.2, 0, 0, Math.PI * 2);
   c.fill();
@@ -408,5 +652,7 @@ function plaster(c, x, y, angle) {
   c.fill();
   c.fillStyle = '#e8a77a';
   c.fillRect(-6, -5, 12, 10);
+  c.fillStyle = 'rgba(255,255,255,0.4)';
+  c.fillRect(-22, -5, 44, 2);
   c.restore();
 }

@@ -232,10 +232,10 @@ const ADVENTURE = {
   catch: { sec: 2.4, top: 520 },
   simon: { sec: 0.4, top: 230 },
   hop: { sec: 0.5, top: 300 },
-  whack: { sec: 3, top: 400 },
-  run: { sec: 1.8, top: 420 },
+  whack: { sec: 2.5, top: 220 },
+  run: { sec: 1.8, top: 300 },
   stack: { sec: 0.5, top: 500 },
-  slice: { sec: 0.8, top: 530, taps: [0] },
+  slice: { sec: 1.0, top: 530, taps: [0] },
   'button-run': { sec: 4.6, top: 395 },
 };
 

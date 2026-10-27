@@ -296,6 +296,18 @@ a.chip:active, button.chip:active { transform: translateY(1px) scale(0.97); }
 .pill .ico { display: inline-block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2)); transition: transform 0.25s cubic-bezier(0.34, 1.8, 0.64, 1); }
 .pill:hover .ico { transform: scale(1.18) rotate(-8deg); }
 .pill.alt { --edge: #6f9a6e; background-color: var(--sage); }
+.hub-actions .pill.play { position: relative; }
+.hub-actions .pill.play::after { /* a slow ring that says "this one" */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px rgba(226, 103, 79, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  animation: hubRing 2.8s ease-out 1.2s infinite;
+}
+.hub > .hub-top { animation: hubDrop 0.5s ease-out backwards; }
 .pill:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
 /* ---------- bottom sheet (wardrobe) ---------- */
@@ -536,6 +548,13 @@ a.chip:active, button.chip:active { transform: translateY(1px) scale(0.97); }
 }
 .arcade .shelf + .shelf .shelf-head h2::before { background: var(--neon-2); box-shadow: 0 0 0 3px rgba(92, 225, 230, 0.2), 0 0 14px var(--neon-2); }
 .arcade .shelf-head p { color: var(--ink-soft); }
+.arcade .shelf-head::after { /* a hairline that runs off to the right */
+  content: '';
+  flex: 1 1 40px;
+  align-self: center;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent);
+}
 
 .games {
   display: grid;
@@ -628,6 +647,8 @@ a.game:hover .pill { transform: translateY(-1px); filter: brightness(1.08); }
 @keyframes hubPop { from { transform: scale(0.85); opacity: 0; } }
 @keyframes hubGlow { from { opacity: 0.75; transform: scale(0.96); } to { opacity: 1; transform: scale(1.04); } }
 @keyframes hubHeroIn { from { opacity: 0; transform: translate(-50%, 24px) scale(0.92); } }
+@keyframes hubRing { 0% { opacity: 0.9; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.18, 1.45); } }
+@keyframes hubDrop { from { opacity: 0; transform: translateY(-10px); } }
 @keyframes hubIdle { 50% { translate: 0 -4px; } }
 @keyframes hubMote {
   0% { opacity: 0; transform: translate(0, 0); }
@@ -649,8 +670,16 @@ a.game:hover .pill { transform: translateY(-1px); filter: brightness(1.08); }
   .room-motes i:nth-child(n + 7) { display: none; }
 }
 
+/* short landscape phones: a smaller button and buttons closer to the edge */
+@media (max-height: 520px) {
+  .hub { --hs: clamp(80px, 26vh, 130px); }
+  .hub-line { top: 62px; padding: 8px 16px; }
+  .hub-actions { bottom: 12px; }
+  .hub .pill.big { padding: 10px 22px; font-size: 17px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .sheet, .chip b, .hub-actions .pill, .hero-spot, .hub-stage .hero, .room-glow, .room-motes i,
+  .sheet, .chip b, .hub-actions .pill, .hub-actions .pill.play::after, .hub > .hub-top, .hero-spot, .hub-stage .hero, .room-glow, .room-motes i,
   .tile, .tile .check, .account-menu, .buybar, .arcade-head, .games li, .hub-line { animation: none !important; }
   .room-motes { display: none; }
   .game, .game .art canvas, .tile, .chip { transition: none; }
