@@ -113,6 +113,7 @@ export class Bobby {
           this.buffer = 0;
           this.jumps = 1;
           sfx.jump();
+          if (onGround) dust(g, cx(this), this.y + this.h, 4, 0.6);
         } else if (this.can.double && this.jumps < 2) {
           this.vy = -620;
           this.buffer = 0;
@@ -130,7 +131,10 @@ export class Bobby {
 
     const wasGround = onGround;
     moveBody(g, this, dt);
-    if (this.ground && !wasGround && this.vy === 0) sfx.land();
+    if (this.ground && !wasGround && this.vy === 0) {
+      sfx.land();
+      dust(g, cx(this), this.y + this.h, 7, 1);
+    } else if (this.ground && Math.abs(this.vx) > 200 && Math.random() < 0.1) dust(g, cx(this) - this.facing * 8, this.y + this.h, 1, 0.5);
     if (this.ground && !this.ground.fall && !this.ground.vanish && !this.ground.move) this.safe = { x: this.x, y: this.y };
 
     // attacks
@@ -305,6 +309,14 @@ export class Bobby {
 
   drawOver(c, g) {
     if (this.bubble) drawBubble(c, g, this, this.bubble);
+  }
+}
+
+// Soft puffs of dust kicked up at the feet (purely visual particles).
+function dust(g, x, y, n, k) {
+  for (let i = 0; i < n; i++) {
+    const d = (i % 2 ? 1 : -1) * rand(0.4, 1);
+    g.parts.push({ x: x + d * 6, y: y - 3, vx: d * 90 * k, vy: -rand(10, 40) * k, grav: -20, life: 0.45, max: 0.45, color: '#f1e8dc', size: rand(6, 10), puff: true });
   }
 }
 

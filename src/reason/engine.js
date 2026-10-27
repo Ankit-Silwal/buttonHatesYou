@@ -1,6 +1,6 @@
 import { sfx, initAudio, music } from './audio';
 import { drawSky, drawSolid, drawDeco, drawHud, drawEffects, drawAtmosphere, SPEAKERS, setFont, FONTS } from './draw';
-import { glow } from './fx';
+import { glow, softLight } from './fx';
 
 // The world is drawn at a fixed 960x540 and scaled to fit the screen.
 export const W = 960;
@@ -506,6 +506,9 @@ export class Game {
         c.strokeStyle = 'rgba(20,12,24,0.55)';
         c.strokeText(p.text, p.x, p.y);
         c.fillText(p.text, p.x, p.y);
+      } else if (p.puff) {
+        // dust: a soft disc that swells as it fades
+        softLight(c, p.x, p.y, p.size * (1.3 + (1 - a) * 1.6), p.color, a * 0.55);
       } else {
         // sparks: a hot core with a soft additive halo
         if (!p.flat) glow(c, p.x, p.y, p.size * 2.4, p.color, 0.55);

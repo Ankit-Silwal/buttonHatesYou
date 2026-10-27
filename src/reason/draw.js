@@ -317,7 +317,7 @@ export function drawSky(c, g) {
       }
     }
     // light pooling on the floor
-    glow(c, W / 2, H - 70, 420, '#1d6a8a', 0.35);
+    glow(c, W / 2, H - 150, 380, '#1d6a8a', 0.3);
   }
   if (s.grid) {
     // a glowing floor that recedes to a horizon, and a slow pulse in the dark
@@ -469,6 +469,8 @@ export function drawSky(c, g) {
     }
     c.globalAlpha = 1;
   }
+  // indoors, a gap in the floor drops into darkness rather than more wall
+  if (s.inside) c.drawImage(fadeStrip('#000000', 0, 0.9, 0.5), 0, H - 120, W, 120);
 }
 
 // Several circles (and an optional base rectangle) filled as one shape, so
@@ -560,11 +562,54 @@ const AMB = {
   gold: { n: 22, color: '#ffcf6a', vx: 3, vy: -5, r: 3, par: 0.5, wob: 10, a: 0.55, blink: 1 },
 };
 
+// Out-of-focus grass and leaves passing in front of the camera, along the
+// bottom edge only (below everyone's feet). Rendered once per colour.
+const FORE = { village: '#3d6b35', forest: '#1f3f2a', night: '#070d18', epilogue: '#3d6b35', popup: '#3e2a70', sunset: '#4a2424', wreck: '#1e1816' };
+function foreSprite(color) {
+  return sprite(`fore:${color}`, 1024, 80, (c) => {
+    if ('filter' in c) c.filter = 'blur(2.5px)';
+    c.fillStyle = color;
+    c.beginPath();
+    for (let i = 0; i < 26; i++) {
+      const x = hash(i * 3.7) * 1024;
+      if (hash(i + 40) > 0.55) {
+        // a leafy clump
+        const r = 16 + hash(i + 9) * 22;
+        c.moveTo(x + r, 80);
+        c.arc(x, 80, r, Math.PI, 0);
+        c.moveTo(x + r * 0.9, 80 - r * 0.6);
+        c.arc(x + r * 0.5, 80 - r * 0.6, r * 0.45, 0, Math.PI * 2);
+      } else {
+        // a tuft of blades
+        for (let k = 0; k < 7; k++) {
+          const bx = x + k * 5 - 15;
+          const h = 22 + hash(i * 7 + k) * 40;
+          c.moveTo(bx - 3, 80);
+          c.quadraticCurveTo(bx + 2, 80 - h * 0.5, bx + (k - 3) * 3, 80 - h);
+          c.quadraticCurveTo(bx + 4, 80 - h * 0.5, bx + 3, 80);
+        }
+      }
+    }
+    c.fill();
+    c.fillRect(0, 74, 1024, 6);
+  });
+}
+
 export function drawAtmosphere(c, g) {
   const key = SKIES[g.level.theme] ? g.level.theme : 'village';
   const s = SKIES[key];
   const lv = g.level;
   const t = g.time;
+  const fore = lv.fore === undefined ? FORE[key] : lv.fore;
+  if (fore && g.cam.zoom === 1) {
+    const sp = foreSprite(fore);
+    const off = wrap(g.cam.x * 1.3, 1024);
+    const y = H - 68;
+    c.globalAlpha = 0.9;
+    c.drawImage(sp, -off, y, 1024, 80);
+    c.drawImage(sp, 1024 - off, y, 1024, 80);
+    c.globalAlpha = 1;
+  }
   const kind = lv.amb === undefined ? s.amb : lv.amb;
   const A = kind && AMB[kind];
   if (A) {
@@ -1083,14 +1128,22 @@ const DECO = {
       c.arc(80, -12, 12, 0, Math.PI * 2);
       c.fill();
     }
+    c.fillStyle = 'rgba(255,255,255,0.25)';
+    c.fillRect(0, 0, 110, 2);
+    c.fillStyle = 'rgba(0,0,0,0.2)';
+    c.fillRect(0, 8, 110, 2);
     c.restore();
+    if (!d.broken) c.drawImage(fadeStrip('#2a1608', 0.25, 0), d.x + 4, d.y + 10, 102, 10);
     c.fillStyle = '#6b4528';
     c.fillRect(d.x + 8, d.y + 10, 6, 14);
     if (!d.broken) c.fillRect(d.x + 96, d.y + 10, 6, 14);
   },
   photo(c, d) {
+    boxShadow(c, d.x, d.y, 60, 48, 0.3, 7, 4);
     c.fillStyle = '#8a6040';
     c.fillRect(d.x, d.y, 60, 48);
+    c.fillStyle = 'rgba(255,220,180,0.3)';
+    c.fillRect(d.x, d.y, 60, 2);
     c.fillStyle = d.dark ? '#555' : '#ffeacc';
     c.fillRect(d.x + 5, d.y + 5, 50, 38);
     c.fillStyle = '#e2674f';
@@ -1797,8 +1850,15 @@ const DECO = {
     c.save();
     c.translate(d.x, d.y);
     if (d.fallen) c.rotate(1.45);
+    boxShadow(c, 0, 0, 76, 56, 0.35, 8, 4);
     c.fillStyle = '#c9a43a';
     c.fillRect(0, 0, 76, 56);
+    c.fillStyle = 'rgba(255,240,180,0.5)';
+    c.fillRect(0, 0, 76, 2);
+    c.fillRect(0, 0, 2, 56);
+    c.fillStyle = 'rgba(90,60,10,0.35)';
+    c.fillRect(0, 54, 76, 2);
+    c.fillRect(74, 0, 2, 56);
     c.fillStyle = d.cracked ? '#6a6670' : '#ffeacc';
     c.fillRect(5, 5, 66, 46);
     const people = [['#e2674f', 18], ['#f39ac0', 34]];
@@ -2487,15 +2547,30 @@ export function drawEffects(c, g) {
     }
   }
   if (f.letterbox > 0) {
+    const bh = 50 * f.letterbox;
     c.fillStyle = '#000';
-    c.fillRect(0, 0, W, 50 * f.letterbox);
-    c.fillRect(0, H - 50 * f.letterbox, W, 50 * f.letterbox);
+    c.fillRect(0, 0, W, bh);
+    c.fillRect(0, H - bh, W, bh);
+    // the bars cast a little shade onto the picture
+    c.globalAlpha = Math.min(1, f.letterbox);
+    c.drawImage(fadeStrip('#000000', 0.45, 0), 0, bh, W, 18);
+    c.drawImage(fadeStrip('#000000', 0, 0.45), 0, H - bh - 18, W, 18);
+    c.globalAlpha = 1;
   }
   if (f.flash > 0) {
-    c.fillStyle = `rgba(255,255,255,${Math.min(1, f.flash)})`;
+    // a bright bloom from the middle rather than a flat white sheet
+    const k = Math.min(1, f.flash);
+    glow(c, W / 2, H / 2, W * 0.9, '#fff4e0', k * 0.8);
+    c.fillStyle = `rgba(255,255,255,${k * 0.75})`;
     c.fillRect(0, 0, W, H);
   }
   if (f.fade > 0) {
+    // the edges go dark first, like a camera iris closing
+    if (f.fade < 1) {
+      c.globalAlpha = Math.min(1, f.fade * 1.8);
+      c.drawImage(vignetteSprite(1), 0, 0, W, H);
+      c.globalAlpha = 1;
+    }
     c.fillStyle = `rgba(0,0,0,${f.fade})`;
     c.fillRect(0, 0, W, H);
   }
