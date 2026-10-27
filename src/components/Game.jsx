@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { startGame } from '@/game/story';
 import { GOAL } from '@/game/core';
+import { useEnergyGate } from '@/house/EnergyGate';
 
 // Furniture in the button's home. x/y place it, tilt is how it sits once the
 // house is ruined, fall is how it lands when the house collapses.
@@ -38,10 +39,13 @@ const MOTES = [
 
 export default function Game() {
   const root = useRef(null);
+  const gate = useEnergyGate('story'); // starting costs energy
 
   // The game itself is an imperative engine (lots of moving, chasing and
   // animating elements); React just renders the stage and starts it.
-  useEffect(() => startGame(root.current), []);
+  useEffect(() => {
+    if (gate.once()) return startGame(root.current); // too tired: shows a refusal instead
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div ref={root} className="pd">
@@ -110,6 +114,7 @@ export default function Game() {
       </div>
       <button id="again" className="pill" hidden>Play again</button>
       <div id="overlay" hidden />
+      {gate.refusal}
     </div>
   );
 }

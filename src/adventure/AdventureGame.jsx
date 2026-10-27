@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Wallet from '@/components/Wallet';
 import Avatar from '@/components/Avatar';
 import { useProfile } from '@/profile/useProfile';
+import { useEnergyGate } from '@/house/EnergyGate';
 import { grantReward } from '@/profile/store';
 import { GAME, REWARDS } from '@/economy/catalog';
 import { Sound } from '@/game/sound';
@@ -27,6 +28,7 @@ function loadSave() {
 export default function AdventureGame({ id }) {
   const meta = GAME[id];
   const profile = useProfile();
+  const gate = useEnergyGate('adventure'); // starting a run costs energy
   const [save, setSave] = useState(null);
   const [mode, setMode] = useState('title'); // title | play | over
   const [run, setRun] = useState(0); // bumps to restart the canvas
@@ -72,6 +74,7 @@ export default function AdventureGame({ id }) {
   if (!save) return <main className={`adv adv-${id}`} />;
 
   const start = () => {
+    if (!gate.spend()) return; // too tired or asleep: shows a refusal
     Sound.init();
     setResult(null);
     setRun((r) => r + 1);
@@ -150,6 +153,7 @@ export default function AdventureGame({ id }) {
           </div>
         </div>
       )}
+      {gate.refusal}
     </main>
   );
 }
