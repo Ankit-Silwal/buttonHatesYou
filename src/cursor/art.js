@@ -535,6 +535,12 @@ function front(c, g) {
       c.globalAlpha = art.glitchK;
       c.drawImage(vstrip('grade:glitch', [[0, 'rgba(170,90,255,0.6)'], [1, 'rgba(40,0,80,0.6)']]), 0, 0, W, H);
     }
+    if (art.glitchK > 0.01) {
+      // and a cool purple cast over the corrupted woods
+      c.globalCompositeOperation = 'multiply';
+      c.globalAlpha = art.glitchK * 0.55;
+      c.drawImage(vstrip('glitch:mul', [[0, 'rgb(215,190,255)'], [1, 'rgb(170,140,230)']]), 0, 0, W, H);
+    }
     c.globalCompositeOperation = 'source-over';
   }
   if (m.fg) {

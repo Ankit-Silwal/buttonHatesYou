@@ -306,7 +306,7 @@ export default async function play(g, p) {
       c.fillRect(x + 20 + i * 22 + Math.sin(t + i) * 4, y + 51, 10 + 6 * k, 1.5);
     }
     // water arcs: glowing droplets on parabolas
-    shine(c, '127,200,255', x + 80, y + 20, 90, 0.35);
+    shine(c, '127,200,255', x + 80, y + 20, 90, 0.22);
     c.fillStyle = 'rgba(200,236,255,0.9)';
     for (let i = 0; i < 16; i++) {
       const side = i % 2 ? 1 : -1;
