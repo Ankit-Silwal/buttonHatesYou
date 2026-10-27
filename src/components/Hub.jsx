@@ -21,11 +21,18 @@ const POKES = [
   'Nice outfit, right? You paid for it.',
 ];
 
+// Things in the room. --horizon (hub.css) is where the wall meets the floor.
 const DECOR = [
-  { e: '🖼️', x: '12%', y: '18%' },
-  { e: '🕰️', x: '84%', y: '16%' },
-  { e: '🪴', x: '6%', y: 'calc(72% - 60px)', cls: 'big' },
-  { e: '🛋️', x: '78%', y: 'calc(72% - 62px)', cls: 'big' },
+  { e: '🖼️', x: '12%', y: '18%', cls: 'wall' },
+  { e: '🕰️', x: '84%', y: '16%', cls: 'wall' },
+  { e: '🪴', x: '6%', y: 'calc(var(--horizon) - 0.86em)', cls: 'big' },
+  { e: '🛋️', x: '78%', y: 'calc(var(--horizon) - 0.9em)', cls: 'big' },
+];
+
+// Dust drifting through the light: [left %, delay s, duration s, size px]
+const MOTES = [
+  [18, 0, 14, 4], [26, 5, 18, 3], [34, 2, 16, 5], [42, 9, 20, 3], [58, 4, 17, 4],
+  [66, 11, 15, 3], [72, 1, 19, 5], [82, 7, 16, 3], [12, 13, 21, 3], [50, 6, 22, 4],
 ];
 
 function greeting({ user, wallet }) {
@@ -75,6 +82,16 @@ export default function Hub() {
   return (
     <main className="hub" data-panel={panel ?? undefined}>
       <div className="hub-room" aria-hidden="true">
+        <div className="room-wall" />
+        <div className="room-shaft" />
+        <div className="room-lamp" />
+        <div className="room-floor" />
+        <div className="room-glow" />
+        <div className="room-motes">
+          {MOTES.map(([x, d, t, sz], i) => (
+            <i key={i} style={{ '--x': `${x}%`, '--d': `-${d}s`, '--t': `${t}s`, '--sz': `${sz}px` }} />
+          ))}
+        </div>
         {DECOR.map((d) => (
           <span key={d.e} className={`decor ${d.cls ?? ''}`} style={{ '--x': d.x, '--y': d.y }}>
             {d.e}
@@ -92,28 +109,30 @@ export default function Hub() {
       </p>
 
       <div className="hub-stage">
-        <Avatar
-          as="button"
-          type="button"
-          className={`hero has-legs ${pressed ? 'press' : ''}`}
-          size={panel ? 'clamp(96px, 22vh, 150px)' : 'clamp(130px, 30vmin, 220px)'}
-          equipped={preview ?? wallet.equipped}
-          mood={line.mood}
-          onClick={poke}
-          aria-label="The button. It would rather you didn't."
-        />
+        <div className="hero-spot">
+          <Avatar
+            as="button"
+            type="button"
+            className={`hero has-legs ${pressed ? 'press' : ''}`}
+            size={panel ? 'clamp(96px, 22vh, 150px)' : 'var(--hs)'}
+            equipped={preview ?? wallet.equipped}
+            mood={line.mood}
+            onClick={poke}
+            aria-label="The button. It would rather you didn't."
+          />
+        </div>
       </div>
 
       {!panel && (
         <nav className="hub-actions">
-          <Link className="pill big" href="/games">
-            🎮 Play
+          <Link className="pill big play" href="/games" style={{ '--i': 0 }}>
+            <span className="ico">🎮</span> Play
           </Link>
-          <button className="pill big alt" onClick={() => setPanel('wardrobe')}>
-            👕 Wardrobe
+          <button className="pill big alt" onClick={() => setPanel('wardrobe')} style={{ '--i': 1 }}>
+            <span className="ico">👕</span> Wardrobe
           </button>
-          <Link className="pill big story-btn" href="/story">
-            📖 Story
+          <Link className="pill big story-btn" href="/story" style={{ '--i': 2 }}>
+            <span className="ico">📖</span> Story
           </Link>
         </nav>
       )}

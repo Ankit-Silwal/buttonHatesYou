@@ -252,6 +252,35 @@ function Stage({ id, equipped, onOver }) {
       c.clip();
       game.draw(c);
       c.restore();
+      bleed();
+    };
+
+    // The bars around the 480x800 frame continue the frame's own edge pixels,
+    // stretched outwards and shaded, so the scene seems to run off-screen.
+    const bleed = () => {
+      const fx = Math.round(ox * dpr);
+      const fy = Math.round(oy * dpr);
+      const fw = Math.round(W * scale * dpr);
+      const fh = Math.round(H * scale * dpr);
+      if (fx < 1 && fy < 1) return;
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      if (fx >= 1) {
+        c.drawImage(cv, fx + 1, 0, 1, cv.height, 0, 0, fx, cv.height);
+        c.drawImage(cv, fx + fw - 2, 0, 1, cv.height, fx + fw, 0, cv.width - fx - fw, cv.height);
+      }
+      if (fy >= 1) {
+        c.drawImage(cv, 0, fy + 1, cv.width, 1, 0, 0, cv.width, fy);
+        c.drawImage(cv, 0, fy + fh - 2, cv.width, 1, 0, fy + fh, cv.width, cv.height - fy - fh);
+      }
+      c.fillStyle = 'rgba(8, 4, 16, 0.32)';
+      if (fx >= 1) {
+        c.fillRect(0, 0, fx, cv.height);
+        c.fillRect(fx + fw, 0, cv.width - fx - fw, cv.height);
+      }
+      if (fy >= 1) {
+        c.fillRect(0, 0, cv.width, fy);
+        c.fillRect(0, fy + fh, cv.width, cv.height - fy - fh);
+      }
     };
     raf = requestAnimationFrame(frame);
 

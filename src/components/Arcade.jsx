@@ -45,8 +45,8 @@ export default function Arcade() {
             <p>{cat.blurb}</p>
           </div>
           <ul className="games">
-            {GAMES.filter((g) => g.category === cat.id).map((g) => (
-              <li key={g.id}>
+            {GAMES.filter((g) => g.category === cat.id).map((g, i) => (
+              <li key={g.id} style={{ '--i': Math.min(i, 8) }}>
                 <GameCard game={g} equipped={equipped} />
               </li>
             ))}
