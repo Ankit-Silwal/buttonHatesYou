@@ -255,31 +255,37 @@ function Stage({ id, equipped, onOver }) {
       bleed();
     };
 
-    // The bars around the 480x800 frame continue the frame's own edge pixels,
-    // stretched outwards and shaded, so the scene seems to run off-screen.
+    // The bars around the 480x800 frame show a heavily blurred, dimmed copy of
+    // the frame itself (shrunk to a few pixels, then stretched back up), so
+    // the scene's colours seem to spill off-screen.
+    const tiny = document.createElement('canvas');
+    tiny.width = 12;
+    tiny.height = 20;
+    const tc = tiny.getContext('2d');
     const bleed = () => {
       const fx = Math.round(ox * dpr);
       const fy = Math.round(oy * dpr);
       const fw = Math.round(W * scale * dpr);
       const fh = Math.round(H * scale * dpr);
-      if (fx < 1 && fy < 1) return;
+      if ((fx < 1 && fy < 1) || fw < 2 || fh < 2) return;
       c.setTransform(1, 0, 0, 1, 0, 0);
+      tc.clearRect(0, 0, 12, 20);
+      tc.drawImage(cv, fx, fy, fw, fh, 0, 0, 12, 20);
+      c.imageSmoothingEnabled = true;
+      c.fillStyle = 'rgba(8, 4, 16, 0.38)';
       if (fx >= 1) {
-        c.drawImage(cv, fx + 1, 0, 1, cv.height, 0, 0, fx, cv.height);
-        c.drawImage(cv, fx + fw - 2, 0, 1, cv.height, fx + fw, 0, cv.width - fx - fw, cv.height);
-      }
-      if (fy >= 1) {
-        c.drawImage(cv, 0, fy + 1, cv.width, 1, 0, 0, cv.width, fy);
-        c.drawImage(cv, 0, fy + fh - 2, cv.width, 1, 0, fy + fh, cv.width, cv.height - fy - fh);
-      }
-      c.fillStyle = 'rgba(8, 4, 16, 0.32)';
-      if (fx >= 1) {
+        const rw = cv.width - fx - fw;
+        c.drawImage(tiny, 0, 0, 1, 20, 0, 0, fx, cv.height);
+        c.drawImage(tiny, 11, 0, 1, 20, fx + fw, 0, rw, cv.height);
         c.fillRect(0, 0, fx, cv.height);
-        c.fillRect(fx + fw, 0, cv.width - fx - fw, cv.height);
+        c.fillRect(fx + fw, 0, rw, cv.height);
       }
       if (fy >= 1) {
+        const bh = cv.height - fy - fh;
+        c.drawImage(tiny, 0, 0, 12, 1, 0, 0, cv.width, fy);
+        c.drawImage(tiny, 0, 19, 12, 1, 0, fy + fh, cv.width, bh);
         c.fillRect(0, 0, cv.width, fy);
-        c.fillRect(0, fy + fh, cv.width, cv.height - fy - fh);
+        c.fillRect(0, fy + fh, cv.width, bh);
       }
     };
     raf = requestAnimationFrame(frame);
