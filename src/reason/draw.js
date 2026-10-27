@@ -560,11 +560,54 @@ const AMB = {
   gold: { n: 22, color: '#ffcf6a', vx: 3, vy: -5, r: 3, par: 0.5, wob: 10, a: 0.55, blink: 1 },
 };
 
+// Out-of-focus grass and leaves passing in front of the camera, along the
+// bottom edge only (below everyone's feet). Rendered once per colour.
+const FORE = { village: '#3d6b35', forest: '#1f3f2a', night: '#070d18', epilogue: '#3d6b35', popup: '#3e2a70', sunset: '#4a2424', wreck: '#1e1816' };
+function foreSprite(color) {
+  return sprite(`fore:${color}`, 1024, 80, (c) => {
+    if ('filter' in c) c.filter = 'blur(2.5px)';
+    c.fillStyle = color;
+    c.beginPath();
+    for (let i = 0; i < 26; i++) {
+      const x = hash(i * 3.7) * 1024;
+      if (hash(i + 40) > 0.55) {
+        // a leafy clump
+        const r = 16 + hash(i + 9) * 22;
+        c.moveTo(x + r, 80);
+        c.arc(x, 80, r, Math.PI, 0);
+        c.moveTo(x + r * 0.9, 80 - r * 0.6);
+        c.arc(x + r * 0.5, 80 - r * 0.6, r * 0.45, 0, Math.PI * 2);
+      } else {
+        // a tuft of blades
+        for (let k = 0; k < 7; k++) {
+          const bx = x + k * 5 - 15;
+          const h = 22 + hash(i * 7 + k) * 40;
+          c.moveTo(bx - 3, 80);
+          c.quadraticCurveTo(bx + 2, 80 - h * 0.5, bx + (k - 3) * 3, 80 - h);
+          c.quadraticCurveTo(bx + 4, 80 - h * 0.5, bx + 3, 80);
+        }
+      }
+    }
+    c.fill();
+    c.fillRect(0, 74, 1024, 6);
+  });
+}
+
 export function drawAtmosphere(c, g) {
   const key = SKIES[g.level.theme] ? g.level.theme : 'village';
   const s = SKIES[key];
   const lv = g.level;
   const t = g.time;
+  const fore = lv.fore === undefined ? FORE[key] : lv.fore;
+  if (fore && g.cam.zoom === 1) {
+    const sp = foreSprite(fore);
+    const off = wrap(g.cam.x * 1.3, 1024);
+    const y = H - 68;
+    c.globalAlpha = 0.9;
+    c.drawImage(sp, -off, y, 1024, 80);
+    c.drawImage(sp, 1024 - off, y, 1024, 80);
+    c.globalAlpha = 1;
+  }
   const kind = lv.amb === undefined ? s.amb : lv.amb;
   const A = kind && AMB[kind];
   if (A) {
