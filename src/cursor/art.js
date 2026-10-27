@@ -229,7 +229,7 @@ const MOODS = {
     garland: { y: 46, rgb: '255,214,140', sag: 26 },
   },
   moonlit: {
-    sun: { x: 0.24, y: 80, rgb: '200,220,255', r: 200, a: 0.42, moon: 1 },
+    sun: { x: 760 / 960, y: 96, rgb: '200,220,255', r: 220, a: 0.35 },
     haze: { rgb: '120,140,210', y: 0.66, a: 0.3 },
     motes: { kind: 'firefly', n: 22, rgb: '210,255,140' },
     bokeh: { n: 5, rgbs: ['150,170,255', '255,170,210'], a: 0.1 },
@@ -256,7 +256,7 @@ const MOODS = {
   },
   golden: {
     day: 1,
-    sun: { x: 0.8125, y: 90, rgb: '255,196,120', r: 330, a: 0.5, flare: 1 },
+    sun: { x: 0.8125, y: 330, rgb: '255,196,120', r: 330, a: 0.45, flare: 1 },
     shafts: { rgb: '255,210,150', a: 0.08, from: 0.74, n: 6, tilt: 0.55, low: 1 },
     haze: { rgb: '255,210,170', y: 0.6, a: 0.38 },
     motes: { kind: 'pollen', n: 36, rgb: '255,220,160' },
@@ -276,6 +276,7 @@ const MOODS = {
     bunting: 1,
   },
   hall: {
+    dim: { rgb: '150,70,110', a: 0.22 },
     motes: { kind: 'sparkle', n: 16, rgb: '255,214,232' },
     bokeh: { n: 7, rgbs: ['255,170,200', '255,214,170'], a: 0.12 },
     grade: ['rgba(255,214,190,0.4)', 'rgba(200,90,150,0.35)'],
@@ -453,21 +454,6 @@ function back(c, g) {
     c.globalCompositeOperation = m.day ? 'source-over' : 'lighter';
     drawGlow(c, s.rgb, x, s.y, s.r * (1 + 0.02 * Math.sin(t * 0.8)), s.a);
     drawGlow(c, s.rgb, x, s.y, s.r * 0.32, s.a * 0.9);
-    if (s.moon) {
-      c.globalCompositeOperation = 'source-over';
-      c.globalAlpha = 0.95;
-      c.fillStyle = '#eef2ff';
-      c.beginPath();
-      c.arc(x, s.y, 26, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = 'rgba(170,180,220,0.22)';
-      c.beginPath();
-      c.arc(x - 8, s.y - 5, 7, 0, Math.PI * 2);
-      c.fill();
-      c.beginPath();
-      c.arc(x + 9, s.y + 9, 4, 0, Math.PI * 2);
-      c.fill();
-    }
   }
   if (m.shafts) drawShafts(c, g, m.shafts, 1);
   if (m.haze) {
@@ -800,6 +786,10 @@ function syncMood(g, art) {
   art.mood = moodName(g);
   art.m = MOODS[art.mood];
   art.motes = makeMotes(art.m.motes);
+  // the engine's own drifting particles and colour grade step aside: this
+  // game paints its own (g.level is a per-load copy, so this is safe)
+  g.level.amb = null;
+  g.level.grade = false;
   if (art.track !== 'love' && art.track !== 'wedding') art.love = 0;
   dressing(g, art);
 }
