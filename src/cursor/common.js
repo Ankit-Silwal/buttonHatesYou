@@ -5,6 +5,7 @@ import { cx, cy, overlap, rand } from '@/reason/engine';
 import { rr, text, heart } from '@/reason/draw';
 import { makeCursor } from './companion';
 import { iris } from './art';
+import { lit, shadow, shine } from './look';
 
 // Shared bits for How I Met Your Cursor's chapters.
 
@@ -32,12 +33,45 @@ export function confidence(g, value, note) {
 }
 
 // Rose petals drifting across the screen (for love at first sight).
+// Real petals: they tumble (a flipping ellipse), sway, and catch the light.
 export function petals(g, sec = 6) {
   const end = g.time + sec;
-  return g.add(new Thing({ w: 0, h: 0, hidden: true, alwaysUpdate: true, tick(g) {
-    if (g.time > end) return (this.dead = true);
-    if (Math.random() < 0.5) g.parts.push({ x: g.cam.x + rand(-500, 500), y: g.cam.y - 290, vx: rand(-60, 20), vy: rand(30, 80), grav: 15, life: 6, max: 6, color: Math.random() < 0.5 ? '#ff8fb1' : '#ffc2d6', size: rand(4, 7) });
-  } }));
+  const list = [];
+  return g.add(new Thing({ w: 0, h: 0, z: 9, alwaysUpdate: true,
+    tick(g, dt) {
+      if (g.time < end && Math.random() < 0.5) list.push({ x: g.cam.x + rand(-500, 500), y: g.cam.y - 290, vx: rand(-60, 20), vy: rand(30, 80), life: 6, ph: rand(0, 6), spin: rand(2, 5), size: rand(4, 7), pink: Math.random() < 0.5 });
+      for (const q of list) {
+        q.life -= dt;
+        q.vy += 15 * dt;
+        q.x += (q.vx + Math.sin(g.time * 1.6 + q.ph) * 30) * dt;
+        q.y += q.vy * dt;
+      }
+      while (list.length && list[0].life <= 0) list.shift(); // oldest first
+      if (g.time > end && !list.some((q) => q.life > 0)) this.dead = true;
+    },
+    look(c, g) {
+      for (const q of list) {
+        if (q.life <= 0) continue;
+        const flip = Math.cos(g.time * q.spin + q.ph);
+        c.save();
+        c.translate(q.x, q.y);
+        c.rotate(q.ph + g.time * 0.8);
+        c.globalAlpha = Math.min(1, q.life / 1.5);
+        c.fillStyle = flip > 0 ? (q.pink ? '#ff8fb1' : '#ffc2d6') : q.pink ? '#e86a92' : '#f2a6c0';
+        c.beginPath();
+        c.ellipse(0, 0, q.size, q.size * 0.55 * Math.max(0.15, Math.abs(flip)), 0, 0, Math.PI * 2);
+        c.fill();
+        if (flip > 0.6) {
+          c.fillStyle = 'rgba(255,255,255,0.5)';
+          c.beginPath();
+          c.ellipse(-q.size * 0.3, -q.size * 0.1, q.size * 0.35, q.size * 0.15 * flip, 0, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.restore();
+      }
+      c.globalAlpha = 1;
+    },
+  }));
 }
 
 // Little floating hearts above someone's head.
@@ -55,10 +89,13 @@ export function trashCan(g, x) {
       c.save();
       c.translate(this.x + 20, this.y + 48);
       c.rotate(Math.sin(this.wob * 30) * this.wob * 0.4);
-      c.fillStyle = '#4f8a52';
+      shadow(c, 0, 0, 56, 0.3);
+      c.fillStyle = lit(c, -42, 42, '#6aa86c', '#2f5c32');
       rr(c, -20, -42, 40, 42, 4);
       c.fill();
-      c.fillStyle = '#3a6a3d';
+      c.fillStyle = 'rgba(255,255,255,0.18)';
+      c.fillRect(-17, -40, 5, 38);
+      c.fillStyle = lit(c, -48, 8, '#4f8a52', '#2d4a2f');
       c.fillRect(-23, -48 - (this.open ?? 0) * 10, 46, 8);
       c.fillStyle = '#2d4a2f';
       for (const dx of [-10, 0, 10]) c.fillRect(dx - 1, -36, 2, 28);
@@ -106,6 +143,7 @@ export function flowerShot(bella, target) {
       }
     },
     look(c) {
+      shine(c, '255,143,177', this.x + 7, this.y + 7, 24, 0.7);
       for (let i = 0; i < 5; i++) {
         const a = (i / 5) * Math.PI * 2;
         c.fillStyle = '#ff8fb1';

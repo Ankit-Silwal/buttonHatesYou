@@ -7,6 +7,7 @@ import { CapsBat, AutoSlime, LagSpider, SpamBee, Lord404 } from '../foes';
 import { clickSwitch } from '../companion';
 import { begin, bellaAt, hearts, petals } from '../common';
 import { checkpointPost, heartAt, coins } from '@/reason/episodes/common';
+import { lit, ball, gloss, shine, shadow } from '../look';
 
 // Chapter 4 — The Great Love Rescue. A flower that never dies, a forest that
 // glitches, and a villain whose girlfriend left him for better Wi-Fi.
@@ -117,18 +118,35 @@ export default async function play(g, p) {
 
   // the Forever Bloom, and someone who followed them
   const bloom = g.add(new Thing({ x: 3470, y: GROUND - 40, w: 24, h: 40, z: 3, look(c, g) {
+    // the Forever Bloom glows, pulses, and sheds little lights
+    const bx = this.x + 12;
+    const by = this.y + 10;
+    shine(c, '255,170,230', bx, by, 70 + Math.sin(g.time * 2) * 8, 0.6);
+    shine(c, '170,230,255', bx, by, 30, 0.6);
     c.strokeStyle = '#4c8a3e';
     c.lineWidth = 3;
     c.beginPath();
-    c.moveTo(this.x + 12, this.y + 40);
-    c.lineTo(this.x + 12, this.y + 12);
+    c.moveTo(bx, this.y + 40);
+    c.quadraticCurveTo(bx - 4, this.y + 26, bx, this.y + 12);
     c.stroke();
+    c.fillStyle = '#5aa64a';
+    c.beginPath();
+    c.ellipse(bx - 6, this.y + 28, 6, 2.5, -0.5, 0, Math.PI * 2);
+    c.fill();
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2 + g.time;
-      c.fillStyle = `hsl(${(g.time * 60 + i * 50) % 360}, 90%, 70%)`;
+      c.fillStyle = `hsl(${(g.time * 60 + i * 50) % 360}, 90%, 72%)`;
       c.beginPath();
-      c.arc(this.x + 12 + Math.cos(a) * 7, this.y + 10 + Math.sin(a) * 7, 5, 0, Math.PI * 2);
+      c.ellipse(bx + Math.cos(a) * 7, by + Math.sin(a) * 7, 6, 4, a, 0, Math.PI * 2);
       c.fill();
+    }
+    c.fillStyle = ball(c, bx, by, 4, '#fffbe0', '#ffe08a', '#e0a020');
+    c.beginPath();
+    c.arc(bx, by, 4, 0, Math.PI * 2);
+    c.fill();
+    for (let i = 0; i < 5; i++) {
+      const k = (g.time * 0.5 + i / 5) % 1;
+      shine(c, '255,220,250', bx + Math.sin(i * 2.3 + g.time) * 16, by - k * 50, 6, 1 - k);
     }
   } }));
   g.lock();

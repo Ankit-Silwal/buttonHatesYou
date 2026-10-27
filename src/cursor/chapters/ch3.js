@@ -5,6 +5,7 @@ import { cx, cy, overlap, rand, pick } from '@/reason/engine';
 import { rr, text, heart } from '@/reason/draw';
 import { PopupGoblin, KarenPopup } from '../foes';
 import { begin, confidence, bellaAt, hearts, flowerShot as flower, mixHex } from '../common';
+import { lit, ball, gloss, shine, shadow } from '../look';
 
 // Chapter 3 — The Worst First Date Ever. A bow tie bigger than his body,
 // an earpiece, soup, a bill, and a popup who wants the manager.
@@ -278,15 +279,46 @@ export default async function play(g, p) {
   p.sit = true;
   const b2 = bellaAt(g, 480, { facing: -1, sit: true });
   const fountain = g.add(new Thing({ x: 380, y: GROUND - 90, w: 160, h: 90, z: 0, look(c, g) {
-    c.fillStyle = '#9aa0ad';
-    rr(c, this.x, this.y + 50, 160, 40, 8);
+    const { x, y } = this;
+    const t = g.time;
+    // the stone: a lit basin, a column and a little top bowl
+    shadow(c, x + 80, y + 90, 190, 0.35);
+    c.fillStyle = lit(c, y + 50, 40, '#c4c9d6', '#6d7384');
+    rr(c, x, y + 50, 160, 40, 8);
     c.fill();
-    c.fillRect(this.x + 70, this.y, 20, 50);
-    c.fillStyle = 'rgba(127,200,255,0.6)';
-    for (let i = 0; i < 8; i++) {
-      const k = (g.time * 2 + i / 8) % 1;
-      c.fillRect(this.x + 80 + Math.sin(i) * k * 50, this.y - 10 + k * 60, 3, 6);
+    c.fillStyle = '#d9dde8';
+    rr(c, x - 4, y + 46, 168, 8, 4);
+    c.fill();
+    c.fillStyle = lit(c, y + 8, 42, '#bfc5d2', '#7a8090');
+    c.fillRect(x + 70, y + 8, 20, 42);
+    c.fillStyle = '#d9dde8';
+    c.beginPath();
+    c.ellipse(x + 80, y + 8, 26, 6, 0, 0, Math.PI * 2);
+    c.fill();
+    // the pool, shimmering with moonlight
+    c.fillStyle = lit(c, y + 50, 10, '#3a6ab0', '#1d3a6a');
+    c.beginPath();
+    c.ellipse(x + 80, y + 52, 74, 5, 0, 0, Math.PI * 2);
+    c.fill();
+    for (let i = 0; i < 6; i++) {
+      const k = (t * 0.6 + i / 6) % 1;
+      c.fillStyle = `rgba(200,230,255,${0.6 * Math.sin(k * Math.PI)})`;
+      c.fillRect(x + 20 + i * 22 + Math.sin(t + i) * 4, y + 51, 10 + 6 * k, 1.5);
     }
+    // water arcs: glowing droplets on parabolas
+    shine(c, '127,200,255', x + 80, y + 20, 90, 0.35);
+    c.fillStyle = 'rgba(200,236,255,0.9)';
+    for (let i = 0; i < 16; i++) {
+      const side = i % 2 ? 1 : -1;
+      const k = (t * 0.9 + i / 16) % 1;
+      const dx = side * k * (46 + (i % 4) * 6);
+      const dy = -26 * Math.sin(k * Math.PI) + k * k * 44;
+      c.globalAlpha = 1 - k * 0.6;
+      c.beginPath();
+      c.arc(x + 80 + dx, y + 4 + dy, 2.2 - k, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha = 1;
   } }));
   g.add(new Npc({ kind: 'tabby', x: 80, y: GROUND - 40, facing: 1 }));
   makeCursorHome(g, p);
