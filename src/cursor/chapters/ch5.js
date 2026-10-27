@@ -7,6 +7,7 @@ import { GoldCoinCrab, PaperclipWorm, CaptchaGuard, CaptchaGolem } from '../foes
 import { clickSwitch } from '../companion';
 import { begin, bellaAt, hearts, petals } from '../common';
 import { checkpointPost, heartAt, coins } from '@/reason/episodes/common';
+import { lit, shine } from '../look';
 
 // Chapter 5 — Operation: Marry Bella. A ring in a mine, a golem that wants
 // proof you're human, and a proposal that goes wrong in a new way each line.
@@ -316,7 +317,8 @@ function rollingRing(x, y) {
     },
     look(c, g) {
       if (this.splash) return;
-      c.strokeStyle = '#dfe6ee';
+      shine(c, '220,240,255', this.x + 8, this.y + 8, 22, 0.5);
+      c.strokeStyle = lit(c, this.y + 2, 12, '#ffffff', '#9aa6b8');
       c.lineWidth = 3;
       c.beginPath();
       c.arc(this.x + 8, this.y + 8, 6, 0, Math.PI * 2);
