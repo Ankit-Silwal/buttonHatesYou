@@ -202,3 +202,17 @@ export function vignetteSprite(a) {
     c.fillRect(0, 0, W, H);
   });
 }
+
+// A soft drop shadow under a box (instead of a per-frame shadowBlur).
+export function boxShadow(c, x, y, w, h, a = 0.35, spread = 18, dy = 8) {
+  const s = sprite('boxShadow', 96, 96, (k) => {
+    k.shadowColor = 'rgba(0,0,0,1)';
+    k.shadowBlur = 16;
+    k.fillStyle = '#000';
+    k.fillRect(24, 24, 48, 48);
+  });
+  const ga = c.globalAlpha;
+  c.globalAlpha = ga * a;
+  c.drawImage(s, x - spread, y - spread + dy, w + spread * 2, h + spread * 2);
+  c.globalAlpha = ga;
+}

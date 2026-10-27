@@ -1,4 +1,4 @@
-import { hash, sprite, glow, softLight, shadow, fadeStrip, fadeStripX, pattern, speckle, gradeOverlay, vignetteSprite, rgba, mix, lighten, darken } from './fx';
+import { hash, sprite, glow, softLight, shadow, boxShadow, fadeStrip, fadeStripX, pattern, speckle, gradeOverlay, vignetteSprite, rgba, mix, lighten, darken } from './fx';
 
 // Everything is drawn with plain canvas shapes: no sprites, no assets.
 // Coordinates are in world pixels (the camera transform is already applied),
@@ -596,10 +596,18 @@ export function popupWindow(c, x, y, w, h, label = 'AD', bar = '#4f6bff') {
   c.fillStyle = '#ffffff';
   rr(c, x, y, w, h, 6);
   c.fill();
+  c.fillStyle = 'rgba(30, 40, 90, 0.07)';
+  c.fillRect(x, y + h * 0.55, w, h * 0.45 - 4);
+  c.strokeStyle = 'rgba(30, 40, 90, 0.18)';
+  c.lineWidth = 1;
+  rr(c, x + 0.5, y + 0.5, w - 1, h - 1, 6);
+  c.stroke();
   c.fillStyle = bar;
   rr(c, x, y, w, 16, 6);
   c.fill();
   c.fillRect(x, y + 10, w, 6);
+  c.fillStyle = 'rgba(255,255,255,0.3)';
+  c.fillRect(x + 4, y + 1.5, w - 8, 3);
   c.fillStyle = '#ff5a5a';
   c.fillRect(x + w - 14, y + 4, 9, 9);
   text(c, label, x + w / 2, y + 16 + (h - 16) / 2, { size: Math.min(18, h * 0.3), color: '#222' });
@@ -1415,15 +1423,36 @@ const DECO = {
       c.stroke();
       return;
     }
+    const sw = Math.sin(g.time * 2 + d.x) * 2;
     c.strokeStyle = '#4c8a3e';
     c.lineWidth = 2;
     c.beginPath();
     c.moveTo(d.x, d.y);
-    c.lineTo(d.x + Math.sin(g.time * 2 + d.x) * 2, d.y - 18);
+    c.quadraticCurveTo(d.x, d.y - 10, d.x + sw, d.y - 18);
     c.stroke();
-    c.fillStyle = d.c ?? '#ff8fb1';
+    c.fillStyle = '#5fa84e';
     c.beginPath();
-    c.arc(d.x + Math.sin(g.time * 2 + d.x) * 2, d.y - 20, 5, 0, Math.PI * 2);
+    c.ellipse(d.x + 4, d.y - 7, 4, 1.8, -0.5, 0, Math.PI * 2);
+    c.fill();
+    // five petals and a bright centre
+    const col = d.c ?? '#ff8fb1';
+    const fx = d.x + sw;
+    const fy = d.y - 20;
+    c.fillStyle = darken(col, 0.12);
+    c.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + d.x;
+      c.moveTo(fx + Math.cos(a) * 4 + 3, fy + Math.sin(a) * 4);
+      c.arc(fx + Math.cos(a) * 4, fy + Math.sin(a) * 4, 3, 0, Math.PI * 2);
+    }
+    c.fill();
+    c.fillStyle = lighten(col, 0.25);
+    c.beginPath();
+    c.arc(fx - 1, fy - 1.5, 2.5, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#ffe28a';
+    c.beginPath();
+    c.arc(fx, fy, 2, 0, Math.PI * 2);
     c.fill();
   },
   fence(c, d) {
@@ -1644,11 +1673,17 @@ const DECO = {
     c.fill();
   },
   rubble(c, d) {
+    shadow(c, d.x + (d.w ?? 80) / 2, d.y, (d.w ?? 80) * 0.6, 0.3, 5);
     for (let i = 0; i < (d.w ?? 80) / 14; i++) {
-      c.fillStyle = ['#7d7470', '#5c5452', '#a39994', '#8a5a3a'][i % 4];
+      const col = ['#7d7470', '#5c5452', '#a39994', '#8a5a3a'][i % 4];
       const x = d.x + i * 14 + hash(i + d.x) * 6;
       const s = 8 + hash(i * 7 + d.x) * 14;
+      c.fillStyle = col;
       c.fillRect(x, d.y - s, s, s);
+      c.fillStyle = 'rgba(255,255,255,0.22)';
+      c.fillRect(x, d.y - s, s, 2);
+      c.fillStyle = 'rgba(0,0,0,0.22)';
+      c.fillRect(x + s - 3, d.y - s + 2, 3, s - 2);
     }
   },
   rack(c, d, g) {
@@ -1796,9 +1831,14 @@ const DECO = {
   },
   // The Forever Bloom in its vase. wilted: after the purge.
   bloomVase(c, d, g) {
+    if (!d.wilted) glow(c, d.x, d.y - 46, 30, '#ffd0f0', 0.45 + 0.15 * Math.sin(g.time * 2));
     c.fillStyle = '#7fb6e6';
     rr(c, d.x - 9, d.y - 22, 18, 22, 5);
     c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.45)';
+    c.fillRect(d.x - 6, d.y - 19, 2.5, 14);
+    c.fillStyle = 'rgba(0,0,40,0.18)';
+    c.fillRect(d.x + 3, d.y - 20, 4, 18);
     c.strokeStyle = d.wilted ? '#6a5a3a' : '#4c8a3e';
     c.lineWidth = 2.5;
     c.beginPath();
@@ -1814,6 +1854,17 @@ const DECO = {
       c.beginPath();
       c.arc(cxp + Math.cos(a) * 6, cyp + Math.sin(a) * 6, d.wilted ? 3 : 4.5, 0, Math.PI * 2);
       c.fill();
+    }
+    if (!d.wilted) {
+      c.fillStyle = '#fff6d0';
+      c.beginPath();
+      c.arc(d.x, d.y - 46, 2.5, 0, Math.PI * 2);
+      c.fill();
+      // sparkles drifting off the petals
+      for (let i = 0; i < 3; i++) {
+        const k = (g.time * 0.5 + i / 3) % 1;
+        glow(c, d.x + Math.sin(g.time * 2 + i * 2) * 10, d.y - 50 - k * 30, 5, '#ffffff', (1 - k) * 0.9);
+      }
     }
   },
   water(c, d, g) {
@@ -1845,6 +1896,7 @@ const DECO = {
   },
   pendantStand(c, d, g) {
     // the pendant hanging from a memorial
+    glow(c, d.x, d.y - 12, 22, '#dfe6ee', 0.3 + 0.15 * Math.sin(g.time * 2));
     c.strokeStyle = '#ccc';
     c.lineWidth = 1.5;
     c.beginPath();
@@ -1853,6 +1905,8 @@ const DECO = {
     c.lineTo(d.x + 8, d.y - 30);
     c.stroke();
     heart(c, d.x, d.y - 10, 6, '#dfe6ee', '#9aa6b4');
+    c.fillStyle = 'rgba(255,255,255,0.8)';
+    c.fillRect(d.x - 3.5, d.y - 13, 2, 2);
   },
   woodSword(c, d) {
     c.save();
@@ -1862,9 +1916,12 @@ const DECO = {
     c.restore();
   },
   giantCursor(c, d, g) {
+    const s = d.s ?? 4;
+    const y = d.y + Math.sin(g.time) * 6;
+    glow(c, d.x + 7 * s, y + 13 * s, 22 * s, '#9fdcff', 0.4);
     c.save();
-    c.translate(d.x, d.y + Math.sin(g.time) * 6);
-    c.scale(d.s ?? 4, d.s ?? 4);
+    c.translate(d.x, y);
+    c.scale(s, s);
     cursorShape(c, '#fff', '#111');
     c.restore();
   },
@@ -1913,6 +1970,8 @@ export function adminFace(c, x, y, r, g) {
   const blink = Math.sin(g.time * 1.3) > 0.97 ? 0.2 : 1;
   c.fillRect(x - r * 0.38, y - r * 0.25, r * 0.22, r * 0.06 * blink + 1);
   c.fillRect(x + r * 0.16, y - r * 0.25, r * 0.22, r * 0.06 * blink + 1);
+  glow(c, x - r * 0.27, y - r * 0.22, r * 0.4, '#8dffc8', 0.55 * blink);
+  glow(c, x + r * 0.27, y - r * 0.22, r * 0.4, '#8dffc8', 0.55 * blink);
 }
 
 // Blades. kind: wood | steel | cursed | tabby (Tabby's chipped wooden sword) | glitch
@@ -2291,57 +2350,101 @@ export function drawKey(c, o) {
 }
 
 /* ---------- screen space: HUD and effects ---------- */
+// A glossy bar: dark glass track, coloured fill with a lit top and a glow at its tip.
+function bar(c, x, y, w, h, k, color, glowIt = true) {
+  c.fillStyle = 'rgba(8, 8, 16, 0.55)';
+  rr(c, x - 2, y - 2, w + 4, h + 4, (h + 4) / 2);
+  c.fill();
+  c.strokeStyle = 'rgba(255,255,255,0.14)';
+  c.lineWidth = 1;
+  c.stroke();
+  const fw = Math.max(0, Math.min(1, k)) * w;
+  if (fw < 1) return;
+  c.fillStyle = color;
+  rr(c, x, y, fw, h, h / 2);
+  c.fill();
+  c.fillStyle = 'rgba(255,255,255,0.3)';
+  rr(c, x + 2, y + 1.5, Math.max(0, fw - 4), h * 0.35, h * 0.2);
+  c.fill();
+  c.fillStyle = 'rgba(0,0,0,0.15)';
+  c.fillRect(x + h / 2, y + h - 3, Math.max(0, fw - h), 2);
+  if (glowIt) glow(c, x + fw - 2, y + h / 2, h * 1.6, color, 0.6);
+}
+
+// Text with a soft dark outline so it reads over any sky.
+function hudText(c, str, x, y, o) {
+  c.font = `${o.weight ?? 700} ${o.size ?? 14}px ${FONT}`;
+  c.textAlign = o.align ?? 'center';
+  c.textBaseline = 'middle';
+  c.lineJoin = 'round';
+  c.lineWidth = 4;
+  c.strokeStyle = 'rgba(10, 8, 20, 0.55)';
+  c.strokeText(str, x, y);
+  c.fillStyle = o.color ?? '#fff';
+  c.fillText(str, x, y);
+}
+
 export function drawHud(c, g) {
   const p = g.player;
   if (p && !p.hideHud && g.level.hud !== false) {
+    const coins = g.level.coins !== false;
+    // a frosted plate behind the hearts and coins
+    c.fillStyle = 'rgba(10, 10, 22, 0.28)';
+    rr(c, 12, 12, p.maxHp * 26 + 8, coins ? 62 : 34, 14);
+    c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.1)';
+    c.lineWidth = 1;
+    c.stroke();
     for (let i = 0; i < p.maxHp; i++) {
-      heart(c, 28 + i * 26, 28, 9, i < p.hp ? '#ff4f6b' : 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.35)');
+      const full = i < p.hp;
+      const hx = 28 + i * 26;
+      // the last full heart beats when health is low
+      const beat = full && i === p.hp - 1 && p.hp <= 2 ? 1 + 0.12 * Math.max(0, Math.sin(g.time * 8)) : 1;
+      if (full) glow(c, hx, 28, 16, '#ff4f6b', 0.35);
+      heart(c, hx, 28, 9 * beat, full ? '#ff4f6b' : 'rgba(0,0,0,0.35)', full ? '#a3203a' : 'rgba(255,255,255,0.18)');
+      if (full) {
+        c.fillStyle = 'rgba(255,255,255,0.65)';
+        c.beginPath();
+        c.ellipse(hx - 4 * beat, 24.5, 2.6 * beat, 1.6 * beat, -0.6, 0, Math.PI * 2);
+        c.fill();
+      }
     }
-    if (g.level.coins !== false) {
-      c.fillStyle = '#f2c14e';
+    if (coins) {
+      glow(c, 30, 58, 16, '#f2a23e', 0.35);
+      c.fillStyle = '#c99a2e';
       c.beginPath();
       c.arc(30, 58, 8, 0, Math.PI * 2);
       c.fill();
-      text(c, `${g.flags.coins ?? 0}`, 44, 59, { size: 15, color: '#fff', align: 'left' });
-      c.lineWidth = 3;
+      c.fillStyle = '#f7cf5e';
+      c.beginPath();
+      c.arc(29.4, 57.2, 6.8, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      c.fillRect(25.5, 53.5, 2, 4);
+      hudText(c, `${g.flags.coins ?? 0}`, 44, 59, { size: 15, align: 'left' });
     }
     if (p.tabby && !p.tabby.dead && g.flags.slam && !g.locked) {
       const k = p.tabby.stunReady;
-      c.fillStyle = 'rgba(0,0,0,0.35)';
-      rr(c, 18, 74, 96, 22, 11);
-      c.fill();
-      c.fillStyle = k >= 1 ? '#5b9bd5' : '#3a5a7a';
-      rr(c, 18, 74, 96 * k, 22, 11);
-      c.fill();
-      text(c, k >= 1 ? 'Q · Tabby slam' : 'Tabby…', 66, 85, { size: 11, color: '#fff' });
+      bar(c, 18, 82, 96, 18, k, k >= 1 ? '#5b9bd5' : '#3a5a7a', k >= 1);
+      hudText(c, k >= 1 ? 'Q · Tabby slam' : 'Tabby…', 66, 91, { size: 11 });
     }
   }
   const m = g.meter;
   if (m && !g.locked) {
     const x = 760;
     const y = 74;
-    text(c, m.label, x + 90, y - 12, { size: 12, color: '#fff' });
-    c.fillStyle = 'rgba(0,0,0,0.4)';
-    rr(c, x, y, 180, 14, 7);
-    c.fill();
+    hudText(c, m.label, x + 90, y - 12, { size: 12 });
     const k = Math.max(0, m.value) / 100;
-    c.fillStyle = k > 1 ? `hsl(${(g.time * 200) % 360}, 90%, 60%)` : m.color ?? '#ff8fb1';
-    rr(c, x, y, Math.min(1, k) * 180, 14, 7);
-    c.fill();
-    text(c, `${Math.round(m.value)}%`, x + 90, y + 7, { size: 11, color: '#fff' });
+    bar(c, x, y, 180, 14, k, k > 1 ? `hsl(${Math.floor(g.time * 200) % 360}, 90%, 60%)` : m.color ?? '#ff8fb1', k <= 1);
+    hudText(c, `${Math.round(m.value)}%`, x + 90, y + 7, { size: 11 });
   }
   const b = g.boss;
   if (b && !b.dead && b.showBar !== false) {
     const bw = 520;
     const x = (W - bw) / 2;
     const y = H - 44;
-    text(c, b.name, W / 2, y - 14, { size: 15, color: '#fff' });
-    c.fillStyle = 'rgba(0,0,0,0.5)';
-    rr(c, x, y, bw, 14, 7);
-    c.fill();
-    c.fillStyle = b.barColor ?? '#ff4d3d';
-    rr(c, x, y, Math.max(0, bw * (b.hp / b.maxHp)), 14, 7);
-    c.fill();
+    hudText(c, b.name, W / 2, y - 14, { size: 15 });
+    bar(c, x, y, bw, 14, b.hp / b.maxHp, b.barColor ?? '#ff4d3d');
   }
 }
 
@@ -2377,11 +2480,8 @@ export function drawEffects(c, g) {
   if (f.ads?.length) {
     f.ads = f.ads.filter((a) => a.until > g.time);
     for (const a of f.ads) {
-      c.save();
-      c.shadowColor = 'rgba(0,0,0,0.4)';
-      c.shadowBlur = 20;
+      boxShadow(c, a.x, a.y, a.w, a.h, 0.5, 22, 10);
       popupWindow(c, a.x, a.y, a.w, a.h, '', '#ff3bb0');
-      c.restore();
       text(c, a.label, a.x + a.w / 2, a.y + a.h / 2 + 4, { size: 15, color: '#d4145a' });
       text(c, 'Close in ' + Math.ceil(a.until - g.time) + '…', a.x + a.w / 2, a.y + a.h - 16, { size: 11, color: '#777' });
     }

@@ -511,12 +511,8 @@ export function drawCursorGuy(c, k, g) {
   c.translate(k.x, k.y + Math.sin(g.time * 3) * 3);
   const s = k.w / 17;
   c.scale(s, s);
-  if (k.glow) {
-    c.shadowColor = k.glow;
-    c.shadowBlur = 18;
-  }
+  if (k.glow) glow(c, 6, 13, 26, k.glow, 0.75);
   cursorShape(c, k.flash ? '#ffd0d0' : '#ffffff', '#111');
-  c.shadowBlur = 0;
   // two tiny worried eyes
   c.fillStyle = '#111';
   c.beginPath();

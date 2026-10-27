@@ -2,6 +2,7 @@ import { GRAVITY, moveBody, overlap, clamp, rand, cx, cy } from './engine';
 import { sfx } from './audio';
 import { rr, text, sword, drawButton, adminFace, popupWindow, heart } from './draw';
 import { Shot, Thing, drawBubble, drawCursorGuy, bark } from './actors';
+import { glow, boxShadow, fadeStrip } from './fx';
 import { GROUND } from './build';
 
 /* ======================================================================
@@ -107,6 +108,7 @@ export class CursorPlayer {
     if (this.iframes > 0 && Math.floor(this.t * 20) % 2 && !g.locked) return;
     drawCursorGuy(c, { ...this, glow: '#7fdcff' }, g);
     if (this.ring > 0) {
+      glow(c, this.x + 6, this.y + 8, 60, '#7fdcff', this.ring * 3);
       c.strokeStyle = `rgba(127,220,255,${this.ring * 4})`;
       c.lineWidth = 3;
       c.beginPath();
@@ -254,6 +256,8 @@ export class BobbyBoss {
 
   draw(c, g) {
     const tired = this.state === 'tired';
+    // a red aura while he fights; it gutters out when he's out of breath
+    if (!this.dropped) glow(c, cx(this), cy(this), tired ? 40 : 70 + Math.sin(this.t * 6) * 6, '#ff2040', tired ? 0.25 : 0.55);
     if (!this.dropped) this.drawSword(c, tired);
     if (Math.random() < 0.3 && !this.dropped) g.parts.push({ x: cx(this) + rand(-20, 20), y: this.y + rand(0, 40), vx: 0, vy: -40, grav: 0, life: 0.4, max: 0.4, color: 'rgba(255,40,70,0.6)', size: 3 });
     drawButton(c, {
@@ -296,13 +300,22 @@ function beam(x, delay) {
     },
     look(c) {
       if (this.t < delay) {
+        const k = this.t / delay;
         c.fillStyle = `rgba(255,40,70,${0.12 + 0.15 * Math.sin(this.t * 30)})`;
         c.fillRect(this.x + 18, this.y, 8, this.h);
+        glow(c, this.x + 22, this.h - 6, 30 + k * 30, '#ff2846', 0.4 + k * 0.4);
       } else {
+        const k = 1 - Math.min(1, (this.t - delay) / 0.4);
+        c.save();
+        c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = k;
+        c.drawImage(fadeStrip('#ff3c50', 0.9, 0.9), this.x - 22, this.y, this.w + 44, this.h);
         c.fillStyle = 'rgba(255,60,80,0.85)';
         c.fillRect(this.x, this.y, this.w, this.h);
-        c.fillStyle = 'rgba(255,255,255,0.8)';
-        c.fillRect(this.x + 16, this.y, 12, this.h);
+        c.fillStyle = 'rgba(255,255,255,0.9)';
+        c.fillRect(this.x + 14, this.y, 16, this.h);
+        c.restore();
+        glow(c, this.x + 22, this.h - 8, 90, '#ff3c50', k);
       }
     },
   });
@@ -326,9 +339,9 @@ export class AdminBoss {
 
   draw(c, g) {
     const { x, y, w, h } = this;
-    // arms
-    c.strokeStyle = '#2a2a33';
-    c.lineWidth = 12;
+    // the screen lights the whole room green
+    glow(c, cx(this), y + h / 2, w * 1.3, this.flash ? '#ff3b3b' : '#2fd690', 0.3 + 0.05 * Math.sin(this.t * 2));
+    // arms: thick cables with a lit edge
     c.lineCap = 'round';
     for (const s of [-1, 1]) {
       if (this.armsOff?.[s]) continue;
@@ -336,7 +349,13 @@ export class AdminBoss {
       c.beginPath();
       c.moveTo(cx(this) + s * (w / 2 - 10), y + h - 30);
       c.quadraticCurveTo(cx(this) + s * (w / 2 + 80), y + h + 40 + k, cx(this) + s * (w / 2 + 120), y + h + 90 + k);
+      c.strokeStyle = '#2a2a33';
+      c.lineWidth = 12;
       c.stroke();
+      c.strokeStyle = 'rgba(141,255,200,0.22)';
+      c.lineWidth = 3;
+      c.stroke();
+      glow(c, cx(this) + s * (w / 2 + 120), y + h + 90 + k, 18, '#8dffc8', 0.6);
     }
     // floating command windows
     for (let i = 0; i < 8; i++) {
@@ -345,15 +364,25 @@ export class AdminBoss {
       popupWindow(c, cx(this) + Math.cos(a) * 260 - 30, y + h / 2 + Math.sin(a) * 90 - 18, 60, 36, ['sudo', 'rm', 'kill', 'chmod'][i % 4], '#1d6b4a');
     }
     c.globalAlpha = 1;
+    boxShadow(c, x - 14, y - 14, w + 28, h + 28, 0.5, 26, 16);
     c.fillStyle = '#16141c';
     rr(c, x - 14, y - 14, w + 28, h + 28, 14);
     c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.12)';
+    c.fillRect(x - 4, y - 12, w + 8, 2);
     c.fillStyle = this.flash ? '#3a0a10' : '#050b08';
     c.fillRect(x, y, w, h);
+    glow(c, cx(this), y + h / 2, w * 0.45, this.flash ? '#ff3b3b' : '#1d6b4a', 0.35);
     adminFace(c, cx(this), y + h / 2 + 6, 80, g);
     if (this.status) text(c, this.status, cx(this), y + h - 18, { size: 14, color: '#ff6b5e' });
     c.fillStyle = 'rgba(141,255,200,0.05)';
     for (let yy = y + ((g.time * 30) % 4); yy < y + h; yy += 4) c.fillRect(x, yy, w, 1);
+    c.fillStyle = 'rgba(255,255,255,0.05)';
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x + w * 0.4, y);
+    c.lineTo(x, y + h * 0.7);
+    c.fill();
   }
 }
 
