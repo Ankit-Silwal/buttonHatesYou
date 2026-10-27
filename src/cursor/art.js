@@ -661,7 +661,24 @@ function dressing(g, art) {
       const x1 = g.cam.x + W / 2 / g.cam.zoom + 60;
       if (m.garland) drawGarland(c, g, m.garland, x0, x1);
       if (m.bunting) drawBunting(c, g, x0, x1);
-      if (m.chandelier) for (const x of m.chandelier) drawChandelier(c, g, x);
+      if (m.chandelier) {
+        for (const x of m.chandelier) {
+          // a warm pool of light on the floor below each chandelier
+          c.globalCompositeOperation = 'lighter';
+          c.save();
+          c.translate(x, 450);
+          c.scale(1, 0.18);
+          stamp(c, glow('255,214,170'), 0, 0, 170, 0.35);
+          c.restore();
+          c.globalCompositeOperation = 'source-over';
+          c.globalAlpha = 1;
+          c.save();
+          c.translate(x, 0);
+          c.scale(1.45, 1.45);
+          drawChandelier(c, g, 0);
+          c.restore();
+        }
+      }
       if (art.mood === 'dinner') for (const d of g.deco) if (d.t === 'table' && d.x > x0 - 100 && d.x < x1) drawCandle(c, g, d.x + 45, d.y - 40);
     },
   }));
@@ -726,7 +743,7 @@ function drawBunting(c, g, x0, x1) {
 }
 
 function drawChandelier(c, g, x) {
-  const y = 96 + Math.sin(g.time * 0.8 + x) * 1.5;
+  const y = 72 + Math.sin(g.time * 0.8 + x) * 1.5;
   c.strokeStyle = '#b08a5a';
   c.lineWidth = 2;
   c.beginPath();
