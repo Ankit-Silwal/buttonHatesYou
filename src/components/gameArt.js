@@ -34,14 +34,57 @@ function big(c, k, x, y, fn) {
 const STORY = {
   // Bobby, his new best friend Cursor, Tabby, and Bella with a heart
   'how-i-met-your-cursor'(c) {
-    sky(c, 'sunset');
+    sky(c, 'sunset', 300);
     drawSolid(c, { kind: 'grass', x: 0, y: 214, w: ART_W, h: 60 }, STILL);
+    // golden-hour light pooling behind the couple
+    glow(c, 300, 170, 230, '#ff9a6b', 0.35);
+    glow(c, 330, 200, 120, '#ffc2d6', 0.3);
     big(c, 2.2, 36, 214, () => drawKey(c, { x: 0, y: -40, w: 44, h: 40, color: '#5b9bd5', dark: '#3b77ad', label: 'TAB', mood: 'happy', t: 0.5 }));
     big(c, 2.6, 150, 214, () => drawButton(c, { x: 0, y: -40, w: 38, h: 40, ...BOBBY, mood: 'happy', t: 0.5 }));
-    big(c, 2.6, 268, 96, () => drawCursorGuy(c, { x: 0, y: 0, w: 26 }, { time: 0 }));
     big(c, 2.6, 368, 214, () => drawButton(c, { x: 0, y: -40, w: 30, h: 40, color: '#f39ac0', dark: '#cc6f97', bow: true, lashes: true, mood: 'happy', facing: -1, t: 0.5 }));
+    // Cursor's light trail: a swoop in from the sky, ending at his tip
+    const pts = [];
+    for (let i = 0; i <= 40; i++) {
+      const u = i / 40;
+      const v = 1 - u;
+      pts.push([v * v * 40 + 2 * v * u * 170 + u * u * 276, v * v * 26 + 2 * v * u * -10 + u * u * 112]);
+    }
+    c.save();
+    c.globalCompositeOperation = 'lighter';
+    c.lineCap = 'round';
+    for (let i = 1; i < pts.length; i++) {
+      const u = i / pts.length;
+      c.strokeStyle = `rgba(160,220,255,${u * u * 0.6})`;
+      c.lineWidth = 1 + u * 9;
+      c.beginPath();
+      c.moveTo(pts[i - 1][0], pts[i - 1][1]);
+      c.lineTo(pts[i][0], pts[i][1]);
+      c.stroke();
+    }
+    c.restore();
+    for (const [x, y, r] of [[120, 40, 6], [196, 30, 7], [236, 70, 5], [330, 40, 5]]) glow(c, x, y, r * 3, '#ffffff', 0.7);
+    glow(c, 290, 130, 70, '#9fdcff', 0.75);
+    big(c, 2.6, 268, 96, () => drawCursorGuy(c, { x: 0, y: 0, w: 26 }, { time: 0 }));
+    // hearts, glowing
+    glow(c, 410, 92, 40, '#ff4f7b', 0.6);
     heart(c, 410, 92, 13, '#ff4f7b', '#c2304f');
+    glow(c, 438, 64, 24, '#ff7a9a', 0.5);
     heart(c, 438, 64, 8, '#ff7a9a');
+    // drifting petals
+    c.fillStyle = '#ffc2d6';
+    for (const [x, y, a] of [[60, 120, 0.4], [96, 180, 1.2], [200, 22, 2], [356, 150, 0.8], [452, 140, 2.4], [300, 236, 1.6], [24, 40, 0.2]]) {
+      c.save();
+      c.translate(x, y);
+      c.rotate(a);
+      c.beginPath();
+      c.ellipse(0, 0, 4, 2.2, 0, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+    }
+    c.save();
+    c.scale(ART_W / 960, ART_H / 540);
+    drawAtmosphere(c, { ...STILL, level: { theme: 'sunset' }, cam: { x: 300, y: 0 } });
+    c.restore();
   },
 
   // Bobby with a sword, the Player's giant cursor over the kingdom, the Admin
