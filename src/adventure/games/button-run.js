@@ -80,6 +80,7 @@ export default function buttonRun({ look, sound }) {
   let chatter = 4;
   let overT = 0;
   let t = 0;
+  let shiftedAt = -9; // when the button last changed lanes
   let coinPop = 0; // the coin counter bulges for a moment per coin
   let flash = null; // { color, left }: a screen flash
   let phase = 0; // the running stride
@@ -232,6 +233,7 @@ export default function buttonRun({ look, sound }) {
     }
     me.from = me.lane;
     me.lane = to;
+    shiftedAt = t;
     sound.tone(520, 0.06, 'triangle', 0.25, 700);
   };
 
@@ -337,7 +339,17 @@ export default function buttonRun({ look, sound }) {
       const was = o.inZ;
       o.inZ = o.z < PZ && o.z + o.len > -PZ;
       if (!o.inZ) continue;
-      if (hb.x1 <= box.x0 || hb.x0 >= box.x1 || hb.y1 <= box.y0 || hb.y0 >= box.y1) continue;
+      if (hb.x1 <= box.x0 || hb.x0 >= box.x1 || hb.y1 <= box.y0 || hb.y0 >= box.y1) {
+        // swerved out of its lane at the last moment
+        if (!was && o.lane === me.from && t - shiftedAt < 0.45 && (o.kind === 'wall' || o.kind === 'train' || o.kind === 'click')) {
+          coinPts += 10;
+          const [sx, sy] = P(me.x, me.y + 1.6, 0);
+          sparks.float(sx, sy, 'Close one! +10', '#ffe27a');
+          sound.tone(880, 0.12, 'triangle', 0.3, 1320);
+          mouth.maybe(['Whoa.', 'Too close!', 'Missed me!'], 0.5, 1);
+        }
+        continue;
+      }
       if (safe > 0 || active.ghost) continue;
       if (active.bubble) {
         delete active.bubble;
