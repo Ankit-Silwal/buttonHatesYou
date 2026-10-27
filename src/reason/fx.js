@@ -30,7 +30,22 @@ export function sprite(key, w, h, make) {
 }
 
 /* ---------- colour helpers ---------- */
+let probe = null;
+const RGB = new Map();
 export function rgb(hex) {
+  if (hex[0] !== '#') {
+    // any other CSS colour: let a canvas resolve it once
+    let v = RGB.get(hex);
+    if (!v) {
+      probe ??= makeCanvas(1, 1).getContext('2d');
+      probe.fillStyle = '#000';
+      probe.fillStyle = hex;
+      const r = probe.fillStyle;
+      v = r[0] === '#' ? rgb(r) : (r.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map(Number);
+      RGB.set(hex, v);
+    }
+    return v;
+  }
   let h = hex.replace('#', '');
   if (h.length === 3) h = h.replace(/./g, (m) => m + m);
   const n = parseInt(h, 16);

@@ -1,5 +1,6 @@
 import { sfx, initAudio, music } from './audio';
 import { drawSky, drawSolid, drawDeco, drawHud, drawEffects, drawAtmosphere, SPEAKERS, setFont, FONTS } from './draw';
+import { glow } from './fx';
 
 // The world is drawn at a fixed 960x540 and scaled to fit the screen.
 export const W = 960;
@@ -493,13 +494,24 @@ export class Game {
     for (const e of ents) if (!e.hidden) e.draw?.(c, this);
     for (const d of this.deco) if (d.front) drawDeco(c, d, this);
     for (const p of this.parts) {
-      c.globalAlpha = Math.max(0, Math.min(1, p.life / (p.max ?? 0.5)));
+      const a = Math.max(0, Math.min(1, p.life / (p.max ?? 0.5)));
+      c.globalAlpha = a;
       c.fillStyle = p.color;
       if (p.text) {
         c.font = `700 ${p.size ?? 16}px ${FONTS()}`;
         c.textAlign = 'center';
+        c.lineWidth = 3;
+        c.lineJoin = 'round';
+        c.strokeStyle = 'rgba(20,12,24,0.55)';
+        c.strokeText(p.text, p.x, p.y);
         c.fillText(p.text, p.x, p.y);
-      } else c.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      } else {
+        // sparks: a hot core with a soft additive halo
+        if (!p.flat) glow(c, p.x, p.y, p.size * 2.4, p.color, 0.55);
+        c.globalAlpha = a;
+        c.fillStyle = p.color;
+        c.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      }
     }
     c.globalAlpha = 1;
     for (const e of ents) if (!e.hidden) e.drawOver?.(c, this);
