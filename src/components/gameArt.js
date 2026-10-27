@@ -58,23 +58,105 @@ const STORY = {
 
   // the button in its room, begging the cursor not to press it
   'please-dont'(c, look) {
-    c.fillStyle = '#f6e3cf';
-    c.fillRect(0, 0, ART_W, ART_H);
-    c.fillStyle = '#e8c9a8';
+    const lin = (y0, y1, stops) => {
+      const g = c.createLinearGradient(0, y0, 0, y1);
+      stops.forEach(([o, col]) => g.addColorStop(o, col));
+      return g;
+    };
+    const rad = (x, y, r, stops) => {
+      const g = c.createRadialGradient(x, y, 0, x, y, r);
+      stops.forEach(([o, col]) => g.addColorStop(o, col));
+      return g;
+    };
+    // wall: warm plaster, faint wallpaper stripes, light pooling from above
+    c.fillStyle = lin(0, 200, [[0, '#f8ecdb'], [1, '#ecd5b8']]);
+    c.fillRect(0, 0, ART_W, 200);
+    c.fillStyle = 'rgba(255,255,255,0.25)';
+    for (let x = 14; x < ART_W; x += 28) c.fillRect(x, 0, 2, 200);
+    c.fillStyle = rad(240, -20, 260, [[0, 'rgba(255,246,226,0.9)'], [1, 'rgba(255,246,226,0)']]);
+    c.fillRect(0, 0, ART_W, 200);
+    // wainscot
+    c.fillStyle = lin(158, 200, [[0, '#ecd6b9'], [1, '#e0c4a1']]);
+    c.fillRect(0, 158, ART_W, 42);
+    c.fillStyle = '#fbf2e4';
+    c.fillRect(0, 156, ART_W, 4);
+    c.fillStyle = 'rgba(120,80,50,0.14)';
+    for (let x = 60; x < ART_W; x += 60) c.fillRect(x, 160, 2, 40);
+    // floor: wood planks running toward you
+    c.fillStyle = lin(200, ART_H, [[0, '#b98d66'], [1, '#dab28b']]);
     c.fillRect(0, 200, ART_W, 70);
-    c.fillStyle = '#d4ad85';
-    c.fillRect(0, 200, ART_W, 5);
-    // a window and a little picture on the wall
-    c.fillStyle = '#bfe3ff';
-    rr(c, 330, 40, 110, 80, 8);
-    c.fill();
-    c.strokeStyle = '#fff';
-    c.lineWidth = 6;
-    c.strokeRect(330, 40, 110, 80);
-    c.beginPath();
-    c.moveTo(385, 40);
-    c.lineTo(385, 120);
+    c.strokeStyle = 'rgba(90,52,28,0.22)';
+    c.lineWidth = 1.5;
+    for (let i = -8; i <= 8; i++) {
+      c.beginPath();
+      c.moveTo(240 + i * 34, 200);
+      c.lineTo(240 + i * 80, ART_H);
+      c.stroke();
+    }
+    c.fillStyle = lin(200, 214, [[0, 'rgba(80,45,25,0.3)'], [1, 'rgba(80,45,25,0)']]);
+    c.fillRect(0, 200, ART_W, 14);
+    c.fillStyle = '#f6e8d4';
+    c.fillRect(0, 196, ART_W, 5);
+    // an arched window with the sky behind it, and its sunbeam
+    const wx = 334;
+    const wy = 34;
+    const ww = 104;
+    const wh = 118;
+    const arch = () => {
+      c.beginPath();
+      c.moveTo(wx, wy + wh);
+      c.lineTo(wx, wy + ww / 2);
+      c.arc(wx + ww / 2, wy + ww / 2, ww / 2, Math.PI, 0);
+      c.lineTo(wx + ww, wy + wh);
+      c.closePath();
+    };
+    c.save();
+    c.shadowColor = 'rgba(110,70,40,0.25)';
+    c.shadowBlur = 16;
+    c.shadowOffsetY = 8;
+    c.fillStyle = '#fbf3e6';
+    c.lineWidth = 14;
+    c.strokeStyle = '#fbf3e6';
+    arch();
     c.stroke();
+    c.restore();
+    arch();
+    c.fillStyle = lin(wy, wy + wh, [[0, '#8cc8f0'], [0.6, '#c6e6f7'], [1, '#fde9c8']]);
+    c.fill();
+    c.fillStyle = rad(wx + 70, wy + 34, 22, [[0, '#fff7d6'], [0.5, 'rgba(255,230,160,0.7)'], [1, 'rgba(255,230,160,0)']]);
+    c.fillRect(wx, wy, ww, wh);
+    c.fillStyle = '#fbf3e6';
+    c.fillRect(wx + ww / 2 - 3, wy, 6, wh);
+    c.fillRect(wx, wy + wh * 0.55 - 3, ww, 6);
+    c.fillStyle = 'rgba(255,255,255,0.3)';
+    c.beginPath();
+    c.moveTo(wx + 8, wy + wh);
+    c.lineTo(wx + 30, wy + 20);
+    c.lineTo(wx + 44, wy + 20);
+    c.lineTo(wx + 22, wy + wh);
+    c.fill();
+    c.fillStyle = lin(wy + wh, ART_H, [[0, 'rgba(255,240,200,0.4)'], [1, 'rgba(255,240,200,0)']]);
+    c.beginPath();
+    c.moveTo(wx, wy + wh);
+    c.lineTo(wx + ww, wy + wh);
+    c.lineTo(wx + 40, ART_H);
+    c.lineTo(wx - 120, ART_H);
+    c.fill();
+    // rug, then a soft glow and shadow so the button sits in the room
+    c.save();
+    c.translate(190, 236);
+    c.scale(1, 0.16);
+    c.fillStyle = rad(0, 0, 120, [[0, '#e2674f'], [0.18, '#e2674f'], [0.2, '#f0c36d'], [0.24, '#c45a43'], [0.52, '#c45a43'], [0.55, '#f3d9a8'], [0.6, '#b84a36'], [0.86, '#b84a36'], [0.9, '#f0c36d'], [0.94, '#9c3c2b'], [1, '#9c3c2b']]);
+    c.beginPath();
+    c.arc(0, 0, 120, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+    c.fillStyle = rad(190, 150, 120, [[0, 'rgba(255,214,160,0.55)'], [1, 'rgba(255,214,160,0)']]);
+    c.fillRect(60, 30, 260, 240);
+    c.fillStyle = 'rgba(60,30,20,0.28)';
+    c.beginPath();
+    c.ellipse(190, 222, 50, 9, 0, 0, Math.PI * 2);
+    c.fill();
     drawBobby(c, 190, 160, 110, { look, mood: 'worried', tears: true, t: 0.1 });
     bubble(c, 190, 96, 'Please don’t.', { size: 20 });
     c.save();
