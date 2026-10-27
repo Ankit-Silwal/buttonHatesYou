@@ -469,7 +469,15 @@ function buildPickup(o, POWERS) {
       new THREE.SpriteMaterial({
         depthWrite: false,
         map: canvasTexture(`icon:${o.kind}`, 128, 128, (c) => {
-          c.font = `700 ${p.icon === 'x2' ? 64 : 84}px ${FONT}`;
+          // a white badge so the icon reads from far away
+          c.fillStyle = '#ffffff';
+          c.beginPath();
+          c.arc(64, 64, 58, 0, Math.PI * 2);
+          c.fill();
+          c.lineWidth = 8;
+          c.strokeStyle = p.color;
+          c.stroke();
+          c.font = `700 ${p.icon === 'x2' ? 56 : 70}px ${FONT}`;
           c.textAlign = 'center';
           c.textBaseline = 'middle';
           c.fillStyle = '#2b1d17';
@@ -478,7 +486,7 @@ function buildPickup(o, POWERS) {
       })
     )
   );
-  icon.scale.set(0.62, 0.62, 1);
+  icon.scale.set(0.78, 0.78, 1);
   g.add(orb, icon);
   g.userData.spin = spin;
   return g;
