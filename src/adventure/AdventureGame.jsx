@@ -122,7 +122,7 @@ export default function AdventureGame({ id }) {
 
       {mode === 'over' && result && (
         <div className="adv-overlay">
-          <div className="adv-card">
+          <div className={`adv-card${result.prize ? ' win' : ''}`}>
             <Avatar size={84} equipped={profile.wallet.equipped} mood={result.prize ? 'sad' : 'smug'} />
             <p className="kicker">{result.prize ? 'Goal reached' : 'Game over'}</p>
             <h2>
