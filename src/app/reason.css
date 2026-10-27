@@ -396,3 +396,213 @@
 @media (prefers-reduced-motion: reduce) {
   .reason-bobby, .reason-titlecard.big h2 { animation: none; }
 }
+
+/* ======================================================================
+   Polish: glassy panels, lit buttons, softer type, livelier transitions.
+   Everything here reads the theme variables, so Cursor's sunset palette
+   comes along for free.
+   ====================================================================== */
+.reason {
+  --glass: color-mix(in srgb, var(--cream) 78%, transparent);
+  --glass-hi: rgba(255, 255, 255, 0.09);
+  --rim: rgba(255, 255, 255, 0.1);
+}
+.reason-menu::before {
+  /* a slow drift of faint motes behind the menu */
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 32% 68%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(2px 2px at 58% 34%, color-mix(in srgb, var(--btn) 70%, white), transparent 60%),
+    radial-gradient(1px 1px at 76% 82%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 14%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(1px 1px at 46% 92%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 115%, color-mix(in srgb, var(--btn) 22%, transparent), transparent 70%);
+  background-size: 420px 420px, 380px 380px, 520px 520px, 460px 460px, 340px 340px, 300px 300px, 100% 100%;
+  animation: reason-motes 60s linear infinite;
+}
+.reason-menu { isolation: isolate; }
+@keyframes reason-motes { to { transform: translateY(-420px); } }
+
+.reason-hero h1 {
+  background: linear-gradient(180deg, #ffffff 30%, color-mix(in srgb, var(--ink) 75%, var(--btn)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 24px color-mix(in srgb, var(--btn) 35%, transparent));
+}
+.reason-hero .kicker { color: color-mix(in srgb, var(--btn) 55%, var(--ink-soft)); }
+.reason-bobby::after {
+  /* a soft contact shadow that breathes with the bob */
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 2%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent);
+  animation: reason-shadow 3s ease-in-out infinite;
+}
+@keyframes reason-shadow { 50% { transform: translateY(8px) scale(0.82); opacity: 0.6; } }
+.reason-bobby .body {
+  background:
+    radial-gradient(ellipse 34% 20% at 32% 16%, rgba(255, 255, 255, 0.55), transparent 70%),
+    radial-gradient(circle at 32% 26%, rgba(255, 150, 120, 0.35), transparent 45%, rgba(70, 0, 20, 0.22) 85%),
+    linear-gradient(#e2674f 0 70%, #8f3222 70% 72%, #b84a36 72%);
+  box-shadow:
+    inset -6px -8px 18px rgba(60, 0, 20, 0.25),
+    0 18px 40px rgba(226, 103, 79, 0.4),
+    0 0 80px rgba(226, 103, 79, 0.18);
+}
+.reason-bobby .pendant { text-shadow: 0 0 6px #fff, 0 0 18px rgba(200, 220, 255, 0.8); }
+
+.reason-btn {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--btn) 85%, white), var(--btn) 55%);
+  box-shadow: 0 4px 0 var(--btn-dark), 0 10px 26px color-mix(in srgb, var(--btn) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+}
+.reason-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.reason-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-dark), 0 4px 12px color-mix(in srgb, var(--btn) 30%, transparent); }
+
+.reason-act h2 { display: flex; align-items: baseline; gap: 8px; letter-spacing: 0.02em; }
+.reason-act h2::after { content: ''; flex: 1; height: 1px; margin-left: 6px; background: linear-gradient(90deg, var(--rim), transparent); }
+.ep {
+  position: relative;
+  border: 1px solid var(--rim);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cream) 92%, white), var(--cream));
+  box-shadow: 0 1px 0 var(--glass-hi) inset, 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+.ep:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--btn) 45%, transparent);
+  box-shadow: 0 1px 0 var(--glass-hi) inset, 0 14px 30px rgba(0, 0, 0, 0.35), 0 0 24px color-mix(in srgb, var(--btn) 18%, transparent);
+}
+.ep .ep-num { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--floor) 70%, white), var(--floor)); box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.25); }
+.ep.won .ep-num { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--btn) 70%, white), var(--btn)); box-shadow: 0 0 14px color-mix(in srgb, var(--btn) 45%, transparent), inset 0 -2px 4px rgba(0, 0, 0, 0.2); }
+.ep.next { border-color: var(--btn); box-shadow: 0 0 0 1px var(--btn), 0 8px 20px rgba(0, 0, 0, 0.25); animation: reason-next 2.4s ease-in-out infinite; }
+@keyframes reason-next {
+  50% { box-shadow: 0 0 0 1px var(--btn), 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 26px color-mix(in srgb, var(--btn) 40%, transparent); }
+}
+.ep:disabled { filter: saturate(0.6); }
+
+/* ---------- in game ---------- */
+.reason-stage canvas { box-shadow: 0 0 80px rgba(0, 0, 0, 0.6); }
+.reason-goal {
+  border: 1px solid var(--rim);
+  background: linear-gradient(180deg, rgba(30, 32, 52, 0.82), rgba(14, 15, 26, 0.82));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 var(--glass-hi);
+  letter-spacing: 0.01em;
+}
+.reason-goal::before { content: '◆'; margin-right: 8px; color: var(--btn); font-size: 10px; vertical-align: 2px; }
+.reason-prompt {
+  border: 1px solid var(--rim);
+  background: linear-gradient(180deg, rgba(30, 32, 52, 0.9), rgba(14, 15, 26, 0.9));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--glass-hi);
+  animation: reason-in 0.25s ease-out, reason-float 2.4s ease-in-out 0.25s infinite;
+}
+@keyframes reason-float { 50% { transform: translateY(-3px); } }
+.reason-prompt kbd { background: linear-gradient(180deg, #fff, #dcdce6); box-shadow: 0 2px 0 #9a9aa8; }
+
+.reason-talk {
+  border: 1px solid color-mix(in srgb, var(--who) 35%, transparent);
+  background:
+    radial-gradient(ellipse 60% 120% at 0% 0%, color-mix(in srgb, var(--who) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, rgba(26, 27, 44, 0.95), rgba(12, 13, 22, 0.95));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 40px color-mix(in srgb, var(--who) 12%, transparent), inset 0 1px 0 var(--glass-hi);
+  animation: reason-talk-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes reason-talk-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } }
+.reason-talk .name {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--who) 80%, white), var(--who));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--who) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.02em;
+}
+.reason-talk .more { text-shadow: 0 0 8px var(--who); }
+.reason-talk.sys {
+  border-color: rgba(255, 90, 90, 0.4);
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 80, 80, 0.05) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, rgba(56, 8, 14, 0.96), rgba(28, 4, 8, 0.96));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 40px rgba(255, 40, 60, 0.18);
+  text-shadow: 0 0 10px rgba(255, 90, 80, 0.5);
+}
+.reason-talk.whisper { background: linear-gradient(180deg, rgba(14, 14, 20, 0.8), rgba(6, 6, 10, 0.8)); border-color: rgba(255, 255, 255, 0.06); }
+
+.reason-choice {
+  border: 1px solid var(--rim);
+  background: linear-gradient(180deg, rgba(26, 27, 44, 0.96), rgba(12, 13, 22, 0.96));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 var(--glass-hi);
+}
+.reason-choice button {
+  border: 1px solid var(--rim);
+  background: linear-gradient(180deg, #30365a, #262b48);
+  transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
+}
+.reason-choice button:hover { transform: translateY(-1px); background: linear-gradient(180deg, #3a4170, #2c3254); }
+.reason-choice button.on {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--btn) 85%, white), var(--btn));
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 26px color-mix(in srgb, var(--btn) 50%, transparent);
+}
+
+.reason-titlecard { animation: reason-card 1.1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.reason-titlecard::before {
+  /* a dark band of light behind the words so they read over any sky */
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 46%;
+  translate: 0 -50%;
+  z-index: -1;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(6, 6, 14, 0.5), transparent 75%);
+}
+.reason-titlecard.item::before, .reason-titlecard.error::before { display: none; }
+.reason-titlecard { isolation: isolate; }
+.reason-titlecard h2 { letter-spacing: 0.01em; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), 0 6px 40px rgba(0, 0, 0, 0.75); }
+.reason-titlecard.episode h2 { color: #fff; opacity: 0.85; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8); animation: reason-track 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.reason-titlecard.episode p {
+  background: linear-gradient(180deg, #ffffff 40%, #ffe2c8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.8));
+}
+.reason-titlecard.big h2 { text-shadow: 0 0 30px rgba(255, 30, 50, 0.8), 0 0 80px rgba(255, 0, 30, 0.5); }
+@keyframes reason-card { from { opacity: 0; transform: scale(1.06); filter: blur(6px); } }
+@keyframes reason-track { from { letter-spacing: 0.8em; opacity: 0; } }
+
+.reason-overlay { background: radial-gradient(ellipse at 50% 40%, rgba(10, 10, 24, 0.55), rgba(3, 3, 8, 0.85)); backdrop-filter: blur(6px) saturate(0.8); animation: reason-fade 0.25s ease-out; }
+@keyframes reason-fade { from { opacity: 0; } }
+.reason-card {
+  border: 1px solid var(--rim);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--btn) 16%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cream) 90%, white), var(--cream));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--glass-hi);
+}
+.reason-card .prize { text-shadow: 0 0 18px rgba(255, 210, 100, 0.6); }
+
+.reason-pad button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  backdrop-filter: none;
+}
+.reason-pad button:active { background: radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.2)); }
+.reason-bigbtn { background: linear-gradient(180deg, #ffffff, #dcdce6); box-shadow: 0 4px 0 #9a9aa8, 0 12px 30px rgba(0, 0, 0, 0.35); }
+
+@media (max-width: 600px) {
+  .reason-goal { top: 58px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reason-menu::before, .reason-bobby::after, .ep.next, .reason-prompt, .reason-titlecard, .reason-titlecard.episode h2 { animation: none; }
+}

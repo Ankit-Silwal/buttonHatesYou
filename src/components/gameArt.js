@@ -1,5 +1,7 @@
 import { drawSky, drawSolid, drawButton, drawKey, cursorShape, adminFace, sword, heart, rr } from '@/reason/draw';
 import { drawCursorGuy } from '@/reason/actors';
+import { drawAtmosphere } from '@/reason/draw';
+import { glow } from '@/reason/fx';
 import { W as AW, H as AH, drawBobby, bubble } from '@/adventure/kit';
 import { CREATE } from '@/adventure/games';
 
@@ -46,14 +48,23 @@ const STORY = {
   'the-reason'(c) {
     sky(c, 'tower', 900);
     drawSolid(c, { kind: 'metal', x: 0, y: 220, w: ART_W, h: 60 }, STILL);
+    // THE ADMIN's green light, the cursor's cold halo, Bobby's red anger
+    glow(c, 400, 120, 130, '#2fd690', 0.65);
     big(c, 3.4, 400, 120, () => adminFace(c, 0, 0, 16, STILL));
+    glow(c, 205, 70, 100, '#9fdcff', 0.5);
     big(c, 4.2, 170, 18, () => cursorShape(c, 'rgba(255,255,255,0.92)', '#111'));
+    glow(c, 123, 170, 90, '#ff2040', 0.6);
     c.save();
     c.translate(186, 196);
     c.rotate(0.6);
     sword(c, 'steel', 0, 0, 2.4);
     c.restore();
+    glow(c, 218, 132, 14, '#ffffff', 0.9);
     big(c, 2.8, 70, 220, () => drawButton(c, { x: 0, y: -40, w: 38, h: 40, ...BOBBY, mood: 'angry', pendant: true, t: 0.5 }));
+    c.save();
+    c.scale(ART_W / 960, ART_H / 540);
+    drawAtmosphere(c, { ...STILL, level: { theme: 'tower' }, cam: { x: 900, y: 0 } });
+    c.restore();
   },
 
   // the button in its room, begging the cursor not to press it
