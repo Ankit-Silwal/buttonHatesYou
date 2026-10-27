@@ -8,7 +8,7 @@ import { adminMonitor, checkpointPost, coins, heartAt } from './common';
 // else is moving his legs, and THE ADMIN makes first contact.
 
 const W = 4300;
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'forest',
   solids: [

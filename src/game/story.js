@@ -7,7 +7,7 @@ import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
   save, load, wipeSave, makeChar, place, setMood, area, spot,
-  say, floatText, shake, updateHud, setScene, showSkips, setLook,
+  say, floatText, shake, updateHud, setScene, showSkips, setLook, pressFx, reducedMotion,
 } from './core';
 
 const REWARD = REWARDS['please-dont'];
@@ -155,6 +155,12 @@ function moveHero(p) {
   followers();
 }
 
+// A scripted event lands with a little camera punch on the room.
+function punch() {
+  if (reducedMotion()) return;
+  dom.room.animate([{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: 650, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+
 const hop = () => moveHero(spot(hero._x, hero._y, 200));
 const center = () => moveHero({ x: innerWidth / 2, y: innerHeight * 0.55 });
 
@@ -188,6 +194,7 @@ function onHeroClick(e) {
   updateHud();
   Sound.click(G.clicks);
   press(hero);
+  pressFx(hero._x, hero._y, e.clientX || hero._x, e.clientY || hero._y);
   floatText('+1', e.clientX || hero._x, (e.clientY || hero._y) - 40);
   advance(G.clicks);
 }
@@ -195,7 +202,8 @@ function onHeroClick(e) {
 function advance(n) {
   const ev = STORY[n];
   if (ev) {
-    say(ev.say);
+    say(ev.say, true);
+    if (ev.run) punch();
     if (ev.mood) setMood(hero, ev.mood);
     ev.run?.();
   } else {
@@ -285,6 +293,7 @@ function popFriend(el) {
   save();
   followersList = followersList.filter((f) => f !== el);
   el.classList.add('popping');
+  pressFx(el._x, el._y, el._x, el._y, getComputedStyle(el).getPropertyValue('--c').trim() || undefined);
   setTimeout(() => el.remove(), 260);
   floatText('pop!', el._x, el._y - 30);
   setMood(hero, 'sad');
@@ -349,11 +358,32 @@ function onMiss(e) {
     Sound.thud();
   }
   shake(dom.room, 3, 160);
+  plaster(e.clientX, e.clientY);
 
   if (now - lastMissLine > 3000) {
     lastMissLine = now;
     say(knocked ? pick([`Not my ${knocked}!`, `Leave my ${knocked} alone!`, `That ${knocked} was a GIFT.`]) : pick(LINES.miss));
     if (!G.chase && G.disguise < 0) setMood(hero, 'angry');
+  }
+}
+
+// A puff of plaster dust where you punched the wall.
+function plaster(x, y) {
+  if (reducedMotion()) return;
+  for (let i = 0; i < 6; i++) {
+    const p = h('i', 'plaster');
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    dom.fx.append(p);
+    const a = rand(-Math.PI, 0);
+    const d = rand(14, 40);
+    p.animate(
+      [
+        { transform: 'translate(-50%,-50%) scale(0.6)', opacity: 0.9 },
+        { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d + 26}px)) scale(1.4)`, opacity: 0 },
+      ],
+      { duration: rand(450, 700), easing: 'cubic-bezier(.2,.7,.4,1)' }
+    ).onfinish = () => p.remove();
   }
 }
 
@@ -487,6 +517,7 @@ function decoyHit(d) {
   d._gone = true;
   decoys = decoys.filter((x) => x !== d);
   d.classList.add('popping');
+  pressFx(d._x, d._y, d._x, d._y, 'rgba(255, 210, 120, 0.95)');
   setTimeout(() => d.remove(), 260);
   floatText(pick(['pop!', 'fake!', 'one down', 'bye clone']), d._x, d._y - 40, 'hot');
   if (!decoys.length) say('You popped my WHOLE army?! …they’ll be back.');
@@ -693,6 +724,7 @@ function postClick() {
   updateHud();
   Sound.click(G.post * 3);
   press(hero);
+  pressFx(hero._x, hero._y, hero._x, hero._y, 'rgba(170, 225, 190, 0.9)');
   say(POST_LINES[G.post - 1]);
   setMood(hero, G.post <= 5 || (G.post >= 16 && G.post < 20) ? 'calm' : 'smug');
 

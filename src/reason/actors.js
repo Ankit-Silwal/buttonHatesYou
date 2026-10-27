@@ -1,6 +1,7 @@
 import { GRAVITY, moveBody, overlap, solidAt, clamp, rand, cx, cy } from './engine';
 import { sfx } from './audio';
 import { drawButton, drawKey, rr, text, heart, sword, popupWindow, cursorShape, FONTS } from './draw';
+import { glow, shadow } from './fx';
 
 const SPEED = 250;
 const DASH_SPEED = 640;
@@ -279,10 +280,11 @@ export class Bobby {
       flash: this.flash > 0, red: this.red, tears: this.tears, sit: this.sit, pendantGlow: this.pendantGlow, acc: this.acc,
     });
     if (a && a.t < 0.18) {
-      // swoosh
+      // swoosh: a wide faint trail under a bright edge, both additive
       c.save();
-      c.strokeStyle = this.flags.cursed ? 'rgba(181,124,255,0.7)' : 'rgba(255,255,255,0.75)';
-      c.lineWidth = a.kind === 'finisher' ? 6 : 4;
+      const fade = 1 - a.t / 0.18;
+      c.globalCompositeOperation = 'lighter';
+      c.lineCap = 'round';
       c.beginPath();
       if (a.kind === 'down') c.arc(cx(this), this.y + this.h + 6, 24, 0.2, Math.PI - 0.2);
       else {
@@ -291,6 +293,11 @@ export class Bobby {
         const e = this.facing > 0 ? 1.1 : Math.PI - 1.1;
         c.arc(cx(this), this.y + 18, r, Math.min(s, e), Math.max(s, e));
       }
+      c.strokeStyle = this.flags.cursed ? `rgba(150,80,255,${0.35 * fade})` : `rgba(160,200,255,${0.3 * fade})`;
+      c.lineWidth = a.kind === 'finisher' ? 16 : 11;
+      c.stroke();
+      c.strokeStyle = this.flags.cursed ? `rgba(200,150,255,${0.9 * fade})` : `rgba(255,255,255,${0.9 * fade})`;
+      c.lineWidth = a.kind === 'finisher' ? 5 : 3;
       c.stroke();
       c.restore();
     }
@@ -428,6 +435,7 @@ export class Npc {
 
 function drawRobot(c, r, g) {
   const { x, y, w, h } = r;
+  shadow(c, x + w / 2, y + h, w * 0.6, 0.32);
   c.fillStyle = '#7d8a99';
   rr(c, x, y + 20, w, h - 30, 8);
   c.fill();
@@ -440,6 +448,10 @@ function drawRobot(c, r, g) {
   c.fillStyle = '#0b1a12';
   c.fillRect(x + 9, y + 5, w - 18, 18);
   const broken = r.broken;
+  c.fillStyle = 'rgba(255,255,255,0.25)';
+  c.fillRect(x + 6, y + 2, w - 12, 2);
+  c.fillRect(x + 2, y + 22, 3, h - 34);
+  glow(c, x + w / 2, y + 14, 22, broken ? '#ff6b5e' : '#3df59a', 0.5);
   text(c, broken && Math.sin(g.time * 9) > 0 ? 'ERR' : '• •', x + w / 2, y + 14, { size: 11, color: broken ? '#ff6b5e' : '#3df59a' });
   if (broken) {
     c.strokeStyle = '#333';
@@ -457,9 +469,18 @@ function drawCookie(c, k, g) {
   const r = k.w / 2;
   const x = cx(k);
   const y = cy(k) + Math.sin(g.time * 2) * 3;
+  shadow(c, x, k.y + k.h + 4, r * 0.8, 0.3);
   c.fillStyle = '#d79a5a';
   c.beginPath();
   c.arc(x, y, r, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = 'rgba(120, 60, 20, 0.25)';
+  c.beginPath();
+  c.arc(x + r * 0.12, y + r * 0.12, r * 0.9, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = 'rgba(255, 230, 180, 0.3)';
+  c.beginPath();
+  c.arc(x - r * 0.25, y - r * 0.3, r * 0.45, 0, Math.PI * 2);
   c.fill();
   c.fillStyle = '#5a3418';
   [[-25, -20], [20, -30], [30, 15], [-10, 30], [-35, 10], [5, -5]].forEach(([dx, dy]) => {
@@ -668,11 +689,18 @@ export class Bug extends Enemy {
   draw(c, g) {
     const x = this.x;
     const y = this.y;
+    if (this.ground) shadow(c, x + 13, y + this.h, 15, 0.3);
     c.fillStyle = this.flash ? '#fff' : this.color ?? '#5aa845';
     c.beginPath();
     c.ellipse(x + 13, y + 9, 13, 8, 0, Math.PI, 0);
     c.fill();
     c.fillRect(x, y + 8, 26, 3);
+    c.fillStyle = 'rgba(255,255,255,0.4)';
+    c.beginPath();
+    c.ellipse(x + 9, y + 4, 5, 2, -0.3, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = 'rgba(0,0,0,0.18)';
+    c.fillRect(x + 12.5, y + 1, 1.2, 8);
     c.strokeStyle = '#2d4a1f';
     c.lineWidth = 2;
     const k = Math.sin(this.t * 18) * 2;
@@ -711,6 +739,7 @@ export class Crab extends Enemy {
   draw(c, g) {
     const x = this.x;
     const y = this.y;
+    if (this.ground) shadow(c, x + 15, y + this.h, 20, 0.3);
     c.strokeStyle = '#c94a3a';
     c.lineWidth = 3;
     const k = Math.sin(this.t * 12) * 3;
@@ -837,11 +866,18 @@ export class Slime extends Enemy {
   }
   draw(c, g) {
     const sq = this.state === 'charge' ? 3 : Math.sin(this.t * 4) * 2;
+    if (this.ground) shadow(c, cx(this), this.y + this.h, 22, 0.3);
     c.fillStyle = this.flash ? '#fff' : '#7fd6ff';
     c.beginPath();
     c.ellipse(cx(this), this.y + this.h - 10 + sq / 2, 18 + sq, 13 - sq / 2, 0, Math.PI, 0);
     c.fillRect(this.x - sq, this.y + this.h - 10, this.w + sq * 2, 10);
     c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.55)';
+    c.beginPath();
+    c.ellipse(cx(this) - 7, this.y + this.h - 18 + sq / 2, 5, 2.5, -0.4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = 'rgba(20,60,110,0.25)';
+    c.fillRect(this.x - sq, this.y + this.h - 4, this.w + sq * 2, 4);
     c.fillStyle = '#1d3b56';
     c.fillRect(cx(this) - 7 + this.facing * 3, this.y + 8, 3, 5);
     c.fillRect(cx(this) + 4 + this.facing * 3, this.y + 8, 3, 5);
@@ -894,10 +930,13 @@ export class Drone extends Enemy {
     c.fillStyle = Math.sin(g.time * 30) > 0 ? '#9aa' : '#667';
     c.fillRect(x - 4, y - 2, 14, 2);
     c.fillRect(x + this.w - 10, y - 2, 14, 2);
+    c.fillStyle = 'rgba(255,255,255,0.22)';
+    c.fillRect(x + 6, y + 7.5, this.w - 12, 1.5);
     c.fillStyle = this.fire < 0.4 ? '#ffffff' : '#ff3b3b';
     c.beginPath();
     c.arc(cx(this) + this.facing * 6, y + 13, 4, 0, Math.PI * 2);
     c.fill();
+    glow(c, cx(this) + this.facing * 6, y + 13, this.fire < 0.4 ? 26 : 16, '#ff3b3b', 0.8);
     this.drawStun(c, g);
   }
 }
@@ -931,6 +970,7 @@ export class Shot {
       popupWindow(c, this.x, this.y, this.w, this.h, this.label, this.bar ?? '#5a74ff');
       return;
     }
+    glow(c, cx(this), cy(this), this.w * 1.8, this.color, 0.75);
     c.fillStyle = this.color;
     c.beginPath();
     c.arc(cx(this), cy(this), this.w / 2 + Math.sin(g.time * 30), 0, Math.PI * 2);
@@ -975,13 +1015,35 @@ export class Pickup {
     const y = this.y + (this.float ? Math.sin(this.t * 3) * 3 : 0);
     if (this.kind === 'coin') {
       const sx = Math.abs(Math.cos(this.t * 3));
-      c.fillStyle = '#f2c14e';
+      glow(c, cx(this), y + 8, 20, '#f2a23e', 0.35);
+      c.fillStyle = '#c99a2e';
       c.beginPath();
       c.ellipse(cx(this), y + 8, 7 * sx + 1, 8, 0, 0, Math.PI * 2);
       c.fill();
+      c.fillStyle = '#f7cf5e';
+      c.beginPath();
+      c.ellipse(cx(this) - sx * 0.6, y + 7.4, 6 * sx + 0.6, 7, 0, 0, Math.PI * 2);
+      c.fill();
       c.fillStyle = '#c99a2e';
       c.fillRect(cx(this) - 1, y + 4, 2 * sx, 8);
-    } else if (this.kind === 'heart') heart(c, cx(this), y + 8, 8, '#ff4f6b', '#a3203a');
+      c.fillStyle = 'rgba(255,255,255,0.75)';
+      c.fillRect(cx(this) - 4 * sx, y + 3, 1.6 * sx + 0.4, 4);
+      // a glint that runs round now and then
+      const k = (this.t * 0.7) % 2.2;
+      if (k < 0.3) {
+        const a = Math.sin((k / 0.3) * Math.PI);
+        c.fillStyle = `rgba(255,255,255,${a})`;
+        c.fillRect(cx(this) + 3 - 0.75, y - 1, 1.5, 7);
+        c.fillRect(cx(this) + 3 - 3.5, y + 2.25, 7, 1.5);
+      }
+    } else if (this.kind === 'heart') {
+      glow(c, cx(this), y + 8, 22, '#ff4f6b', 0.4);
+      heart(c, cx(this), y + 8, 8, '#ff4f6b', '#a3203a');
+      c.fillStyle = 'rgba(255,255,255,0.6)';
+      c.beginPath();
+      c.ellipse(cx(this) - 4, y + 5, 2.2, 1.4, -0.6, 0, Math.PI * 2);
+      c.fill();
+    }
     else this.look?.(c, g, this.x, y);
   }
 }

@@ -9,7 +9,7 @@ import { BEDROOM, VILLAGE } from './ep1';
 // backwards, with everything in the same place and nothing left.
 
 // Episode 1's village, after the purge.
-const RUINED = {
+export const RUINED = {
   ...VILLAGE,
   theme: 'wreck',
   coins: false,
@@ -32,7 +32,7 @@ const RUINED = {
   spawn: { x: 3560, y: GROUND - 60 },
 };
 
-const ROOM = {
+export const ROOM = {
   ...BEDROOM,
   coins: false,
   deco: [

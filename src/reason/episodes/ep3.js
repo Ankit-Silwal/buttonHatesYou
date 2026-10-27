@@ -14,7 +14,7 @@ const W = 4300;
 const A0 = 3320; // boss arena
 const A1 = 4280;
 
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'popup',
   solids: [
@@ -44,7 +44,7 @@ const LEVEL = {
   spawn: { x: 120, y: GROUND - 60 },
 };
 
-const CAMP = {
+export const CAMP = {
   w: 960,
   theme: 'night',
   coins: false,
