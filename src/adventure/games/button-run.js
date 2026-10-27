@@ -80,6 +80,8 @@ export default function buttonRun({ look, sound }) {
   let chatter = 4;
   let overT = 0;
   let t = 0;
+  let coinPop = 0; // the coin counter bulges for a moment per coin
+  let flash = null; // { color, left }: a screen flash
   let phase = 0; // the running stride
   let glance = 0; // 0 facing ahead .. 1 turned round to look at you
   let glanceFor = 0;
@@ -237,6 +239,7 @@ export default function buttonRun({ look, sound }) {
     const p = POWERS[kind];
     active[kind] = p.time || 1;
     sound.win();
+    flash = { color: p.color, left: 0.35 };
     mouth.say(GOT[kind], 2);
     lookBack(1.2);
     if (kind === 'wings') {
@@ -254,6 +257,7 @@ export default function buttonRun({ look, sound }) {
     g.over = true;
     sound.crash();
     world.shake(1);
+    flash = { color: '#ff3b2f', left: 0.5 };
     const [sx, sy] = P(me.x, me.y + 0.5, 0);
     sparks.burst(sx, sy, look.color, 18);
     mouth.say(fell ? 'AAAAH—' : pick(CRASH), 3);
@@ -365,6 +369,7 @@ export default function buttonRun({ look, sound }) {
         const worth = active.double ? COIN * 2 : COIN;
         coinPts += worth;
         coinCount++;
+        coinPop = 0.18;
         sound.tone(1320, 0.06, 'square', 0.12, 1760);
         const [sx, sy] = P(k.x, k.y, Math.max(k.z, 0));
         sparks.burst(sx, sy, '#ffd84d', 6, 140);
@@ -459,6 +464,8 @@ export default function buttonRun({ look, sound }) {
 
     update(dt) {
       t += dt;
+      coinPop = Math.max(0, coinPop - dt);
+      if (flash && (flash.left -= dt) <= 0) flash = null;
       mouth.update(dt);
       sparks.update(dt);
       me.squash = Math.max(0, me.squash - dt);
@@ -542,6 +549,12 @@ export default function buttonRun({ look, sound }) {
 
       drawScore(c, g.score, t < 5 ? 'Swipe to dodge · tap to jump' : 'points');
       hud(c);
+      if (flash) {
+        c.globalAlpha = Math.min(0.45, flash.left);
+        c.fillStyle = flash.color;
+        c.fillRect(0, 0, W, H);
+        c.globalAlpha = 1;
+      }
     },
   };
 
@@ -568,7 +581,12 @@ export default function buttonRun({ look, sound }) {
       } else text(c, 'one hit', 96, y + 18, { size: 13, color: '#fff' });
       y += 44;
     }
-    // coins, top right under the shell's buttons
+    // coins, top right under the shell's buttons, bulging as they come in
+    const pop = 1 + coinPop * 1.6;
+    c.save();
+    c.translate(W - 58, 168);
+    c.scale(pop, pop);
+    c.translate(-(W - 58), -168);
     c.fillStyle = 'rgba(25,18,40,0.55)';
     rr(c, W - 104, 150, 92, 36, 18);
     c.fill();
@@ -581,6 +599,7 @@ export default function buttonRun({ look, sound }) {
     c.arc(W - 86, 168, 6, 0, Math.PI * 2);
     c.fill();
     text(c, String(coinCount), W - 46, 169, { size: 18, color: '#fff' });
+    c.restore();
   }
 
   return g;
