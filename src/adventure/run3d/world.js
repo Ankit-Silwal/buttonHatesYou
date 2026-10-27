@@ -263,10 +263,10 @@ export function createWorld(look, POWERS) {
     keys.instanceColor.needsUpdate = sideKeys.instanceColor.needsUpdate = true;
 
     place(s.things, buildThing, (o, obj) => {
-      obj.position.set(o.lane == null ? 0 : LANES[o.lane], 0, -o.z);
+      obj.position.set(o.x ?? 0, 0, -o.z);
       // nothing gets between the camera and the button: short things vanish
       // once passed, and a train you're phasing through goes see-through
-      if (o.kind === 'train') obj.visible = !(Math.abs(LANES[o.lane] - s.me.x) < 1 && o.z < 0.3 && o.z + o.len > -0.3 && s.me.y < o.top - 0.1);
+      if (o.kind === 'train') obj.visible = !(Math.abs(o.x - s.me.x) < 1 && o.z < 0.3 && o.z + o.len > -0.3 && s.me.y < o.top - 0.1);
       else if (o.kind !== 'hole' && o.kind !== 'ramp' && o.z + o.len < -0.4) obj.visible = false;
       const a = obj.userData;
       if (a.flames) a.flames.forEach((f, i) => f.scale.set(0.75 + Math.sin(t * 17 + i) * 0.08, 1.1 + Math.sin(t * 13 + i * 2) * 0.3, 1));
@@ -274,6 +274,8 @@ export function createWorld(look, POWERS) {
       if (a.pointer) a.pointer.position.y = o.cy;
       if (a.ring) a.ring.material.opacity = o.slammed ? 0.3 : 0.55 + Math.sin(t * 14) * 0.3;
       if (a.leds) a.leds.material.emissiveIntensity = 0.6 + Math.sin(t * 7 + o.z) * 0.6;
+      if (a.arrows) a.arrows.material.opacity = 0.5 + Math.sin(t * 10) * 0.4;
+      if (a.wobble) a.wobble.rotation.set(Math.sin(t * 20) * 0.04, o.dir * 0.3 + Math.sin(t * 9) * 0.08, 0);
     });
     place(s.coins, buildCoin, (o, obj) => {
       obj.position.set(o.x, o.y, -o.z);
@@ -373,7 +375,31 @@ function letterMaterial() {
 function buildThing(o) {
   const g = new THREE.Group();
   const a = g.userData;
-  if (o.kind === 'block') {
+  if (o.kind === 'mouse') {
+    // a giant computer mouse skidding sideways, cable whipping behind it
+    const wob = new THREE.Group();
+    g.add(wob);
+    const shell = mesh(geo('mouseshell', () => new THREE.SphereGeometry(0.66, 32, 20).scale(1, 0.7, 1.35)), mat('#1d1f27', { roughness: 0.18, metalness: 0.4 }));
+    shell.position.set(0, 0.36, -0.65);
+    const wheel = mesh(geo('mousewheel', () => new THREE.CylinderGeometry(0.1, 0.1, 0.08, 18).rotateZ(Math.PI / 2)), mat('#4fd1ff', { emissive: '#4fd1ff', emissiveIntensity: 1.5 }));
+    wheel.position.set(0, 0.72, -0.25);
+    const seam = mesh(geo('mouseseam', () => new THREE.BoxGeometry(0.02, 0.05, 0.55)), mat('#9aa0ab'));
+    seam.position.set(0, 0.72, -0.1);
+    const glow = mesh(geo('mouseglow', () => new THREE.TorusGeometry(0.58, 0.025, 8, 40).rotateX(Math.PI / 2).scale(1, 1, 1.32)), mat('#4fd1ff', { emissive: '#4fd1ff', emissiveIntensity: 2 }), { cast: false });
+    glow.position.set(0, 0.08, -0.65);
+    wob.add(shell, wheel, seam, glow);
+    a.wobble = wob;
+  } else if (o.kind === 'slider') {
+    const cap = mesh(geo('bigkey', () => new RoundedBoxGeometry(1.4, 0.82, 0.72, 4, 0.16)), mat('#ffd9a0', { roughness: 0.35 }), { receive: true });
+    cap.position.set(0, 0.41, -0.36);
+    const label = labelPlane(o.label, 1.2, 0.5, '#7a5520');
+    label.position.set(0, 0.42, 0.005);
+    const arrows = labelPlane('◀ ▶', 1.2, 0.3, '#ff7a1c', 0.9);
+    arrows.material = arrows.material.clone();
+    arrows.position.set(0, 1.05, -0.36);
+    g.add(cap, label, arrows);
+    a.arrows = arrows;
+  } else if (o.kind === 'block') {
     // a giant keycap, with its letter on the front
     const cap = mesh(geo('bigkey', () => new RoundedBoxGeometry(1.4, 0.82, 0.72, 4, 0.16)), mat('#f2ecdc', { roughness: 0.4 }), { receive: true });
     cap.position.set(0, 0.41, -0.36);

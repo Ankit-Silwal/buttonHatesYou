@@ -104,6 +104,7 @@ export default function buttonRun({ look, sound }) {
   };
 
   const add = (o) => {
+    if (o.lane != null && o.x == null) o.x = LANES[o.lane];
     things.push(o);
     if (o.lane != null) laneEnd[o.lane] = Math.max(laneEnd[o.lane], o.z + o.len);
   };
@@ -116,6 +117,23 @@ export default function buttonRun({ look, sound }) {
     if (dist > 250 && r < 0.1) {
       add({ kind: 'bar', z, len: 0.3, pct: rand(0.6, 0.97) });
       coinLine(pick([0, 1, 2]), z - 4, 6, (cz) => 0.6 + Math.max(0, 1.7 * (1 - ((cz - z) / 4.5) ** 2)));
+      rowZ = z + gap;
+      return;
+    }
+
+    // a keycap gliding back and forth between two lanes: jump it or time it
+    if (dist > 180 && r < 0.18) {
+      const a = pick([0, 1]);
+      add({ kind: 'slider', lane: a, x: LANES[a], from: a, z, len: 0.7, label: pick(KEYS), ph: rand(0, Math.PI * 2), w: rand(2.2, 3.2) });
+      if (Math.random() < 0.5) add({ kind: 'block', lane: a === 0 ? 2 : 0, z, len: 0.7, label: pick(KEYS) });
+      rowZ = z + gap;
+      if (Math.random() < 0.6) coinPattern(z + 3, rowZ - 3);
+      return;
+    }
+    // a giant mouse skidding sideways across the whole track: jump it
+    if (dist > 280 && r < 0.25) {
+      const from = pick([-1, 1]);
+      add({ kind: 'mouse', lane: from < 0 ? 0 : 2, x: from * 3.4, dir: -from, tx: pick(LANES), z, len: 1.3 });
       rowZ = z + gap;
       return;
     }
@@ -170,7 +188,7 @@ export default function buttonRun({ look, sound }) {
         const w0 = Math.ceil((dist + z - 2 - NEAR_KEY) / TILE) * TILE + NEAR_KEY;
         add({ kind, lane, z: w0 - dist, len: TILE * 2 });
       }
-      else if (kind === 'click') add({ kind, lane, z, len: 1.2, cy: 7, slammed: false });
+      else if (kind === 'click') add({ kind, lane, z, len: 1.2, cy: 7, slammed: false, track: !row.includes('wall') });
     });
 
     // coins arcing over something jumpable in this row
@@ -332,8 +350,8 @@ export default function buttonRun({ look, sound }) {
     let gh = 0;
     me.ramp = false;
     for (const o of things) {
-      if (o.lane == null || Math.abs(LANES[o.lane] - me.x) > 0.75) continue;
-      if (o.kind === 'hole' && Math.abs(LANES[o.lane] - me.x) < 0.45 && o.z + 0.3 < 0 && o.z + o.len - 0.3 > 0) gh = -20;
+      if (o.lane == null || Math.abs(o.x - me.x) > 0.75) continue;
+      if (o.kind === 'hole' && Math.abs(o.x - me.x) < 0.45 && o.z + 0.3 < 0 && o.z + o.len - 0.3 > 0) gh = -20;
       else if (o.kind === 'train' && o.z < PZ && o.z + o.len > -PZ && me.y >= o.top - 0.5) gh = Math.max(gh, o.top);
       else if (o.kind === 'ramp' && o.z < 0 && o.z + o.len > 0) {
         const s = (-o.z / o.len) * TRAIN_TOP;
@@ -389,7 +407,7 @@ export default function buttonRun({ look, sound }) {
       if (!o.inZ) continue;
       if (hb.x1 <= box.x0 || hb.x0 >= box.x1 || hb.y1 <= box.y0 || hb.y0 >= box.y1) {
         // swerved out of its lane at the last moment
-        if (!was && o.lane === me.from && t - shiftedAt < 0.45 && (o.kind === 'wall' || o.kind === 'train' || o.kind === 'click')) {
+        if (!was && o.lane === me.from && t - shiftedAt < 0.45 && (o.kind === 'wall' || o.kind === 'train' || o.kind === 'click' || o.kind === 'slider')) {
           coinPts += 10;
           const [sx, sy] = P(me.x, me.y + 1.6, 0);
           sparks.float(sx, sy, 'Close one! +10', '#ffe27a');
@@ -424,7 +442,9 @@ export default function buttonRun({ look, sound }) {
         k.y += (me.y + 0.5 - k.y) * f;
         k.z += -k.z * f;
       }
-      if (Math.abs(k.z) < 0.7 && Math.abs(k.x - me.x) < 0.75 && Math.abs(k.y - (me.y + 0.5)) < 0.95) {
+      // spring shoes sweep up the coins underneath a big jump, too
+      const low = active.spring && !me.ground ? me.gh - 0.3 : me.y - 0.45;
+      if (Math.abs(k.z) < 0.7 && Math.abs(k.x - me.x) < 0.75 && k.y > low && k.y < me.y + 1.45) {
         k.got = true;
         const worth = active.double ? COIN * 2 : COIN;
         coinPts += worth;
@@ -461,6 +481,23 @@ export default function buttonRun({ look, sound }) {
     rowZ -= move;
     decorZ -= move;
 
+    // things that move on their own
+    for (const o of things) {
+      if (o.kind === 'slider') {
+        o.x = (LANES[o.from] + LANES[o.from + 1]) / 2 + Math.sin(t * o.w + o.ph) * (LANE / 2);
+        o.lane = Math.round(o.x / LANE) + 1;
+      } else if (o.kind === 'mouse' && !g.over) {
+        // timed to cross the middle lane just as it reaches you
+        const left = Math.max(0.4, (o.z + 1) / Math.max(speed, 1));
+        o.x += ((o.tx - o.x) / left) * dt;
+        o.lane = clamp(Math.round(o.x / LANE) + 1, 0, 2);
+      } else if (o.kind === 'click' && o.track && o.z > 24 && !g.over) {
+        // it follows your lane until it locks on
+        o.x += clamp(LANES[me.lane] - o.x, -5 * dt, 5 * dt);
+        o.lane = clamp(Math.round(o.x / LANE) + 1, 0, 2);
+      } else if (o.kind === 'click') o.x += (LANES[o.lane] - o.x) * Math.min(1, dt * 10);
+    }
+
     // the cursor hovers over its lane, then clicks down as you get close
     for (const o of things) {
       if (o.kind !== 'click') continue;
@@ -469,7 +506,7 @@ export default function buttonRun({ look, sound }) {
       if (k >= 1 && !o.slammed) {
         o.slammed = true;
         sound.thud();
-        const [sx, sy] = P(LANES[o.lane], 0, o.z + 0.6);
+        const [sx, sy] = P(o.x, 0, o.z + 0.6);
         sparks.burst(sx, sy, '#ffffff', 12, 200);
       }
     }
@@ -684,8 +721,9 @@ function prune(arr, gone) {
 
 // The box the button can run into, or null for things it can't.
 function hitOf(o) {
-  const lx = LANES[o.lane];
+  const lx = o.x;
   switch (o.kind) {
+    case 'slider':
     case 'block':
       return { x0: lx - 0.7, x1: lx + 0.7, y0: 0, y1: 0.8 };
     case 'ad':
@@ -694,6 +732,8 @@ function hitOf(o) {
       return { x0: lx - 0.75, x1: lx + 0.75, y0: 0, y1: 3.2 };
     case 'train':
       return { x0: lx - 0.72, x1: lx + 0.72, y0: 0, y1: o.top };
+    case 'mouse':
+      return { x0: lx - 0.6, x1: lx + 0.6, y0: 0, y1: 0.75 };
     case 'bar':
       return { x0: -2.6, x1: 2.6, y0: 0.1, y1: 0.7 };
     case 'click':
