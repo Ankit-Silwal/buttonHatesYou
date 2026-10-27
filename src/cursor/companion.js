@@ -2,6 +2,7 @@ import { cx, cy, pick } from '@/reason/engine';
 import { sfx } from '@/reason/audio';
 import { rr, text } from '@/reason/draw';
 import { motion, ripple, drawPal } from './pal';
+import { shine } from './look';
 import { Npc, Thing, bark } from '@/reason/actors';
 
 // Cursor: Bobby's best friend, and the Player's hand in the world. He floats
@@ -99,6 +100,21 @@ export function clickSwitch(g, x, y, onPress, opts = {}) {
     },
     look(c, g) {
       const on = this.used && !opts.repeat;
+      const cxx = this.x + 15;
+      const cyy = this.y + 15;
+      shine(c, on ? '141,255,200' : '127,220,255', cxx, cyy, 52, on ? 0.35 : 0.55 + 0.25 * Math.sin(g.time * 5));
+      if (!on) {
+        // a slowly turning dashed ring: "click me"
+        c.save();
+        c.strokeStyle = 'rgba(190,240,255,0.85)';
+        c.lineWidth = 1.5;
+        c.setLineDash([5, 4]);
+        c.lineDashOffset = -g.time * 14;
+        c.beginPath();
+        c.arc(cxx, cyy, 24 + Math.sin(g.time * 5) * 1.5, 0, Math.PI * 2);
+        c.stroke();
+        c.restore();
+      }
       c.fillStyle = 'rgba(0,0,0,0.25)';
       rr(c, this.x - 3, this.y - 3, 36, 36, 9);
       c.fill();
