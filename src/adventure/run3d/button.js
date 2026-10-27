@@ -224,7 +224,7 @@ export function buildButton(look) {
     if (s.slide) body.position.y = -0.12;
     tilt.rotation.z = s.lean;
     tilt.rotation.x = s.spin;
-    turn.rotation.y = s.glance * Math.PI * 0.85;
+    turn.rotation.y = s.glance * Math.PI * 0.55; // a look over its shoulder, not a U-turn
     if (scarfTail) scarfTail.rotation.x = 0.5 + Math.sin(s.t * 18) * 0.25;
 
     const mood = moods[s.mood] ?? moods.angry;

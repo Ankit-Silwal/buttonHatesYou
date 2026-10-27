@@ -416,11 +416,12 @@ function buildThing(o) {
     body.scale.z = o.len;
     body.position.set(0, TRAIN_TOP / 2, -o.len / 2);
     g.add(body);
-    // a little railing and vents on the roof
-    for (let z = 1; z < o.len - 0.5; z += 2.5) {
-      const vent = mesh(geo('vent', () => new RoundedBoxGeometry(0.9, 0.12, 0.8, 2, 0.04)), mat(spam ? '#c0392b' : '#3a4568'));
-      vent.position.set(0, TRAIN_TOP + 0.06, -z);
-      g.add(vent);
+    // low rails along the roof edges, clear of the middle where you run
+    for (const side of [-1, 1]) {
+      const rail = mesh(geo('rail', () => new THREE.BoxGeometry(0.08, 0.1, 1)), mat(spam ? '#c0392b' : '#3a4568', { metalness: 0.5, roughness: 0.4 }));
+      rail.scale.z = o.len - 0.4;
+      rail.position.set(side * 0.66, TRAIN_TOP + 0.05, -o.len / 2);
+      g.add(rail);
     }
     if (spam) {
       a.lights = [-1, 1].map((s) => {

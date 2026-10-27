@@ -286,13 +286,17 @@ export default function buttonRun({ look, sound }) {
   // nothing at all over a hole.
   const groundUnder = () => {
     let gh = 0;
+    me.ramp = false;
     for (const o of things) {
       if (o.lane == null || Math.abs(LANES[o.lane] - me.x) > 0.75) continue;
       if (o.kind === 'hole' && Math.abs(LANES[o.lane] - me.x) < 0.45 && o.z + 0.3 < 0 && o.z + o.len - 0.3 > 0) gh = -20;
       else if (o.kind === 'train' && o.z < PZ && o.z + o.len > -PZ && me.y >= o.top - 0.5) gh = Math.max(gh, o.top);
       else if (o.kind === 'ramp' && o.z < 0 && o.z + o.len > 0) {
         const s = (-o.z / o.len) * TRAIN_TOP;
-        if (me.y >= s - 0.6) gh = Math.max(gh, s);
+        if (me.y >= s - 0.6 && s >= gh) {
+          gh = s;
+          me.ramp = true;
+        }
       }
     }
     return gh;
@@ -513,6 +517,8 @@ export default function buttonRun({ look, sound }) {
       }
 
       if (me.ground && !g.over) phase += dt * speed * 0.8;
+      // lean into a ramp while running up it
+      me.pitch = (me.pitch ?? 0) + ((me.ground && me.ramp ? 0.42 : 0) - (me.pitch ?? 0)) * Math.min(1, dt * 12);
       glanceFor -= dt;
       glance += ((glanceFor > 0 || g.over ? 1 : 0) - glance) * Math.min(1, dt * 7);
       cam.x += (me.x * 0.75 - cam.x) * Math.min(1, dt * 6);
@@ -544,7 +550,7 @@ export default function buttonRun({ look, sound }) {
           mood: g.over ? 'sad' : chase > 0 ? 'worried' : !me.ground ? 'shout' : 'angry',
           glance,
           lean: (me.x - LANES[me.lane]) * 0.25,
-          spin: g.over ? -me.spin : 0,
+          spin: g.over ? -me.spin : me.pitch ?? 0,
           alpha: active.ghost ? 0.45 : blink ? 0.35 : 1,
           wings: !!active.wings,
           bubble: !!active.bubble,
