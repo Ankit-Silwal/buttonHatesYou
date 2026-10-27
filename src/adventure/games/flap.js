@@ -35,6 +35,7 @@ export default function flap({ look, sound }) {
     me.vy = Math.min(me.vy, -200);
     sound.hit();
     sparks.burst(me.x, me.y, look.color, 16);
+    sparks.burst(me.x, me.y, '#ffffff', 8, 140); // loose feathers
     mouth.say(CRASH[Math.floor(Math.random() * CRASH.length)], 3);
   };
 
@@ -46,6 +47,7 @@ export default function flap({ look, sound }) {
     }
     me.vy = FLAP;
     squash = 0.18;
+    sparks.burst(me.x - 6, me.y + SIZE * 0.4, '#fff4ea', 3, 90); // a puff of air
     sound.jump();
     mouth.maybe(FLAPS, 0.2);
   };

@@ -23,6 +23,8 @@ const SPRITES = new Map();
 export function sprite(key, w, h, make) {
   let cv = SPRITES.get(key);
   if (!cv) {
+    // keep memory bounded across many runs: drop the oldest sprites
+    if (SPRITES.size > 500) for (const k of [...SPRITES.keys()].slice(0, 100)) SPRITES.delete(k);
     cv = makeCanvas(w, h);
     make(cv.getContext('2d'), cv);
     SPRITES.set(key, cv);

@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, heart, text, drawBobby, drawScore, backdrop, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, heart, text, drawBobby, drawScore, Mouth, Sparks, sprite, layer, vignette, glow, softLight, shadow, hash } from '../kit';
 
 // Snack Attack: slide the button left and right to catch falling snacks and
 // dodge the bombs. Three lives; a missed snack costs nothing.
@@ -151,38 +151,33 @@ export default function catchGame({ look, sound, keys }) {
     draw(c) {
       c.save();
       if (shake) c.translate(rand(-6, 6) * shake * 3, rand(-6, 6) * shake * 3);
-      backdrop(c, '#ffc98f', '#fff1dc');
-
-      // a sun and some lazy clouds over the picnic
-      c.fillStyle = '#ffe28a';
-      c.beginPath();
-      c.arc(390, 220, 46, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = 'rgba(255,255,255,0.8)';
+      // a golden-hour picnic: warm sky, slow sun rays, hazy hills
+      c.drawImage(skyArt(), -10, -10, W + 20, H + 20);
+      c.save();
+      c.translate(SUN.x, SUN.y);
+      c.rotate(t * 0.04);
+      c.globalCompositeOperation = 'lighter';
+      c.globalAlpha = 0.16;
+      c.drawImage(raysArt(), -380, -380, 760, 760);
+      c.restore();
+      glow(c, SUN.x, SUN.y, 140, '#ffb347', 0.28);
       for (let i = 0; i < 4; i++) {
         const x = ((i * 150 + t * 12) % (W + 160)) - 80;
-        cloud(c, x, 200 + (i % 2) * 110);
+        c.drawImage(cloudArt(i % 2), x - 30, 200 + (i % 2) * 110 - 46);
       }
-      c.fillStyle = '#9fd38a';
-      c.beginPath();
-      c.arc(90, GROUND + 40, 200, Math.PI, 0);
-      c.arc(400, GROUND + 50, 170, Math.PI, 0);
-      c.fill();
+      c.drawImage(hillsArt(), -10, GROUND - 230);
+      c.drawImage(blanketArt(), -10, GROUND - 6);
 
-      // the checked picnic blanket is the ground
-      c.fillStyle = '#fff';
-      c.fillRect(0, GROUND, W, H - GROUND);
-      c.fillStyle = '#e65a4f';
-      for (let y = 0; y < 3; y++) for (let x = 0; x < 16; x++) if ((x + y) % 2) c.fillRect(x * 32, GROUND + y * 24, 32, 24);
-
-      for (const it of items) item(c, it, t);
+      // falling things cast a shadow that sharpens as they get close
+      for (const it of items) {
+        const near = clamp(1 - (GROUND - it.y) / 600, 0, 1);
+        shadow(c, it.x, GROUND + 6, it.r * (0.5 + near * 0.6), 0.08 + near * 0.25, 6);
+      }
+      for (const it of items) item(c, it, t, me);
 
       // the mouth opens when something is about to land on it
       const incoming = items.some((it) => it.y > me.y - 190 && it.y < me.y - SIZE * 0.2 && Math.abs(it.x - me.x) < SIZE * 0.8);
-      c.fillStyle = 'rgba(0,0,0,0.15)';
-      c.beginPath();
-      c.ellipse(me.x, GROUND + 4, SIZE * 0.42, 7, 0, 0, Math.PI * 2);
-      c.fill();
+      shadow(c, me.x, GROUND + 4, SIZE * 0.5, 0.4, 9);
       drawBobby(c, me.x, me.y, SIZE, {
         look,
         t,
@@ -195,40 +190,221 @@ export default function catchGame({ look, sound, keys }) {
       });
 
       sparks.draw(c);
+      // a bomb hit flashes the whole frame hot orange for a moment
+      if (hurt > 0.3) {
+        c.globalAlpha = (hurt - 0.3) / 0.3;
+        vignette(c, 0.95, '#ff5a1a');
+        c.globalAlpha = 1;
+      }
+      vignette(c, 0.3, '#4a1a08');
       mouth.draw(c, me.x, me.y - SIZE * 0.62);
       c.restore();
 
       drawScore(c, g.score);
-      for (let i = 0; i < LIVES; i++) heart(c, W / 2 - 30 + i * 30, 130, 10, i < lives ? '#ff4f7b' : 'rgba(255,255,255,0.45)');
+      for (let i = 0; i < LIVES; i++) {
+        const hx = W / 2 - 30 + i * 30;
+        if (i < lives) softLight(c, hx, 130, 22, '#ff4f7b', 0.45);
+        heart(c, hx, 130, 10, i < lives ? '#ff4f7b' : 'rgba(255,255,255,0.45)');
+      }
       if (t < 3 && !g.over) text(c, 'Drag, or use ← →', W / 2, 168, { size: 16, color: 'rgba(80,50,30,0.8)' });
     },
   };
   return g;
 }
 
-function item(c, it, t) {
+/* ---------- cached art ---------- */
+const SUN = { x: 370, y: 250 };
+
+function skyArt() {
+  return layer('catch:sky', (c) => {
+    const g = c.createLinearGradient(0, 0, 0, GROUND);
+    g.addColorStop(0, '#f08a6a');
+    g.addColorStop(0.35, '#ffb27a');
+    g.addColorStop(0.7, '#ffd79a');
+    g.addColorStop(1, '#fff0cf');
+    c.fillStyle = g;
+    c.fillRect(0, 0, W, H);
+    const s = c.createRadialGradient(SUN.x, SUN.y, 0, SUN.x, SUN.y, 340);
+    s.addColorStop(0, 'rgba(255,250,215,0.6)');
+    s.addColorStop(0.25, 'rgba(255,225,160,0.4)');
+    s.addColorStop(1, 'rgba(255,225,160,0)');
+    c.fillStyle = s;
+    c.fillRect(0, 0, W, H);
+    const d = c.createRadialGradient(SUN.x, SUN.y, 0, SUN.x, SUN.y, 48);
+    d.addColorStop(0, '#fffef2');
+    d.addColorStop(0.7, '#fff2bf');
+    d.addColorStop(1, '#ffe08a');
+    c.fillStyle = d;
+    c.beginPath();
+    c.arc(SUN.x, SUN.y, 46, 0, Math.PI * 2);
+    c.fill();
+  });
+}
+
+function raysArt() {
+  return sprite('catch:rays', 256, 256, (c) => {
+    c.translate(128, 128);
+    for (let i = 0; i < 12; i++) {
+      c.rotate((Math.PI * 2) / 12 + (hash(i) - 0.5) * 0.25);
+      const g = c.createLinearGradient(0, 0, 128, 0);
+      g.addColorStop(0, 'rgba(255,240,200,0.9)');
+      g.addColorStop(1, 'rgba(255,240,200,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(128, -6 - hash(i + 3) * 10);
+      c.lineTo(128, 6 + hash(i + 3) * 10);
+      c.fill();
+    }
+  });
+}
+
+// Clouds lit warm on top with a rosy belly.
+function cloudArt(v) {
+  return sprite(`catch:cloud:${v}`, 140, 90, (c) => {
+    c.translate(30, 46);
+    c.beginPath();
+    const parts = v ? [[0, 0, 22], [24, -10, 26], [50, 0, 20], [74, 6, 14]] : [[0, 0, 22], [24, -10, 26], [50, 0, 20]];
+    for (const [x, y, r] of parts) {
+      c.moveTo(x + r, y);
+      c.arc(x, y, r, 0, Math.PI * 2);
+    }
+    const g = c.createLinearGradient(0, -36, 0, 22);
+    g.addColorStop(0, '#fffaf0');
+    g.addColorStop(0.6, '#ffe6cf');
+    g.addColorStop(1, '#f6b7a2');
+    c.fillStyle = g;
+    c.globalAlpha = 0.92;
+    c.fill();
+  });
+}
+
+// Two hazy hill layers with a few round trees, and a meadow at the front.
+function hillsArt() {
+  return sprite('catch:hills', W + 20, 240, (c) => {
+    c.translate(10, 0);
+    const hill = (cx, cy, r, top, bottom) => {
+      const g = c.createLinearGradient(0, cy - r, 0, 240);
+      g.addColorStop(0, top);
+      g.addColorStop(1, bottom);
+      c.fillStyle = g;
+      c.beginPath();
+      c.ellipse(cx, cy, r, r * 0.55, 0, Math.PI, 0);
+      c.lineTo(cx + r, 240);
+      c.lineTo(cx - r, 240);
+      c.fill();
+    };
+    // far, hazy
+    hill(380, 160, 260, '#d9c79a', '#c9b98e');
+    hill(40, 175, 220, '#cfc293', '#c2b688');
+    // trees on the far hills
+    for (let i = 0; i < 9; i++) {
+      const x = 20 + hash(i + 11) * W;
+      const y = 120 + hash(i + 2) * 40;
+      c.fillStyle = 'rgba(120,130,80,0.55)';
+      c.beginPath();
+      c.arc(x, y, 8 + hash(i) * 6, 0, Math.PI * 2);
+      c.fill();
+    }
+    // near meadow hills, with a sunlit rim
+    hill(90, 240, 220, '#a8d47e', '#6fae5a');
+    hill(410, 250, 190, '#b2da84', '#78b55e');
+    c.globalCompositeOperation = 'source-atop';
+    const rim = c.createLinearGradient(0, 120, 0, 240);
+    rim.addColorStop(0, 'rgba(255,240,180,0.5)');
+    rim.addColorStop(0.4, 'rgba(255,240,180,0)');
+    c.fillStyle = rim;
+    c.fillRect(-10, 0, W + 20, 240);
+    // haze over everything far away
+    c.globalCompositeOperation = 'source-over';
+    const hz = c.createLinearGradient(0, 100, 0, 240);
+    hz.addColorStop(0, 'rgba(255,230,190,0.0)');
+    hz.addColorStop(1, 'rgba(255,230,190,0.15)');
+    c.fillStyle = hz;
+    c.fillRect(-10, 0, W + 20, 240);
+  });
+}
+
+// The checked picnic blanket, with soft folds and shading towards the front.
+function blanketArt() {
+  const h = H - GROUND + 16;
+  return sprite('catch:blanket', W + 20, h, (c) => {
+    c.translate(10, 6);
+    c.fillStyle = '#fff8ee';
+    c.fillRect(-10, 0, W + 20, h);
+    c.fillStyle = '#e04f45';
+    for (let y = 0; y < 3; y++) for (let x = -1; x < 16; x++) if ((x + y) % 2) c.fillRect(x * 32, y * 24, 32, 24);
+    // the thread lines of a gingham weave
+    c.fillStyle = 'rgba(200,40,40,0.25)';
+    for (let y = 0; y < 72; y += 24) for (let x = -32; x < W + 10; x += 32) c.fillRect(x + 15, y, 2, 24), c.fillRect(x, y + 11, 32, 2);
+    // folds: soft light and dark bands
+    const f = c.createLinearGradient(0, 0, W, 0);
+    for (let i = 0; i <= 6; i++) f.addColorStop(i / 6, i % 2 ? 'rgba(80,20,10,0.10)' : 'rgba(255,255,255,0.08)');
+    c.fillStyle = f;
+    c.fillRect(-10, 0, W + 20, h);
+    // shaded towards the front, lit along the back edge
+    const s = c.createLinearGradient(0, 0, 0, h);
+    s.addColorStop(0, 'rgba(255,240,200,0.35)');
+    s.addColorStop(0.15, 'rgba(255,240,200,0)');
+    s.addColorStop(1, 'rgba(70,20,10,0.35)');
+    c.fillStyle = s;
+    c.fillRect(-10, 0, W + 20, h);
+    c.fillStyle = 'rgba(90,40,10,0.25)';
+    c.fillRect(-10, -6, W + 20, 6);
+  });
+}
+
+// Every snack is painted once at 2x with shading on top, then just rotated.
+const ART_R = 22;
+function itemArt(kind) {
+  return sprite(`catch:item:${kind}`, 160, 160, (c) => {
+    c.translate(80, 80);
+    c.scale(2, 2);
+    const r = ART_R;
+    if (kind === 'donut') donut(c, r, '#ff8fb8');
+    else if (kind === 'gold') donut(c, r, '#ffd84d', '#e0a92a');
+    else if (kind === 'cookie') cookie(c, r);
+    else if (kind === 'cake') cake(c, r);
+    else if (kind === 'apple') apple(c, r);
+    else bomb(c, r);
+    // round shading over whatever was drawn: lit top left, shadowed bottom right
+    c.globalCompositeOperation = 'source-atop';
+    const g = c.createRadialGradient(-r * 0.45, -r * 0.5, 2, 0, 0, r * 1.5);
+    g.addColorStop(0, 'rgba(255,255,255,0.35)');
+    g.addColorStop(0.45, 'rgba(255,255,255,0)');
+    g.addColorStop(0.8, 'rgba(40,10,20,0.12)');
+    g.addColorStop(1, 'rgba(40,10,20,0.3)');
+    c.fillStyle = g;
+    c.fillRect(-40, -40, 80, 80);
+  });
+}
+
+function item(c, it, t, me) {
   c.save();
   c.translate(it.x, it.y);
+  if (it.kind === 'gold') glow(c, 0, 0, it.r * 2.6, '#ffd84d', 0.75 + Math.sin(t * 6) * 0.15);
+  // a bomb close to the button pulses red, so it reads at a glance
+  if (it.kind === 'bomb') {
+    const danger = clamp(1 - Math.hypot(it.x - me.x, it.y - me.y) / 300, 0, 1);
+    if (danger) softLight(c, 0, 0, it.r * 2.4, '#ff2a2a', danger * (0.5 + Math.sin(t * 18) * 0.3));
+  }
   c.rotate(it.kind === 'bomb' ? Math.sin(it.spin) * 0.3 : it.spin);
+  const s = (it.r / ART_R) * 40;
+  c.drawImage(itemArt(it.kind), -s, -s, s * 2, s * 2);
   const r = it.r;
-  if (it.kind === 'donut') donut(c, r, '#ff8fb8');
-  else if (it.kind === 'gold') {
-    // a golden donut, worth three
-    const glow = c.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.9);
-    glow.addColorStop(0, 'rgba(255,226,90,0.7)');
-    glow.addColorStop(1, 'rgba(255,226,90,0)');
-    c.fillStyle = glow;
+  if (it.kind === 'bomb') {
+    // the lit fuse flickers and spits light
+    const f = 4 + Math.abs(Math.sin(t * 30)) * 4;
+    glow(c, 14, -r - 10, f * 3.2, '#ffb02a', 0.9);
+    c.fillStyle = '#fff3b0';
     c.beginPath();
-    c.arc(0, 0, r * 1.9, 0, Math.PI * 2);
+    c.arc(14, -r - 10, f * 0.45, 0, Math.PI * 2);
     c.fill();
-    donut(c, r, '#ffd84d', '#e0a92a');
+  } else if (it.kind === 'gold') {
     c.fillStyle = '#fff';
     const tw = 2 + Math.abs(Math.sin(t * 6)) * 3;
     c.fillRect(r * 0.5 - tw / 2, -r * 0.9, tw, tw);
-  } else if (it.kind === 'cookie') cookie(c, r);
-  else if (it.kind === 'cake') cake(c, r);
-  else if (it.kind === 'apple') apple(c, r);
-  else bomb(c, r, t);
+  }
   c.restore();
 }
 
@@ -330,12 +506,16 @@ function apple(c, r) {
   c.fill();
 }
 
-function bomb(c, r, t) {
-  c.fillStyle = '#26232e';
+function bomb(c, r) {
+  const g = c.createRadialGradient(-r * 0.4, -r * 0.3, 1, 0, 2, r);
+  g.addColorStop(0, '#5a5668');
+  g.addColorStop(0.5, '#2a2734');
+  g.addColorStop(1, '#16141c');
+  c.fillStyle = g;
   c.beginPath();
   c.arc(0, 2, r, 0, Math.PI * 2);
   c.fill();
-  c.fillStyle = 'rgba(255,255,255,0.25)';
+  c.fillStyle = 'rgba(255,255,255,0.35)';
   c.beginPath();
   c.ellipse(-r * 0.4, -r * 0.25, 5, 8, 0.6, 0, Math.PI * 2);
   c.fill();
@@ -347,22 +527,4 @@ function bomb(c, r, t) {
   c.moveTo(0, -r - 4);
   c.quadraticCurveTo(8, -r - 14, 14, -r - 10);
   c.stroke();
-  // the lit fuse flickers
-  const f = 4 + Math.abs(Math.sin(t * 30)) * 4;
-  c.fillStyle = '#ffd84d';
-  c.beginPath();
-  c.arc(14, -r - 10, f, 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = '#ff6a2a';
-  c.beginPath();
-  c.arc(14, -r - 10, f * 0.5, 0, Math.PI * 2);
-  c.fill();
-}
-
-function cloud(c, x, y) {
-  c.beginPath();
-  c.arc(x, y, 22, 0, Math.PI * 2);
-  c.arc(x + 24, y - 10, 26, 0, Math.PI * 2);
-  c.arc(x + 50, y, 20, 0, Math.PI * 2);
-  c.fill();
 }
