@@ -1,26 +1,22 @@
-import { W, H, rand, pick, clamp, rr, text, drawBobby, drawScore, Mouth, Sparks } from '../kit';
-import { cursorShape } from '@/reason/draw';
+import { W, H, rand, pick, clamp, rr, text, drawScore, Mouth, Sparks } from '../kit';
+import { createWorld } from '../run3d/world';
 
 // Button Run: a 3D dash down three lanes of a giant keyboard, seen from just
 // behind the button. The world is in meters: x across (lanes at -1.6, 0, 1.6),
-// y up, z ahead of the button (which always sits at z = 0). Everything is
-// projected with one fixed-pitch camera and painted far to near.
+// y up, z ahead of the button (which always sits at z = 0). This file is the
+// game; src/adventure/run3d/ draws it with WebGL.
 const LANE = 1.6;
 const LANES = [-LANE, 0, LANE];
-const HOR = 360; // the horizon, in screen pixels
-const F = 360; // focal length, pixels per meter at 1 m away
-const CAM_BACK = 4.5; // camera distance behind the button
-const CAM_UP = 3;
-const NEAR = -2.3; // nothing is drawn closer than this
-const FAR = 75; // or further than this
+const CAM_UP = 3; // camera height above the button
+const NEAR = -4.5; // things behind this are gone for good
+const FAR = 75; // things appear this far ahead
 const TILE = 2; // keycap length along the track
 
 const GRAVITY = 38;
 const JUMP = 12.5; // about 2 m high
 const SPRING_JUMP = 18; // about 4 m: over a train
 const FLY = 5; // cruising height with wings
-const BODY = 0.9; // the button is 0.9 m wide...
-const TALL = 1; // ...1 m tall standing, 0.5 m sliding
+const TALL = 1; // the button is 1 m tall standing, 0.5 m sliding
 const LOW = 0.5;
 const PZ = 0.3; // half its depth
 const SHIFT = 13; // lane change speed, m/s
@@ -56,6 +52,7 @@ const POPS = ['My bubble!', 'Pop. Rude.'];
 const KEYS = ['ESC', 'DEL', 'ALT', 'F1', 'TAB', 'END'];
 const ADS = ['YOU WON!', 'FREE RAM', 'CLICK ME', 'HOT DEALS', '1 VIRUS!'];
 const SERVERS = ['SERVER', 'CLOUD', 'BACKUP'];
+const NEAR_KEY = -4; // where the world's first row of keycaps starts (see run3d/world.js)
 
 export default function buttonRun({ look, sound }) {
   const me = { lane: 1, from: 1, x: 0, y: 0, vy: 0, ground: true, gh: 0, slide: 0, squash: 0, spin: 0 };
@@ -82,12 +79,13 @@ export default function buttonRun({ look, sound }) {
   let chatter = 4;
   let overT = 0;
   let t = 0;
+  let phase = 0; // the running stride
+  let glance = 0; // 0 facing ahead .. 1 turned round to look at you
+  let glanceFor = 0;
 
-  // world -> screen: [x, y, pixels per meter]
-  const P = (x, y, z) => {
-    const s = F / (z + CAM_BACK);
-    return [W / 2 + (x - cam.x) * s, HOR + (cam.y - y) * s, s];
-  };
+  const world = createWorld(look, POWERS);
+  const P = world.project;
+  const lookBack = (sec) => (glanceFor = Math.max(glanceFor, sec));
 
   /* ---------- building the track ---------- */
   const coinLine = (lane, z0, n, height = () => 0.6) => {
@@ -159,7 +157,11 @@ export default function buttonRun({ look, sound }) {
       if (kind === 'block') add({ kind, lane, z, len: 0.7, label: pick(KEYS) });
       else if (kind === 'ad') add({ kind, lane, z, len: 0.25, label: pick(ADS) });
       else if (kind === 'wall') add({ kind, lane, z, len: 1 });
-      else if (kind === 'hole') add({ kind, lane, z: z - 1.4, len: 3.4 });
+      else if (kind === 'hole') {
+        // two keys missing, lined up with the keycaps on the track
+        const w0 = Math.ceil((dist + z - 2 - NEAR_KEY) / TILE) * TILE + NEAR_KEY;
+        add({ kind, lane, z: w0 - dist, len: TILE * 2 });
+      }
       else if (kind === 'click') add({ kind, lane, z, len: 1.2, cy: 7, slammed: false });
     });
 
@@ -231,6 +233,7 @@ export default function buttonRun({ look, sound }) {
     active[kind] = p.time || 1;
     sound.win();
     mouth.say(GOT[kind], 2);
+    lookBack(1.2);
     if (kind === 'wings') {
       // a trail of coins up in the sky
       let lane = me.lane;
@@ -245,6 +248,7 @@ export default function buttonRun({ look, sound }) {
     if (g.over) return;
     g.over = true;
     sound.crash();
+    world.shake(1);
     const [sx, sy] = P(me.x, me.y + 0.5, 0);
     sparks.burst(sx, sy, look.color, 18);
     mouth.say(fell ? 'AAAAH—' : pick(CRASH), 3);
@@ -262,7 +266,9 @@ export default function buttonRun({ look, sound }) {
     safe = 0.6;
     me.lane = me.from;
     sound.thud();
+    world.shake(0.5);
     mouth.say(pick(BUMPS), 1.6);
+    lookBack(1.4);
   };
 
   // What the button stands on right now: the desk, a train roof, a ramp, or
@@ -305,6 +311,10 @@ export default function buttonRun({ look, sound }) {
         me.ground = true;
         me.squash = 0.18;
         if (g.over) me.spin = 0;
+        else if (me.vy === 0 && t > 0.5) {
+          const [sx, sy] = P(me.x, me.y, 0);
+          sparks.burst(sx, sy, 'rgba(255,255,255,0.8)', 5, 90);
+        }
         if (buffer > 0) jumpNow();
       } else if (me.y < -0.8 && !g.over) crash(true);
     }
@@ -465,108 +475,61 @@ export default function buttonRun({ look, sound }) {
         if (chatter <= 0) {
           chatter = rand(6, 10);
           mouth.maybe(RUNS, 0.6);
+          if (mouth.line) lookBack(1.5);
         }
         g.score = Math.floor(dist) + coinPts;
       }
 
+      if (me.ground && !g.over) phase += dt * speed * 0.8;
+      glanceFor -= dt;
+      glance += ((glanceFor > 0 || g.over ? 1 : 0) - glance) * Math.min(1, dt * 7);
       cam.x += (me.x * 0.75 - cam.x) * Math.min(1, dt * 6);
       cam.y += (CAM_UP + Math.max(0, me.y) * 0.75 - cam.y) * Math.min(1, dt * 5);
     },
 
     draw(c) {
-      drawWorld(c, P, cam, dist, t);
-      drawTrack(c, P, dist);
+      const blink = safe > 0 && Math.floor(t * 12) % 2;
+      world.sync({
+        t,
+        me,
+        cam,
+        speed,
+        dist,
+        things,
+        coins,
+        pickups,
+        decor,
+        chase,
+        over: g.over,
+        overT,
+        pose: {
+          t,
+          phase,
+          air: !me.ground,
+          slide: me.slide > 0 && me.ground,
+          squash: me.squash,
+          mood: g.over ? 'sad' : chase > 0 ? 'worried' : !me.ground ? 'shout' : 'angry',
+          glance,
+          lean: (me.x - LANES[me.lane]) * 0.25,
+          spin: g.over ? -me.spin : 0,
+          alpha: active.ghost ? 0.45 : blink ? 0.35 : 1,
+          wings: !!active.wings,
+          bubble: !!active.bubble,
+          magnet: !!active.magnet,
+          spring: !!active.spring,
+        },
+      });
+      world.render(c);
 
-      for (const o of things) if (o.kind === 'hole') hole(c, P, o);
-      for (const o of things) if (o.kind === 'click' && o.z < FAR) target(c, P, o, t);
-
-      // the button's shadow on whatever is under it
-      if (me.gh > -1) {
-        const [sx, sy, s] = P(me.x, me.gh, 0);
-        const k = clamp(1 - (me.y - me.gh) / 6, 0.3, 1);
-        c.fillStyle = `rgba(0,0,0,${0.25 * k})`;
-        c.beginPath();
-        c.ellipse(sx, sy, 0.45 * s * k, 0.14 * s * k, 0, 0, Math.PI * 2);
-        c.fill();
-      }
-
-      // everything else, far to near
-      const list = [];
-      for (const o of things) if (o.kind !== 'hole' && o.z < FAR) list.push([o.kind === 'train' || o.kind === 'ramp' ? o.z + o.len : o.z, () => thing(c, P, cam, o, t)]);
-      for (const k of coins) if (k.z < FAR) list.push([k.z, () => coin(c, P, k, t)]);
-      for (const p of pickups) if (p.z < FAR) list.push([p.z, () => pickup(c, P, p, t)]);
-      for (const d of decor) if (d.z < FAR) list.push([d.z, () => prop(c, P, cam, d)]);
-      list.sort((a, b) => b[0] - a[0]);
-      for (const [z, paint] of list) {
-        c.globalAlpha = clamp((FAR - z) / 14, 0, 1);
-        paint();
-      }
-      c.globalAlpha = 1;
-
-      drawMe(c);
+      if (speed > 17 && !g.over) speedLines(c, (speed - 17) / (TOP_SPEED - 17), t);
       sparks.draw(c);
-      const [mx, my, ms] = P(me.x, me.y + TALL, 0);
-      mouth.draw(c, mx + 20, my - ms * 0.15);
-
-      if (chase > 0 && !g.over) {
-        // the cursor, right on your heels
-        const k = Math.min(1, chase * 2, (5 - chase) * 4);
-        bigCursor(c, W / 2 - 60, H - 150 * k + Math.sin(t * 9) * 8, 6, -0.3);
-      }
-      if (g.over) {
-        const [sx, sy] = P(me.x, me.y + 0.5, 0);
-        const k = clamp(overT / 0.5, 0, 1);
-        bigCursor(c, sx, sy - (1 - k) * 500, 6, -0.4);
-      }
+      const [mx, my] = P(me.x, me.y + 1.35, 0);
+      mouth.draw(c, mx + 10, my);
 
       drawScore(c, g.score, t < 5 ? 'Swipe to dodge · tap to jump' : 'points');
       hud(c);
     },
   };
-
-  function drawMe(c) {
-    const [sx, sy, s] = P(me.x, me.y, 0);
-    const size = BODY * s;
-    const foot = size * (20 / 38);
-    const sq = me.slide > 0 && me.ground ? 0.4 : me.squash;
-    const blink = safe > 0 && Math.floor(t * 12) % 2;
-    const cy = sy - foot + foot * sq;
-
-    if (active.wings) wings(c, sx, cy, size, t);
-    if (active.spring && !active.wings) springs(c, sx, sy, size, t);
-    drawBobby(c, sx, cy, size, {
-      look,
-      t,
-      squash: sq,
-      angle: g.over ? -me.spin : (LANES[me.lane] - me.x) * 0.18,
-      moving: !g.over && me.ground,
-      mood: g.over ? 'sad' : chase > 0 ? 'worried' : !me.ground ? 'shout' : 'angry',
-      tears: g.over,
-      alpha: active.ghost ? 0.45 : blink ? 0.4 : 1,
-    });
-    if (active.bubble) {
-      c.strokeStyle = 'rgba(200,240,255,0.9)';
-      c.fillStyle = 'rgba(167,227,255,0.18)';
-      c.lineWidth = 3;
-      c.beginPath();
-      c.arc(sx, cy, size * 0.85, 0, Math.PI * 2);
-      c.fill();
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.7)';
-      c.beginPath();
-      c.ellipse(sx - size * 0.35, cy - size * 0.4, size * 0.12, size * 0.07, -0.6, 0, Math.PI * 2);
-      c.fill();
-    }
-    if (active.magnet) {
-      c.globalAlpha = 0.5 + Math.sin(t * 8) * 0.2;
-      c.strokeStyle = '#e0453a';
-      c.lineWidth = 2;
-      c.beginPath();
-      c.arc(sx, cy, size * (0.9 + ((t * 1.5) % 1) * 0.6), 0, Math.PI * 2);
-      c.stroke();
-      c.globalAlpha = 1;
-    }
-  }
 
   // Power-ups running, with time left, down the left side.
   function hud(c) {
@@ -645,368 +608,19 @@ function hitOf(o) {
   }
 }
 
-const shades = new Map();
-// A hex color made lighter (k > 0) or darker (k < 0).
-function shade(hex, k) {
-  const key = hex + k;
-  if (!shades.has(key)) {
-    const n = parseInt(hex.slice(1), 16);
-    const f = (v) => Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k);
-    shades.set(key, `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`);
-  }
-  return shades.get(key);
-}
-
-function poly(c, pts, fill) {
-  c.beginPath();
-  for (const p of pts) c.lineTo(p[0], p[1]);
-  c.closePath();
-  c.fillStyle = fill;
-  c.fill();
-}
-
-// A solid box, painted with the faces the camera can see. Returns the
-// corners of its front face for decorating: [bottom-left, bottom-right,
-// top-right, top-left].
-function box(c, P, cam, x0, x1, y0, y1, z0, z1, color) {
-  z0 = Math.max(z0, NEAR);
-  if (z1 <= z0) return null;
-  if (cam.x < x0) poly(c, [P(x0, y0, z0), P(x0, y0, z1), P(x0, y1, z1), P(x0, y1, z0)], shade(color, -0.3));
-  if (cam.x > x1) poly(c, [P(x1, y0, z0), P(x1, y0, z1), P(x1, y1, z1), P(x1, y1, z0)], shade(color, -0.3));
-  if (cam.y > y1) poly(c, [P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)], shade(color, 0.25));
-  const front = [P(x0, y0, z0), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0)];
-  poly(c, front, color);
-  return front;
-}
-
-// Text stuck on a front face, centered at its middle.
-function label(c, front, str, k, color) {
-  const [bl, br, tr] = front;
-  const size = Math.max(6, (br[0] - bl[0]) * k);
-  text(c, str, (bl[0] + br[0]) / 2, (bl[1] + tr[1]) / 2, { size, color });
-}
-
-/* ---------- the world ---------- */
-function drawWorld(c, P, cam, dist, t) {
-  const sky = c.createLinearGradient(0, 0, 0, HOR);
-  sky.addColorStop(0, '#6f6cf0');
-  sky.addColorStop(1, '#ffc2a8');
-  c.fillStyle = sky;
-  c.fillRect(0, 0, W, HOR + 2);
-
-  c.fillStyle = '#fff1b8';
-  c.beginPath();
-  c.arc(W / 2 + 120 - cam.x * 4, HOR - 90, 44, 0, Math.PI * 2);
-  c.fill();
-
-  // a row of giant app icons on the horizon
-  const icons = ['#f39ac0', '#7cc6a4', '#5b9bd5', '#f2c14e', '#a58bd6', '#e2674f'];
-  for (let i = 0; i < 9; i++) {
-    const x = i * 62 - 20 - cam.x * 10;
-    const h = 40 + ((i * 37) % 50);
-    c.fillStyle = shade(icons[i % icons.length], -0.15);
-    rr(c, x, HOR - h, 48, h + 4, 10);
-    c.fill();
-  }
-
-  // and the monitor you are watching all this on, with your cursor in it
-  const mx = W / 2 - cam.x * 6;
-  c.fillStyle = '#2b2d3a';
-  c.fillRect(mx - 10, HOR - 40, 20, 40);
-  rr(c, mx - 95, HOR - 160, 190, 120, 12);
-  c.fill();
-  const scr = c.createLinearGradient(0, HOR - 152, 0, HOR - 48);
-  scr.addColorStop(0, '#9fd7ff');
-  scr.addColorStop(1, '#5b8fe0');
-  c.fillStyle = scr;
-  rr(c, mx - 87, HOR - 152, 174, 104, 7);
-  c.fill();
-  c.save();
-  c.translate(mx - 8 + Math.sin(t * 1.3) * 26, HOR - 128 + Math.cos(t * 1.7) * 10);
-  c.scale(2, 2);
-  cursorShape(c, '#fff', '#111');
-  c.restore();
-
-  // the desk, with its planks running off to the horizon
-  const desk = c.createLinearGradient(0, HOR, 0, H);
-  desk.addColorStop(0, '#d9a777');
-  desk.addColorStop(1, '#9a6a42');
-  c.fillStyle = desk;
-  c.fillRect(0, HOR, W, H - HOR);
-  c.strokeStyle = 'rgba(70,40,20,0.18)';
+// Streaks rushing past the edges of the screen at speed.
+function speedLines(c, k, t) {
+  c.strokeStyle = `rgba(255,255,255,${0.12 + k * 0.25})`;
   c.lineWidth = 2;
-  for (const x of [-16, -10, -6.5, 6.5, 10, 16]) {
-    const a = P(x, 0, NEAR);
-    const b = P(x, 0, FAR);
+  for (let i = 0; i < 18; i++) {
+    const a = i * 2.39996 + Math.floor(t * 20) * 0.7;
+    const dx = Math.cos(a);
+    const dy = Math.sin(a) * 1.4;
+    const r0 = 300 + ((i * 53 + Math.floor(t * 30) * 17) % 120);
+    const r1 = r0 + 60 + k * 90;
     c.beginPath();
-    c.moveTo(a[0], a[1]);
-    c.lineTo(b[0], b[1]);
-    c.stroke();
-  }
-  const off = dist % 9;
-  for (let z = 9 - off; z < FAR; z += 9) {
-    const a = P(-30, 0, z);
-    const b = P(30, 0, z);
-    c.beginPath();
-    c.moveTo(a[0], a[1]);
-    c.lineTo(b[0], b[1]);
-    c.stroke();
-  }
-}
-
-// The keyboard the button runs down: three lanes of keycaps.
-function drawTrack(c, P, dist) {
-  poly(c, [P(-2.55, 0, NEAR), P(2.55, 0, NEAR), P(2.55, 0, FAR), P(-2.55, 0, FAR)], '#2c2f3d');
-  const off = dist % TILE;
-  const base = Math.floor(dist / TILE);
-  for (let k = Math.ceil((FAR - NEAR) / TILE); k >= 0; k--) {
-    const z0 = NEAR + k * TILE - off;
-    const z1 = z0 + TILE - 0.18;
-    if (z1 < NEAR) continue;
-    for (let l = 0; l < 3; l++) {
-      const lx = LANES[l];
-      const col = (base + k + l) % 2 ? '#f4f1ea' : '#e2ddd0';
-      poly(c, [P(lx - 0.72, 0, Math.max(z0, NEAR)), P(lx + 0.72, 0, Math.max(z0, NEAR)), P(lx + 0.72, 0, z1), P(lx - 0.72, 0, z1)], col);
-    }
-  }
-  // haze where the keyboard meets the sky
-  const haze = c.createLinearGradient(0, HOR - 4, 0, HOR + 40);
-  haze.addColorStop(0, 'rgba(255,194,168,0.95)');
-  haze.addColorStop(1, 'rgba(255,194,168,0)');
-  c.fillStyle = haze;
-  c.fillRect(0, HOR - 4, W, 44);
-}
-
-// A missing key: a dark pit in the lane.
-function hole(c, P, o) {
-  if (o.z > FAR) return;
-  const lx = LANES[o.lane];
-  const z0 = Math.max(o.z, NEAR);
-  const z1 = Math.min(o.z + o.len, FAR);
-  if (z1 <= z0) return;
-  poly(c, [P(lx - 0.8, 0, z0), P(lx + 0.8, 0, z0), P(lx + 0.8, 0, z1), P(lx - 0.8, 0, z1)], '#110d18');
-  poly(c, [P(lx - 0.8, 0, z1), P(lx + 0.8, 0, z1), P(lx + 0.8, -1.2, z1), P(lx - 0.8, -1.2, z1)], '#3a2c4f');
-}
-
-// The red ring where the cursor is about to click.
-function target(c, P, o, t) {
-  const lx = LANES[o.lane];
-  const cz = o.z + 0.6;
-  if (cz < NEAR) return;
-  const pts = [];
-  for (let i = 0; i < 20; i++) {
-    const a = (i / 20) * Math.PI * 2;
-    pts.push(P(lx + Math.cos(a) * 0.7, 0.01, cz + Math.sin(a) * 0.7));
-  }
-  c.globalAlpha = o.slammed ? 0.35 : 0.5 + Math.sin(t * 14) * 0.25;
-  poly(c, pts, '#e0453a');
-  c.globalAlpha = 1;
-}
-
-function thing(c, P, cam, o, t) {
-  const lx = LANES[o.lane];
-  const z0 = o.z;
-  const z1 = o.z + o.len;
-  if (o.kind === 'block') {
-    // a giant keycap, wider at the bottom
-    box(c, P, cam, lx - 0.7, lx + 0.7, 0, 0.35, z0, z1, '#cfc7b4');
-    const f = box(c, P, cam, lx - 0.58, lx + 0.58, 0.35, 0.8, z0 + 0.08, z1 - 0.08, '#f4efe2');
-    if (f) label(c, f, o.label, 0.24, '#5a5246');
-  } else if (o.kind === 'ad') {
-    // a popup window on two poles: slide under it
-    box(c, P, cam, lx - 0.78, lx - 0.7, 0, AD_LOW, z0, z1, '#9aa0ab');
-    box(c, P, cam, lx + 0.7, lx + 0.78, 0, AD_LOW, z0, z1, '#9aa0ab');
-    const f = box(c, P, cam, lx - 0.78, lx + 0.78, AD_LOW, AD_LOW + 1.25, z0, z1, '#ffffff');
-    if (f) {
-      const [bl, br, tr, tl] = f;
-      const bar = (tl[1] - bl[1]) * -0.2;
-      c.fillStyle = '#3b6fd8';
-      c.fillRect(tl[0], tl[1], tr[0] - tl[0], bar);
-      c.fillStyle = '#e0453a';
-      c.fillRect(tr[0] - bar * 0.9, tl[1] + bar * 0.15, bar * 0.7, bar * 0.7);
-      const w = br[0] - bl[0];
-      text(c, o.label, (bl[0] + br[0]) / 2, tl[1] + (bl[1] - tl[1]) * 0.5, { size: Math.max(5, w * 0.15), color: Math.sin(t * 10) > 0 ? '#e0453a' : '#f2a516' });
-      c.fillStyle = '#3fae5a';
-      const bw = w * 0.36;
-      rr(c, (bl[0] + br[0]) / 2 - bw / 2, bl[1] - (bl[1] - tl[1]) * 0.26, bw, (bl[1] - tl[1]) * 0.16, 3);
-      c.fill();
-    }
-  } else if (o.kind === 'wall') {
-    // a firewall: bricks, on fire
-    const f = box(c, P, cam, lx - 0.75, lx + 0.75, 0, 3.2, z0, z1, '#c8432f');
-    if (f) {
-      c.strokeStyle = 'rgba(90,20,10,0.5)';
-      c.lineWidth = 1.5;
-      const [bl, br, , tl] = f;
-      const rows = 7;
-      for (let i = 1; i < rows; i++) {
-        const y = bl[1] + ((tl[1] - bl[1]) * i) / rows;
-        c.beginPath();
-        c.moveTo(bl[0], y);
-        c.lineTo(br[0], y);
-        c.stroke();
-        for (let j = i % 2 ? 0.25 : 0.5; j < 1; j += 0.5) {
-          const x = bl[0] + (br[0] - bl[0]) * j;
-          c.beginPath();
-          c.moveTo(x, y);
-          c.lineTo(x, y - (tl[1] - bl[1]) / rows);
-          c.stroke();
-        }
-      }
-      label(c, f, 'FIREWALL', 0.13, '#ffe0b8');
-    }
-    for (let i = 0; i < 4; i++) {
-      const x = lx - 0.75 + (i + 0.5) * 0.375;
-      const h = 0.55 + Math.sin(t * 13 + i * 2) * 0.18;
-      const z = Math.max(z0, NEAR);
-      poly(c, [P(x - 0.2, 3.2, z), P(x + 0.2, 3.2, z), P(x, 3.2 + h, z)], '#f2a516');
-      poly(c, [P(x - 0.1, 3.2, z), P(x + 0.1, 3.2, z), P(x, 3.2 + h * 0.55, z)], '#ffe27a');
-    }
-  } else if (o.kind === 'train') {
-    const color = o.moving ? '#e0453a' : '#4a5a85';
-    const f = box(c, P, cam, lx - 0.72, lx + 0.72, 0, o.top, z0, z1, color);
-    if (f && z0 > NEAR) {
-      const [bl, br, tr, tl] = f;
-      const w = br[0] - bl[0];
-      const h = bl[1] - tl[1];
-      c.fillStyle = 'rgba(15,20,40,0.75)';
-      rr(c, tl[0] + w * 0.12, tl[1] + h * 0.12, w * 0.76, h * 0.3, 4);
-      c.fill();
-      if (o.moving) {
-        // headlights and an envelope: spam, coming straight at you
-        c.fillStyle = Math.sin(t * 16) > 0 ? '#fff6a8' : '#ffd84d';
-        for (const k of [0.2, 0.8]) {
-          c.beginPath();
-          c.arc(bl[0] + w * k, bl[1] - h * 0.18, w * 0.08, 0, Math.PI * 2);
-          c.fill();
-        }
-        text(c, '✉ SPAM', (bl[0] + br[0]) / 2, tl[1] + h * 0.6, { size: Math.max(6, w * 0.15), color: '#fff' });
-      } else {
-        for (let i = 0; i < 4; i++) {
-          c.fillStyle = (Math.floor(t * 3) + i) % 3 ? '#7cc6a4' : '#ffd84d';
-          c.fillRect(bl[0] + w * (0.2 + i * 0.18), bl[1] - h * 0.2, w * 0.06, w * 0.06);
-        }
-        text(c, o.label, (bl[0] + br[0]) / 2, tl[1] + h * 0.6, { size: Math.max(6, w * 0.14), color: '#dfe6ff' });
-      }
-    }
-  } else if (o.kind === 'ramp') {
-    const zz = Math.max(z0, NEAR);
-    const y0 = ((zz - z0) / o.len) * TRAIN_TOP;
-    if (cam.x < lx - 0.72) poly(c, [P(lx - 0.72, 0, zz), P(lx - 0.72, 0, z1), P(lx - 0.72, TRAIN_TOP, z1), P(lx - 0.72, y0, zz)], '#a87d0c');
-    if (cam.x > lx + 0.72) poly(c, [P(lx + 0.72, 0, zz), P(lx + 0.72, 0, z1), P(lx + 0.72, TRAIN_TOP, z1), P(lx + 0.72, y0, zz)], '#a87d0c');
-    poly(c, [P(lx - 0.72, y0, zz), P(lx + 0.72, y0, zz), P(lx + 0.72, TRAIN_TOP, z1), P(lx - 0.72, TRAIN_TOP, z1)], '#f2c14e');
-    for (let i = 1; i < 4; i++) {
-      const z = z0 + (o.len * i) / 4;
-      if (z < zz) continue;
-      const y = (i / 4) * TRAIN_TOP;
-      poly(c, [P(lx - 0.72, y, z), P(lx + 0.72, y, z), P(lx + 0.72, y + 0.08, z + 0.2), P(lx - 0.72, y + 0.08, z + 0.2)], '#2b2d3a');
-    }
-  } else if (o.kind === 'bar') {
-    // a loading bar laid across the whole track: jump it
-    const f = box(c, P, cam, -2.6, 2.6, 0.1, 0.7, z0, z1, '#ffffff');
-    if (f) {
-      const [bl, br, , tl] = f;
-      const w = br[0] - bl[0];
-      const h = bl[1] - tl[1];
-      c.fillStyle = '#d6d9e6';
-      c.fillRect(bl[0] + w * 0.03, tl[1] + h * 0.2, w * 0.94, h * 0.6);
-      c.fillStyle = '#3fae5a';
-      c.fillRect(bl[0] + w * 0.03, tl[1] + h * 0.2, w * 0.94 * o.pct, h * 0.6);
-      text(c, `LOADING ${Math.floor(o.pct * 100)}%`, (bl[0] + br[0]) / 2, tl[1] + h * 0.5, { size: Math.max(5, h * 0.45), color: '#1b1b22' });
-    }
-  } else if (o.kind === 'click') {
-    const [sx, sy, s] = P(lx, o.cy, Math.max(o.z + 0.6, NEAR));
-    bigCursor(c, sx, sy, s * 0.085, Math.PI - 0.35);
-  }
-}
-
-// The mouse pointer, tip at (x, y), `k` times its normal size.
-function bigCursor(c, x, y, k, angle) {
-  c.save();
-  c.translate(x, y);
-  c.rotate(angle);
-  c.scale(k, k);
-  cursorShape(c, '#fff', '#111');
-  c.restore();
-}
-
-function coin(c, P, k, t) {
-  const [sx, sy, s] = P(k.x, k.y, Math.max(k.z, NEAR));
-  const r = 0.3 * s;
-  const squeeze = Math.abs(Math.cos(t * 4 + k.z * 0.4));
-  c.fillStyle = '#c99a2e';
-  c.beginPath();
-  c.ellipse(sx, sy, r * squeeze + 1.5, r, 0, 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = '#f2b632';
-  c.beginPath();
-  c.ellipse(sx, sy, r * squeeze * 0.85 + 1, r * 0.85, 0, 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = '#ffe27a';
-  c.beginPath();
-  c.ellipse(sx, sy, r * squeeze * 0.45 + 0.5, r * 0.5, 0, 0, Math.PI * 2);
-  c.fill();
-}
-
-function pickup(c, P, p, t) {
-  const kind = POWERS[p.kind];
-  const [sx, sy, s] = P(p.x, 1 + Math.sin(t * 4) * 0.15, Math.max(p.z, NEAR));
-  const r = 0.48 * s;
-  c.fillStyle = 'rgba(255,255,255,0.35)';
-  c.beginPath();
-  c.arc(sx, sy, r * (1.25 + Math.sin(t * 6) * 0.08), 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = kind.color;
-  c.beginPath();
-  c.arc(sx, sy, r, 0, Math.PI * 2);
-  c.fill();
-  c.strokeStyle = '#fff';
-  c.lineWidth = Math.max(1, r * 0.12);
-  c.stroke();
-  text(c, kind.icon, sx, sy + r * 0.05, { size: Math.max(6, r * (kind.icon === 'x2' ? 0.8 : 1.1)), color: '#2b1d17' });
-}
-
-// Desk clutter along both sides of the keyboard.
-function prop(c, P, cam, d) {
-  if (d.kind === 'pencil') {
-    box(c, P, cam, d.x - 0.18, d.x + 0.18, 0, d.h, d.z, d.z + 0.36, d.color);
-    box(c, P, cam, d.x - 0.18, d.x + 0.18, d.h, d.h + 0.18, d.z, d.z + 0.36, '#b8bcc6');
-    box(c, P, cam, d.x - 0.18, d.x + 0.18, d.h + 0.18, d.h + 0.45, d.z, d.z + 0.36, '#f39ac0');
-  } else if (d.kind === 'mug') {
-    box(c, P, cam, d.x - 0.55, d.x + 0.55, 0, 1.2, d.z, d.z + 1.1, d.color);
-    if (cam.y > 1.2) poly(c, [P(d.x - 0.45, 1.2, d.z + 0.1), P(d.x + 0.45, 1.2, d.z + 0.1), P(d.x + 0.45, 1.2, d.z + 1), P(d.x - 0.45, 1.2, d.z + 1)], '#5a3a22');
-  } else {
-    for (let i = 0; i < d.n; i++) {
-      const inset = (i % 2) * 0.15;
-      box(c, P, cam, d.x - 0.9 + inset, d.x + 0.9 - inset, i * 0.4, i * 0.4 + 0.38, d.z + inset, d.z + 1.3 - inset, d.colors[i % d.colors.length]);
-    }
-  }
-}
-
-function wings(c, x, y, size, t) {
-  const flap = Math.sin(t * 14) * 0.35;
-  c.fillStyle = '#ffffff';
-  c.strokeStyle = '#b9d9f0';
-  c.lineWidth = 2;
-  for (const side of [-1, 1]) {
-    c.save();
-    c.translate(x + side * size * 0.35, y - size * 0.1);
-    c.rotate(side * (-0.5 + flap));
-    c.beginPath();
-    c.ellipse(side * size * 0.45, 0, size * 0.5, size * 0.22, 0, 0, Math.PI * 2);
-    c.fill();
-    c.stroke();
-    c.restore();
-  }
-}
-
-function springs(c, x, y, size, t) {
-  c.strokeStyle = '#7cc6a4';
-  c.lineWidth = Math.max(2, size * 0.06);
-  for (const side of [-1, 1]) {
-    const fx = x + side * size * 0.2;
-    c.beginPath();
-    for (let i = 0; i <= 4; i++) c.lineTo(fx + (i % 2 ? 6 : -6), y - 2 - i * 3 + Math.sin(t * 20) * 1.5);
+    c.moveTo(W / 2 + dx * r0, 400 + dy * r0);
+    c.lineTo(W / 2 + dx * r1, 400 + dy * r1);
     c.stroke();
   }
 }

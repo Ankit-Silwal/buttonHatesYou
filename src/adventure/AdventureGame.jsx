@@ -231,7 +231,8 @@ function Stage({ id, equipped, onOver }) {
     let reported = false;
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
-      const dt = Math.min((now - last) / 1000, 1 / 30);
+      // frame timestamps can arrive out of order; never step backwards
+      const dt = Math.min(Math.max(0, (now - last) / 1000), 1 / 30);
       last = now;
       if (!pausedRef.current && !reported) {
         game.update(dt);
