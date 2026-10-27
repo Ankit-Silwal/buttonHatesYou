@@ -340,6 +340,11 @@ body.cracked .pd #cracks { opacity: 0.85; }
     0 8px 10px -4px rgba(60, 30, 20, 0.4),
     0 0 26px color-mix(in oklab, var(--c), #fff 30%);
 }
+/* everyone breathes a little (the real one still only differs by blinking) */
+.pd #world .char .body { animation: breathe 3.2s ease-in-out infinite; }
+.pd #world .char.running .body { animation: bob 0.16s infinite alternate; }
+.pd #world .char.tremble .body { animation: tremble 0.12s infinite; }
+
 /* a tiny glint in the default eyes */
 .pd .char:not([data-eyes]) .eyes i { box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.1); }
 .pd .char:not([data-eyes]) .eyes i::after {
@@ -410,6 +415,13 @@ body.cracked .pd #cracks { opacity: 0.85; }
   height: 8px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0 30%, var(--sc, #ffc27a) 60%, transparent 70%);
+}
+.pd .plaster {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250, 238, 222, 0.95), rgba(220, 196, 168, 0.6) 60%, transparent 72%);
 }
 .pd .burst {
   position: absolute;
@@ -493,6 +505,7 @@ body.collapsed .pd #line { color: #fff4e8; text-shadow: 0 2px 0 rgba(40, 20, 20,
 @media (max-width: 520px) {
   .pd .tools button, .pd .tools a { width: 34px; height: 34px; }
   .pd #line { top: 64px; }
+  body.boss .pd #line { top: 82px; }
 }
 
 /* ---------- overlays & dialogs ---------- */
@@ -909,6 +922,7 @@ body.boss .pd #arena::after { /* rising embers */
   25% { opacity: 1; }
   100% { opacity: 0; transform: translateY(-20%) scale(1.15); }
 }
+@keyframes breathe { 50% { scale: 1.025 0.975; } }
 @keyframes water { to { transform: translateX(140px); } }
 @keyframes ripple {
   from { transform: scale(0.5); opacity: 1; }
@@ -957,5 +971,5 @@ body.boss .pd #arena::after { /* rising embers */
 @media (prefers-reduced-motion: reduce) {
   .pd .pd-beam, .pd .pd-motes i, .pd #puddle::before, body.boss .pd #arena::after,
   .pd .char.boss::before, .pd .crash .inner::after, .pd .card.win::before,
-  .pd .blackout .big, .pd #loadbar .fill { animation: none !important; }
+  .pd .blackout .big, .pd #loadbar .fill, .pd #world .char .body { animation: none !important; }
 }
