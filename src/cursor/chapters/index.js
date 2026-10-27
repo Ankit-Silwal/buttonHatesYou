@@ -1,14 +1,16 @@
-import ch1 from './ch1';
-import ch2 from './ch2';
-import ch3 from './ch3';
-import ch4 from './ch4';
-import ch5 from './ch5';
-import ch6 from './ch6';
+import ch1, * as m1 from './ch1';
+import ch2, * as m2 from './ch2';
+import ch3, * as m3 from './ch3';
+import ch4, * as m4 from './ch4';
+import ch5, * as m5 from './ch5';
+import ch6, * as m6 from './ch6';
 import { installArt } from '../art';
 
 // Every chapter gets the Cursor lighting/atmosphere layers first.
 const lit = (n, play) => (g, p) => {
   installArt(g, n);
+  // dev only: the levels, so screenshots can jump straight to a scene
+  if (process.env.NODE_ENV !== 'production') window.__cursorLevels = { 1: m1, 2: m2, 3: m3, 4: m4, 5: m5, 6: m6 };
   return play(g, p);
 };
 

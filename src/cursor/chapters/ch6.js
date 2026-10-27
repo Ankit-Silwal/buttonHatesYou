@@ -11,7 +11,7 @@ import { BEDROOM } from '@/reason/episodes/ep1';
 // the roof, a checkbox priest, and one promise.
 
 const W = 3200;
-const STREET = {
+export const STREET = {
   w: W,
   theme: 'village',
   coins: false,
@@ -28,7 +28,7 @@ const STREET = {
   spawn: { x: 380, y: GROUND - 60 },
 };
 
-const HALL = {
+export const HALL = {
   w: 960,
   theme: 'bedroom',
   coins: false,

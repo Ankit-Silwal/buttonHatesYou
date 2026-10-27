@@ -201,7 +201,7 @@ function fgGrass(col, flowers) {
 const MOODS = {
   morning: {
     day: 1,
-    sun: { x: 0.8, y: 70, rgb: '255,236,190', r: 260, a: 0.55 },
+    sun: { x: 0.8125, y: 90, rgb: '255,236,190', r: 260, a: 0.55 },
     shafts: { rgb: '255,238,200', a: 0.07, from: 0.86, n: 5, tilt: 0.38 },
     haze: { rgb: '255,250,240', y: 0.62, a: 0.32 },
     motes: { kind: 'pollen', n: 34, rgb: '255,240,190' },
@@ -211,7 +211,7 @@ const MOODS = {
   },
   noon: {
     day: 1,
-    sun: { x: 0.8, y: 70, rgb: '255,246,210', r: 240, a: 0.45 },
+    sun: { x: 0.8125, y: 90, rgb: '255,246,210', r: 240, a: 0.45 },
     shafts: { rgb: '255,248,220', a: 0.05, from: 0.84, n: 4, tilt: 0.3 },
     haze: { rgb: '250,252,255', y: 0.62, a: 0.3 },
     motes: { kind: 'pollen', n: 26, rgb: '255,248,210' },
@@ -240,22 +240,23 @@ const MOODS = {
   },
   forest: {
     shafts: { rgb: '230,255,200', a: 0.085, from: 0.3, n: 7, tilt: 0.28, sway: 1 },
-    haze: { rgb: '210,240,220', y: 0.7, a: 0.36 },
+    haze: { rgb: '210,240,220', y: 0.72, a: 0.2 },
     motes: { kind: 'spore', n: 32, rgb: '200,255,210' },
-    grade: ['rgba(220,255,190,0.35)', 'rgba(20,60,70,0.45)'],
+    grade: ['rgba(240,255,200,0.3)', 'rgba(20,60,70,0.4)'],
     vig: { rgb: '6,24,20', a: 0.42, inner: 0.5 },
     fg: { col: '#173225', flowers: ['#b6f0ff', '#ffe08a'] },
     glitch: 1,
   },
   mine: {
-    dark: { rgb: '10,6,14', a: 0.72 },
+    dark: { rgb: '10,6,14', a: 0.6 },
     motes: { kind: 'ember', n: 26, rgb: '255,196,110' },
     grade: ['rgba(255,170,90,0.35)', 'rgba(40,20,60,0.5)'],
     vig: { rgb: '0,0,0', a: 0.55, inner: 0.45 },
     lights: 1,
   },
   golden: {
-    sun: { x: 0.74, y: 150, rgb: '255,200,130', r: 380, a: 0.75, flare: 1 },
+    day: 1,
+    sun: { x: 0.8125, y: 90, rgb: '255,196,120', r: 330, a: 0.5, flare: 1 },
     shafts: { rgb: '255,210,150', a: 0.08, from: 0.74, n: 6, tilt: 0.55, low: 1 },
     haze: { rgb: '255,210,170', y: 0.6, a: 0.38 },
     motes: { kind: 'pollen', n: 36, rgb: '255,220,160' },
@@ -265,18 +266,18 @@ const MOODS = {
   },
   wedding: {
     day: 1,
-    sun: { x: 0.8, y: 70, rgb: '255,240,210', r: 260, a: 0.5 },
+    sun: { x: 0.8125, y: 90, rgb: '255,240,210', r: 260, a: 0.5 },
     shafts: { rgb: '255,240,220', a: 0.06, from: 0.86, n: 5, tilt: 0.38 },
     haze: { rgb: '255,244,248', y: 0.62, a: 0.32 },
-    motes: { kind: 'sparkle', n: 22, rgb: '255,220,236' },
+    motes: { kind: 'sparkle', n: 14, rgb: '255,214,232' },
     grade: ['rgba(255,196,206,0.28)', 'rgba(100,110,200,0.2)'],
     vig: { rgb: '40,20,40', a: 0.3, inner: 0.55 },
     fg: { col: '#24461f', flowers: ['#ff8fb1', '#ffffff', '#ffc2d6'] },
     bunting: 1,
   },
   hall: {
-    motes: { kind: 'sparkle', n: 26, rgb: '255,226,240' },
-    bokeh: { n: 9, rgbs: ['255,180,210', '255,230,190', '255,255,255'], a: 0.14 },
+    motes: { kind: 'sparkle', n: 16, rgb: '255,214,232' },
+    bokeh: { n: 7, rgbs: ['255,170,200', '255,214,170'], a: 0.12 },
     grade: ['rgba(255,214,190,0.4)', 'rgba(200,90,150,0.35)'],
     vig: { rgb: '60,16,40', a: 0.42, inner: 0.5 },
     lights: 1,
@@ -368,8 +369,8 @@ function drawMotes(c, g, art, m) {
     } else if (kind === 'sparkle') {
       x += Math.sin(t * 0.4 + p.ph) * 20;
       y += t * 8 * p.sp;
-      r = 4 + 6 * p.z * Math.abs(Math.sin(t * 1.4 * p.sp + p.ph));
-      a = 0.75;
+      r = 1.5 + 3 * p.z * Math.abs(Math.sin(t * 1.4 * p.sp + p.ph));
+      a = 0.7;
     }
     stamp(c, img, wrap(x, W + 80) - 40, wrap(y, H + 60) - 30, r * 2.4, a * art.ambient);
   }
@@ -412,7 +413,7 @@ function gatherLights(g, art) {
   }
   if (art.mood === 'mine' || art.mood === 'moonlit' || art.mood === 'home') {
     const p = g.player;
-    if (p && !p.hidden && !p.dead) add(p.x + p.w / 2, p.y + p.h / 2, art.mood === 'mine' ? 120 : 60, '255,220,180', art.mood === 'mine' ? 0.55 : 0.25);
+    if (p && !p.hidden && !p.dead) add(p.x + p.w / 2, p.y + p.h / 2, art.mood === 'mine' ? 170 : 60, '255,220,180', art.mood === 'mine' ? 0.55 : 0.25);
   }
   for (const e of g.ents) {
     if (e.dead || e.hidden) continue;
@@ -459,11 +460,12 @@ function back(c, g) {
       c.beginPath();
       c.arc(x, s.y, 26, 0, Math.PI * 2);
       c.fill();
-      c.fillStyle = 'rgba(160,170,210,0.35)';
+      c.fillStyle = 'rgba(170,180,220,0.22)';
       c.beginPath();
-      c.arc(x - 8, s.y - 6, 6, 0, Math.PI * 2);
-      c.arc(x + 9, s.y + 8, 4, 0, Math.PI * 2);
-      c.arc(x + 6, s.y - 10, 3, 0, Math.PI * 2);
+      c.arc(x - 8, s.y - 5, 7, 0, Math.PI * 2);
+      c.fill();
+      c.beginPath();
+      c.arc(x + 9, s.y + 9, 4, 0, Math.PI * 2);
       c.fill();
     }
   }
@@ -476,8 +478,8 @@ function back(c, g) {
   }
   // romance: pink bloom behind everything
   if (art.love > 0.01) {
-    c.globalCompositeOperation = 'lighter';
-    drawGlow(c, '255,120,170', W * 0.5, H * 0.55, 520, art.love * 0.25);
+    c.globalCompositeOperation = m.day ? 'source-over' : 'lighter';
+    drawGlow(c, m.day ? '255,170,200' : '255,120,170', W * 0.5, H * 0.55, 520, art.love * (m.day ? 0.14 : 0.25));
   }
   c.restore();
 }
@@ -531,7 +533,8 @@ function front(c, g) {
   if (art.glitchK > 0.01) drawGlitchAir(c, g, art);
   drawMotes(c, g, art, m.motes ?? {});
   if (art.love > 0.01) drawLove(c, g, art);
-  if (m.bokeh || art.love > 0.2) drawBokeh(c, g, art, m.bokeh ?? { n: 6, rgbs: ['255,150,190', '255,200,220'], a: 0.12 });
+  if (m.sun?.flare) drawFlare(c, g, art, m.sun);
+  if (m.bokeh) drawBokeh(c, g, art, m.bokeh);
   for (const fx of art.fx) fx(c, g, dt);
   if (art.fx.length) art.fx = art.fx.filter((f) => !f.done);
 
@@ -597,6 +600,25 @@ function drawLove(c, g, art) {
     const r = 8 + 6 * sp;
     stamp(c, img, x, y, r, art.love * art.ambient * (0.35 + 0.25 * Math.sin(t * 2 + i)));
   }
+  c.globalCompositeOperation = 'source-over';
+  c.globalAlpha = 1;
+}
+
+// Lens flare ghosts strung from the low sun through the middle of the screen.
+const GHOSTS = [
+  [0.35, 10, 0.16, '255,220,170'],
+  [0.62, 22, 0.1, '255,170,140'],
+  [0.9, 7, 0.2, '255,240,200'],
+  [1.25, 34, 0.08, '200,170,255'],
+  [1.6, 15, 0.12, '255,190,150'],
+];
+function drawFlare(c, g, art, s) {
+  const x0 = W * s.x - g.cam.x * 0.02;
+  const y0 = s.y;
+  const dx = W / 2 - x0;
+  const dy = H / 2 - y0;
+  c.globalCompositeOperation = 'lighter';
+  for (const [k, r, a, rgb] of GHOSTS) stamp(c, bokehDisc(rgb), x0 + dx * k, y0 + dy * k, r, a * art.ambient);
   c.globalCompositeOperation = 'source-over';
   c.globalAlpha = 1;
 }
@@ -742,7 +764,7 @@ function drawChandelier(c, g, x) {
     const fy = y - 10;
     stamp(c, glow('255,214,150'), fx, fy, 22, 0.8 + 0.2 * Math.sin(g.time * 8 + k * 3));
   }
-  stamp(c, glow('255,226,180'), x, y, 140, 0.35);
+  stamp(c, glow('255,226,180'), x, y, 130, 0.2);
   c.globalCompositeOperation = 'source-over';
   c.globalAlpha = 1;
   for (let k = -2; k <= 2; k++) {
