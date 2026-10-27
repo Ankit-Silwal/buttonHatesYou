@@ -233,8 +233,8 @@ body.collapsed .pd .pd-hole { transform: scale(1); }
 .pd-tint { position: absolute; inset: 0; z-index: 2; opacity: 0; transition: opacity 2.4s ease; }
 .pd-tint.dusk {
   background:
-    radial-gradient(ellipse 70% 60% at 30% 30%, rgba(255, 150, 90, 0.18), transparent 70%),
-    linear-gradient(to bottom, rgba(90, 50, 110, 0.2), rgba(200, 90, 60, 0.12));
+    radial-gradient(ellipse 70% 60% at 30% 30%, rgba(255, 150, 90, 0.22), transparent 70%),
+    linear-gradient(to bottom, rgba(90, 50, 110, 0.28), rgba(200, 90, 60, 0.16));
 }
 .pd-tint.dark { background: linear-gradient(to bottom, rgba(40, 22, 40, 0.42), rgba(60, 30, 30, 0.3)); }
 body.dusk .pd .pd-tint.dusk { opacity: 1; }
@@ -340,6 +340,11 @@ body.cracked .pd #cracks { opacity: 0.85; }
     0 8px 10px -4px rgba(60, 30, 20, 0.4),
     0 0 26px color-mix(in oklab, var(--c), #fff 30%);
 }
+/* everyone breathes a little (the real one still only differs by blinking) */
+.pd #world .char .body { animation: breathe 3.2s ease-in-out infinite; }
+.pd #world .char.running .body { animation: bob 0.16s infinite alternate; }
+.pd #world .char.tremble .body { animation: tremble 0.12s infinite; }
+
 /* a tiny glint in the default eyes */
 .pd .char:not([data-eyes]) .eyes i { box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.1); }
 .pd .char:not([data-eyes]) .eyes i::after {
@@ -410,6 +415,13 @@ body.cracked .pd #cracks { opacity: 0.85; }
   height: 8px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0 30%, var(--sc, #ffc27a) 60%, transparent 70%);
+}
+.pd .plaster {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250, 238, 222, 0.95), rgba(220, 196, 168, 0.6) 60%, transparent 72%);
 }
 .pd .burst {
   position: absolute;
@@ -493,6 +505,7 @@ body.collapsed .pd #line { color: #fff4e8; text-shadow: 0 2px 0 rgba(40, 20, 20,
 @media (max-width: 520px) {
   .pd .tools button, .pd .tools a { width: 34px; height: 34px; }
   .pd #line { top: 64px; }
+  body.boss .pd #line { top: 82px; }
 }
 
 /* ---------- overlays & dialogs ---------- */
@@ -550,6 +563,10 @@ body.collapsed .pd #line { color: #fff4e8; text-shadow: 0 2px 0 rgba(40, 20, 20,
 }
 .pd .pill:hover { transform: translateY(-2px); filter: brightness(1.05); }
 .pd .pill:active { transform: translateY(3px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 1px 0 var(--btn-dark), 0 3px 6px rgba(120, 40, 20, 0.28); }
+/* "Play again" is centred with a transform, so keep that while it lifts */
+.pd #again { transition: transform 0.2s var(--ease-spring), box-shadow 0.15s, filter 0.2s; animation: cardIn 0.5s var(--ease-spring); }
+.pd #again:hover { transform: translate(-50%, -2px); }
+.pd #again:active { transform: translate(-50%, 3px); }
 .pd .pill.ghost {
   background: rgba(255, 255, 255, 0.5);
   color: var(--ink-soft);
@@ -909,6 +926,7 @@ body.boss .pd #arena::after { /* rising embers */
   25% { opacity: 1; }
   100% { opacity: 0; transform: translateY(-20%) scale(1.15); }
 }
+@keyframes breathe { 50% { scale: 1.025 0.975; } }
 @keyframes water { to { transform: translateX(140px); } }
 @keyframes ripple {
   from { transform: scale(0.5); opacity: 1; }
@@ -957,5 +975,5 @@ body.boss .pd #arena::after { /* rising embers */
 @media (prefers-reduced-motion: reduce) {
   .pd .pd-beam, .pd .pd-motes i, .pd #puddle::before, body.boss .pd #arena::after,
   .pd .char.boss::before, .pd .crash .inner::after, .pd .card.win::before,
-  .pd .blackout .big, .pd #loadbar .fill { animation: none !important; }
+  .pd .blackout .big, .pd #loadbar .fill, .pd #world .char .body { animation: none !important; }
 }
