@@ -558,7 +558,7 @@ body.puddle #puddle { height: 6vh; }
 }
 .pill:hover:not(:disabled) { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 0 var(--edge), 0 16px 26px -8px var(--edge); }
 .pill:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 0 var(--edge), 0 4px 8px -4px var(--edge); transition-duration: 0.06s; }
-.pill:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+.pill:focus-visible { outline: 2.5px solid var(--mustard); outline-offset: 3px; }
 .pill.ghost,
 .pill.ghost:hover:not(:disabled),
 .pill.ghost:active:not(:disabled) { background: transparent; color: var(--ink-soft); text-shadow: none; box-shadow: inset 0 0 0 2px var(--floor); }

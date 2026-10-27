@@ -548,6 +548,13 @@ a.chip:active, button.chip:active { transform: translateY(1px) scale(0.97); }
 }
 .arcade .shelf + .shelf .shelf-head h2::before { background: var(--neon-2); box-shadow: 0 0 0 3px rgba(92, 225, 230, 0.2), 0 0 14px var(--neon-2); }
 .arcade .shelf-head p { color: var(--ink-soft); }
+.arcade .shelf-head::after { /* a hairline that runs off to the right */
+  content: '';
+  flex: 1 1 40px;
+  align-self: center;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent);
+}
 
 .games {
   display: grid;
