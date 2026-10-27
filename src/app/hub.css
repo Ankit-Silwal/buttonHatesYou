@@ -473,9 +473,9 @@ a.chip:active, button.chip:active { transform: translateY(1px) scale(0.97); }
 .arcade::before, .arcade::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 .arcade::before { /* coloured light leaking in from the corners */
   background:
-    radial-gradient(ellipse 60% 50% at 10% -5%, rgba(255, 122, 92, 0.22), transparent 70%),
-    radial-gradient(ellipse 55% 45% at 95% 10%, rgba(167, 139, 250, 0.2), transparent 70%),
-    radial-gradient(ellipse 70% 50% at 70% 110%, rgba(92, 225, 230, 0.14), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 10% -5%, rgba(255, 122, 92, 0.28), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 95% 12%, rgba(167, 139, 250, 0.26), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 70% 110%, rgba(92, 225, 230, 0.18), transparent 70%),
     linear-gradient(180deg, #151829, #0e1019);
 }
 .arcade::after { /* a neon floor grid, far away */
@@ -493,9 +493,12 @@ a.chip:active, button.chip:active { transform: translateY(1px) scale(0.97); }
 }
 .arcade .hub-top {
   position: fixed;
-  background: linear-gradient(rgba(17, 19, 31, 0.92) 30%, rgba(17, 19, 31, 0));
+  background: rgba(17, 19, 31, 0.62);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
 }
-.arcade .chip { background-color: rgba(34, 39, 64, 0.8); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.arcade .chip { background-color: rgba(40, 46, 74, 0.85); }
 .arcade-left { display: flex; align-items: center; gap: 8px; }
 .chip.home { justify-content: center; width: 38px; padding: 0; text-decoration: none; }
 

@@ -66,7 +66,9 @@ export default function Story() {
       </header>
 
       <section className="story-hero">
-        <Avatar size={84} equipped={profile.wallet.equipped} mood="sad" className="has-legs" />
+        <span className="story-portrait">
+          <Avatar size={84} equipped={profile.wallet.equipped} mood="sad" className="has-legs" />
+        </span>
         <div>
           <h1>The Story</h1>
           <p>
@@ -76,6 +78,9 @@ export default function Story() {
           <p className="story-count">
             {all ? 'Everything unlocked. Spoilers ahead.' : done ? `${Math.min(unlocked, total)} of ${total} chapters unlocked` : '…'}
           </p>
+          <span className="story-progress" aria-hidden="true">
+            <i style={{ width: `${all ? 100 : (Math.min(unlocked, total) / total) * 100}%` }} />
+          </span>
           <button className={`pill ${all ? 'ghost' : 'reveal'}`} onClick={() => reveal(!all)}>
             {all ? '🔒 Lock it again' : '📖 Read it all (spoilers)'}
           </button>
@@ -83,18 +88,18 @@ export default function Story() {
       </section>
 
       <ol className="story-parts">
-        {SERIES.map((s) => (
-          <Part key={s.id} s={s} done={done?.[s.id]} all={all} />
+        {SERIES.map((s, i) => (
+          <Part key={s.id} s={s} i={i} done={done?.[s.id]} all={all} />
         ))}
       </ol>
     </main>
   );
 }
 
-function Part({ s, done, all }) {
+function Part({ s, i, done, all }) {
   const finished = done?.size ?? 0;
   return (
-    <li className="story-part" style={{ '--tone': s.color }}>
+    <li className="story-part" style={{ '--tone': s.color, '--i': i }}>
       <div className="part-head">
         <p className="kicker">{s.order}</p>
         <h2>{s.title}</h2>
