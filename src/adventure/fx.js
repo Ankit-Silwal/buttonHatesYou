@@ -188,6 +188,18 @@ export function sky(c, stops) {
   c.drawImage(s, 0, 0, W, H);
 }
 
+// A soft round blob of colour (dust, smoke).
+export function puffSprite(color) {
+  return sprite(`puff:${color}`, 32, 32, (c) => {
+    const g = c.createRadialGradient(16, 16, 0, 16, 16, 16);
+    g.addColorStop(0, rgba(color, 0.9));
+    g.addColorStop(0.6, rgba(color, 0.45));
+    g.addColorStop(1, rgba(color, 0));
+    c.fillStyle = g;
+    c.fillRect(0, 0, 32, 32);
+  });
+}
+
 /* ---------- particles ---------- */
 // Glowing sparks, embers, shards and shockwave rings, drawn additively.
 // Pre-allocates a pool so bursts don't allocate in the hot loop.
@@ -217,10 +229,12 @@ export class Fx {
       p.life = p.max = life * (0.6 + Math.random() * 0.6);
       p.color = color;
       p.streak = true;
+      p.add = true;
     }
   }
-  // slow floating motes (dust, pollen, embers)
-  mote(x, y, color, { vx = 0, vy = -20, r = 2, life = 2 } = {}) {
+  // slow floating motes (pollen, embers glow; dust with add: false is a
+  // soft normal-blended puff)
+  mote(x, y, color, { vx = 0, vy = -20, r = 2, life = 2, add = true, drag = 0 } = {}) {
     const p = this.spawn();
     p.live = true;
     p.x = x;
@@ -228,11 +242,12 @@ export class Fx {
     p.vx = vx;
     p.vy = vy;
     p.g = 0;
-    p.drag = 0;
+    p.drag = drag;
     p.r = r;
     p.life = p.max = life;
     p.color = color;
     p.streak = false;
+    p.add = add;
   }
   // an expanding shockwave ring
   ring(x, y, color, r = 60, life = 0.35, width = 6) {
@@ -271,6 +286,15 @@ export class Fx {
     for (const p of this.pool) {
       if (!p.live) continue;
       const k = p.life / p.max;
+      if (!p.add) {
+        // dust grows as it fades
+        const rad = p.r * (2.2 - k);
+        c.globalCompositeOperation = 'source-over';
+        c.globalAlpha = k * 0.7;
+        c.drawImage(puffSprite(p.color), p.x - rad * 2, p.y - rad * 2, rad * 4, rad * 4);
+        c.globalCompositeOperation = 'lighter';
+        continue;
+      }
       const rad = p.r * (0.5 + k * 0.5);
       c.globalAlpha = Math.min(1, k * 1.6);
       c.drawImage(glowSprite(p.color), p.x - rad * 4, p.y - rad * 4, rad * 8, rad * 8);
