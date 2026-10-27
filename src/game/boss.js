@@ -96,7 +96,9 @@ async function next(fresh = false) {
     dom.arena.append(card);
     Sound.boom();
     shake(dom.app, 8, 500);
-    await wait(2600);
+    await wait(2300);
+    card.classList.add('out');
+    await wait(300);
     card.remove();
   } else {
     await wait(300);

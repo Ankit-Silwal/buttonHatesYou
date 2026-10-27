@@ -802,6 +802,7 @@ body.boss .pd #arena::after { /* rising embers */
   border-radius: 24px;
   background: radial-gradient(ellipse at 50% 50%, rgba(30, 10, 30, 0.7), transparent 75%);
 }
+.pd .phase-card.out { animation: phaseOut 0.3s ease-in forwards; }
 .pd .phase-card::before { /* a hot band behind the title */
   content: '';
   position: absolute;
@@ -966,6 +967,7 @@ body.boss .pd #arena::after { /* rising embers */
 }
 @keyframes embers { to { transform: translateY(-25%); } }
 @keyframes aura { from { transform: scale(0.92); opacity: 0.75; } to { transform: scale(1.08); opacity: 1; } }
+@keyframes phaseOut { to { transform: translate(-50%, -50%) scale(0.9); opacity: 0; filter: blur(6px); } }
 @keyframes band { from { transform: translateY(-62%) skewY(-3deg) scaleX(0); } }
 @keyframes pdPop {
   50% { transform: scale(1.35); opacity: 0.9; }
