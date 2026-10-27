@@ -4,6 +4,7 @@ import { sfx } from '@/reason/audio';
 import { cx, cy, overlap, rand } from '@/reason/engine';
 import { rr, text, heart } from '@/reason/draw';
 import { makeCursor } from './companion';
+import { iris } from './art';
 
 // Shared bits for How I Met Your Cursor's chapters.
 
@@ -16,7 +17,10 @@ export async function begin(g, p, level, n, title, music) {
   if (music !== undefined) g.music(music);
   g.lock();
   await g.card(`Chapter ${n}`, title, 3);
-  await g.fade(0, 1);
+  // open on Cursor, like a click spreading out (same 1s as the old fade)
+  g.fx.fade = 0;
+  g.fx.fadeTo = 0;
+  await iris(g, 1, cur);
   return cur;
 }
 

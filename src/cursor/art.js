@@ -521,8 +521,6 @@ function front(c, g) {
   if (art.love > 0.01) drawLove(c, g, art);
   if (m.sun?.flare) drawFlare(c, g, art, m.sun);
   if (m.bokeh) drawBokeh(c, g, art, m.bokeh);
-  for (const fx of art.fx) fx(c, g, dt);
-  if (art.fx.length) art.fx = art.fx.filter((f) => !f.done);
 
   // colour grade (soft-light gradient), then the foreground, then the vignette
   if (m.grade) {
@@ -550,6 +548,9 @@ function front(c, g) {
     c.globalAlpha = m.vig.a + art.love * 0.12;
     c.drawImage(vignette(m.vig.rgb, m.vig.inner), 0, 0, W, H);
   }
+  c.globalAlpha = 1;
+  for (const fx of art.fx) fx(c, g, dt);
+  if (art.fx.length) art.fx = art.fx.filter((f) => !f.done);
   c.restore();
 }
 
@@ -811,4 +812,57 @@ export function installArt(g, n) {
 // One-off screen effects pushed from anywhere: fn(c, g, dt) sets fn.done.
 export function addFx(g, fn) {
   g.art?.fx.push(fn);
+}
+
+// Chapter opening: the black opens as a circle around Cursor, with a ring of
+// his light at the edge (like a click spreading out). Resolves after sec.
+export function iris(g, sec, who) {
+  const start = g.time;
+  const fn = (c, g) => {
+    const u = Math.min(1, (g.time - start) / sec);
+    if (u >= 1) {
+      fn.done = true;
+      return;
+    }
+    const e = 1 - (1 - u) ** 3;
+    const X = who ? sx(g, who.x + who.w / 2) : W / 2;
+    const Y = who ? sy(g, who.y + who.h / 2) : H / 2;
+    const R = 6 + e * 1150;
+    const art = g.art;
+    if (!art.irisCv) art.irisCv = canvas(W / 2, H / 2);
+    const k = art.irisCv.getContext('2d');
+    k.globalCompositeOperation = 'source-over';
+    k.globalAlpha = 1;
+    k.fillStyle = '#05040a';
+    k.fillRect(0, 0, W / 2, H / 2);
+    k.globalCompositeOperation = 'destination-out';
+    k.drawImage(disc(), (X - R) / 2, (Y - R) / 2, R, R);
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+    c.drawImage(art.irisCv, 0, 0, W, H);
+    c.globalCompositeOperation = 'lighter';
+    c.globalAlpha = (1 - u) * 0.9;
+    c.strokeStyle = 'rgb(150,220,255)';
+    c.lineWidth = 3 + 6 * (1 - u);
+    c.beginPath();
+    c.arc(X, Y, R * 0.94, 0, Math.PI * 2);
+    c.stroke();
+    stamp(c, glow('150,220,255'), X, Y, 40 + 60 * (1 - u), 1 - u);
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+  };
+  g.art?.fx.push(fn);
+  return g.wait(sec);
+}
+
+// A filled circle with a soft rim (for the iris).
+function disc() {
+  return sprite('disc', 128, 128, (c) => {
+    const gr = c.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(0,0,0,1)');
+    gr.addColorStop(0.9, 'rgba(0,0,0,1)');
+    gr.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = gr;
+    c.fillRect(0, 0, 128, 128);
+  });
 }
