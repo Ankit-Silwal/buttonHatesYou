@@ -1,16 +1,13 @@
 import { Sound } from './sound';
 import { Boss } from './boss';
 import { openSkip, closeSkip, loserStamp } from './skip';
-import { getProfile, grantReward } from '@/profile/store';
-import { REWARDS } from '@/economy/catalog';
+import { getProfile, claimStory } from '@/profile/store';
 import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
   save, load, wipeSave, makeChar, place, setMood, area, spot,
   say, floatText, shake, updateHud, setScene, showSkips, setLook, pressFx, reducedMotion,
 } from './core';
-
-const REWARD = REWARDS['please-dont'];
 
 /* ---------- what the button says ---------- */
 const LINES = {
@@ -737,9 +734,9 @@ function postClick() {
     G.done = true;
     save();
     // Queued in the profile before the redirect; it syncs now or on the next visit.
-    if (!G.testRun && grantReward('please-dont')) {
-      floatText(`+${REWARD.coins} 🪙  +${REWARD.diamonds} 💎`, hero._x, hero._y - 90, 'reward');
-    }
+    // Pays the first time only (the wallet remembers), even after a wipe.
+    const prize = !G.testRun && claimStory('please-dont');
+    if (prize) floatText(`+${prize.coins} 🪙  +${prize.diamonds} 💎`, hero._x, hero._y - 90, 'reward');
     dom.loadbar.querySelector('.fill').style.width = '100%';
     Sound.win();
     // Same-tab navigation, so no popup blocker gets in the way.

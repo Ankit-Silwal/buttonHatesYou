@@ -32,7 +32,7 @@ export default function Arcade() {
         <Avatar size={64} equipped={equipped} mood="smug" className="has-legs" />
         <div>
           <h1>Games</h1>
-          <p>Finish a game to earn coins and diamonds. The button will hate every second of it.</p>
+          <p>Every Adventure run pays coins, and each story chapter pays big the first time. The button will hate every second of it.</p>
         </div>
       </div>
 

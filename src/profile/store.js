@@ -1,4 +1,5 @@
 import { START, applyEvent, replay } from '@/economy/rules';
+import { legacyReplay } from '@/economy/legacy';
 
 // The player's profile, offline first.
 //
@@ -7,6 +8,9 @@ import { START, applyEvent, replay } from '@/economy/rules';
 //   owner   the account the queued events belong to (survives an expired session)
 //   base    the last wallet the server sent (or START for a fresh guest)
 //   outbox  events made since then that the server has not seen yet
+//   v       2 since the economy rework (see migrate)
+//   legacy  a guest's events from before it, already folded into `base`;
+//           uploaded (and then forgotten) the first time they sign in
 //
 // What the player sees is `base` with the outbox replayed on top, so buying
 // and earning work with no network at all. Whenever we are signed in and
@@ -18,7 +22,8 @@ const KEY = 'buttonHatesYou.profile.v1';
 const BATCH = 200;
 const RESYNC_MS = 60_000;
 
-const fresh = () => ({ user: null, owner: null, base: START, outbox: [] });
+const VERSION = 2;
+const fresh = () => ({ user: null, owner: null, base: START, outbox: [], legacy: [], v: VERSION });
 
 let data = null;
 let net = 'idle'; // idle | syncing | error
@@ -36,12 +41,30 @@ const online = () => typeof navigator === 'undefined' || navigator.onLine;
 function init() {
   if (data) return;
   try {
-    data = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY)) };
+    const saved = JSON.parse(localStorage.getItem(KEY));
+    data = saved ? { ...fresh(), v: 1, ...saved } : fresh();
   } catch {
     data = fresh();
   }
   data.outbox.forEach((e) => delete e.inflight); // a reload cut off the last request
+  if (data.v < VERSION) migrate();
   recompute();
+}
+
+// The economy rework raised prices and changed how rewards work. A guest's
+// wallet is just their queued events replayed, so fold those into a plain
+// wallet once, under the old rules, or old purchases would be re-priced (and
+// fail). Queues that belong to an account are left for its server to replay.
+function migrate() {
+  if (!data.owner && data.outbox.length) {
+    data.base = legacyReplay(data.base, data.outbox);
+    data.legacy = [...data.legacy, ...data.outbox];
+    data.outbox = [];
+  }
+  data.v = VERSION;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  } catch {}
 }
 
 function status() {
@@ -106,7 +129,25 @@ function tryRecord(ev) {
   return true;
 }
 
-export const grantReward = (game) => tryRecord({ type: 'reward', game });
+/* ---------- earning (the economy, see economy/rules.js) ---------- */
+// What an event added to the wallet, or null when it isn't allowed.
+function earn(ev) {
+  const before = getProfile().wallet;
+  const after = applyEvent(before, ev);
+  if (!after) return null;
+  record(ev);
+  return { coins: after.coins - before.coins, diamonds: after.diamonds - before.diamonds };
+}
+
+// A finished Adventure run: { game, score, extra (Button Run's coins), ms of play }.
+// Returns the payout; the server works it out again from the same numbers.
+export const recordRun = ({ game, score, extra = 0, ms }) =>
+  earn({ type: 'run', game, score: Math.floor(score), extra: Math.floor(extra), ms: Math.round(ms), at: Date.now() });
+
+// A finished story part (an id in STORY_REWARDS). Pays once; null after that.
+export const claimStory = (claim) => earn({ type: 'claim', claim });
+export const isClaimed = (wallet, claim) => !!wallet.claimed?.includes(claim);
+
 export const buy = (item) => tryRecord({ type: 'buy', item });
 export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 
@@ -167,6 +208,11 @@ function expire() {
 
 function adopt(user, state) {
   if (data.owner && data.owner !== user.id) data.outbox = []; // another account's leftovers
+  if (data.legacy.length) {
+    // a guest's events from before the economy rework go up first
+    data.outbox = [...data.legacy, ...data.outbox];
+    data.legacy = [];
+  }
   data.user = user;
   data.owner = user.id;
   data.base = state;

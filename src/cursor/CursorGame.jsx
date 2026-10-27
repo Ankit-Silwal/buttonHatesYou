@@ -25,7 +25,7 @@ const CONFIG = {
   saveKey: 'buttonHatesYou.cursor.v1',
   episodes: CHAPTERS,
   acts: PARTS,
-  rewards: { episode: 'cursor-chapter', finale: 'cursor-finale' },
+  story: 'cursor', // pays STORY_REWARDS 'cursor:<n>', once each
   unit: 'Chapter',
   title: 'How I Met Your Cursor',
   kicker: 'Button Quest · the story before The Reason',

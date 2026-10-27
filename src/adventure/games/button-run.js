@@ -448,7 +448,7 @@ export default function buttonRun({ look, sound }) {
         k.got = true;
         const worth = active.double ? COIN * 2 : COIN;
         coinPts += worth;
-        coinCount++;
+        coinCount += active.double ? 2 : 1; // the wallet gets what the counter shows
         coinPop = 0.18;
         sound.tone(1320, 0.06, 'square', 0.12, 1760);
         const [sx, sy] = P(k.x, k.y, Math.max(k.z, 0));
@@ -532,6 +532,10 @@ export default function buttonRun({ look, sound }) {
   const g = {
     score: 0,
     over: false,
+    // coins for the wallet (and the counter): 1 per coin, 2 with Double coins on
+    get coins() {
+      return coinCount;
+    },
 
     down(x, y) {
       if (intro > 0) return skipIntro();

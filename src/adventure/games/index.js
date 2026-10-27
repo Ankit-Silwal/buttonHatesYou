@@ -16,6 +16,7 @@ import buttonRun from './button-run';
 //   update(dt), draw(c)     called every frame; draw on the 480x800 canvas
 //   score, over             read by the shell every frame; once `over` turns
 //                           true the run ends and `score` is what counts
+//   coins                   (Button Run) coins picked up, paid 1:1
 // and, optionally, the input it cares about (game coordinates):
 //   down(x, y), move(x, y), up(x, y), key(code)
 export const CREATE = { flap, pop, catch: catchGame, simon, hop, whack, run, stack, slice, 'button-run': buttonRun };

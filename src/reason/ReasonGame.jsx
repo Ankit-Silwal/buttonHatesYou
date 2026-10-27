@@ -13,7 +13,7 @@ const CONFIG = {
   saveKey: 'buttonHatesYou.reason.v1',
   episodes: EPISODES,
   acts: ACTS,
-  rewards: { episode: 'reason-episode', finale: 'reason-finale' },
+  story: 'reason', // pays STORY_REWARDS 'reason:<n>', once each
   unit: 'Episode',
   title: 'The Reason',
   kicker: 'A prequel to The Button That Hates You',

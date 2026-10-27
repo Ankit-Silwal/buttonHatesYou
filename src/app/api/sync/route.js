@@ -4,10 +4,13 @@ import { applyEvent, isEventId } from '@/economy/rules';
 
 const MAX_EVENTS = 200;
 const SEEN_KEEP = 1000;
+const CLOCK_SKEW = 5 * 60_000; // how far ahead of ours a browser's clock may be
 
 // Replays the browser's queued events on the stored wallet. Rewards and prices
 // come from the shared catalog, never from the request, and an event id that
-// was already applied is skipped, so retrying a sync is always safe.
+// was already applied is skipped, so retrying a sync is always safe. An
+// Adventure run sends its score and play time, never its payout: applyEvent
+// works the payout out again and caps it (see applyRun in rules.js).
 export async function POST(req) {
   const me = await currentUser();
   if (!me) return Response.json({ error: 'Not signed in' }, { status: 401 });
@@ -19,11 +22,12 @@ export async function POST(req) {
   const user = await updateUser(me.id, (u) => {
     u ??= newUser(me);
     const seen = new Set(u.seen);
+    const now = Date.now() + CLOCK_SKEW;
     let wallet = u.wallet;
     for (const ev of events) {
       if (!isEventId(ev?.id) || seen.has(ev.id)) continue;
       seen.add(ev.id);
-      wallet = applyEvent(wallet, ev) ?? wallet;
+      wallet = applyEvent(wallet, ev, now) ?? wallet;
     }
     return { ...u, wallet, seen: [...seen].slice(-SEEN_KEEP), updatedAt: Date.now() };
   });

@@ -36,7 +36,7 @@ const MOTES = [
 ];
 
 function greeting({ user, wallet }) {
-  if (wallet.coins >= 100) return ["You're rich. Buy me something nice.", 'smug'];
+  if (wallet.coins >= 1000) return ["You're rich. Buy me something nice.", 'smug'];
   if (user) return [`Oh no. ${user.name?.split(' ')[0] || 'You'}'s back.`, 'annoyed'];
   return ["Oh. A visitor. Please don't press anything.", 'calm'];
 }

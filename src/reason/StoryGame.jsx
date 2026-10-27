@@ -4,15 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Wallet from '@/components/Wallet';
 import { useProfile } from '@/profile/useProfile';
-import { grantReward } from '@/profile/store';
-import { REWARDS } from '@/economy/catalog';
+import { claimStory } from '@/profile/store';
 import { Game } from './engine';
 import { Bobby } from './actors';
 import { SPEAKERS } from './draw';
 import { initAudio, setMuted, stopAll } from './audio';
 // The menu, episode runner and overlays shared by the story platformers
 // (The Reason, How I Met Your Cursor). Each game passes a config:
-//   saveKey, episodes, acts, rewards: { episode, finale }, unit ('Episode'),
+//   saveKey, episodes, acts, story (its STORY_REWARDS prefix), unit ('Episode'),
 //   title, kicker, sub, theme (extra class on <main>), keys (controls line)
 
 function loadSave(key) {
@@ -52,11 +51,8 @@ export default function StoryGame({ cfg }) {
 
   const complete = useCallback(
     (n, flags, skipped = false) => {
-      let prize = null;
-      if (!skipped && !save.paid.includes(n)) {
-        const id = n === LAST ? cfg.rewards.finale : cfg.rewards.episode;
-        if (grantReward(id)) prize = REWARDS[id];
-      }
+      // the first finish of each part pays (big, once: the wallet remembers)
+      const prize = skipped ? null : claimStory(`${cfg.story}:${n}`);
       update((s) => ({
         ...s,
         done: { ...s.done, [n]: s.done[n] === 'won' || !skipped ? 'won' : 'skipped' },
@@ -176,10 +172,12 @@ function Finished({ cfg, n, prize, skipped, onClose, onNext }) {
         <h2>
           {n}. {ep.title}
         </h2>
-        {prize && (
+        {prize ? (
           <p className="prize">
             +{prize.coins} 🪙{prize.diamonds ? ` +${prize.diamonds} 💎` : ''}
           </p>
+        ) : (
+          !skipped && <p>Already paid out. Replays are just for fun.</p>
         )}
         <div className="row">
           <button className="pill ghost" onClick={onClose}>

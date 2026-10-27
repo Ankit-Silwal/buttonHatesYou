@@ -5,17 +5,17 @@ import Link from 'next/link';
 import Wallet from '@/components/Wallet';
 import Avatar from '@/components/Avatar';
 import { useProfile } from '@/profile/useProfile';
-import { grantReward } from '@/profile/store';
-import { GAME, REWARDS } from '@/economy/catalog';
+import { recordRun } from '@/profile/store';
+import { GAME } from '@/economy/catalog';
 import { Sound } from '@/game/sound';
 import { W, H, lookOf } from './kit';
 import { CREATE } from './games';
 
 const SAVE_KEY = 'buttonHatesYou.adventure.v1';
 
-// { best: { [game]: score }, goal: [games whose goal was ever reached], muted }
+// { best: { [game]: score }, muted } (older saves also have `goal`, unused now)
 function loadSave() {
-  const empty = { best: {}, goal: [], muted: false };
+  const empty = { best: {}, muted: false };
   try {
     return { ...empty, ...JSON.parse(localStorage.getItem(SAVE_KEY)) };
   } catch {
@@ -48,28 +48,22 @@ export default function AdventureGame({ id }) {
     });
   }, []);
 
+  // Every run pays by how it went (see adventurePayout in economy/rules.js).
   const finish = useCallback(
-    (score) => {
+    ({ score, coins, ms }) => {
       const best = Math.max(score, save.best[id] ?? 0);
       const newBest = score > (save.best[id] ?? 0) && score > 0;
-      let prize = null;
-      if (score >= meta.goal && grantReward('adventure-goal')) {
-        prize = { ...REWARDS['adventure-goal'] };
-        // the very first time a game's goal is reached it also pays a diamond
-        if (!save.goal.includes(id) && grantReward('adventure-first')) prize.diamonds += REWARDS['adventure-first'].diamonds;
-      }
-      update((s) => ({
-        ...s,
-        best: { ...s.best, [id]: best },
-        goal: prize && !s.goal.includes(id) ? [...s.goal, id] : s.goal,
-      }));
-      setResult({ score, best, newBest, prize });
+      const prize = recordRun({ game: id, score, extra: coins, ms }) ?? { coins: 0, diamonds: 0 };
+      update((s) => ({ ...s, best: { ...s.best, [id]: best } }));
+      setResult({ score, coins, best, newBest, prize });
       setMode('over');
     },
-    [id, meta, save, update]
+    [id, save, update]
   );
 
   if (!save) return <main className={`adv adv-${id}`} />;
+  // a run that paid at least a full first tier counts as a good one
+  const good = result && (result.prize.coins >= (meta.payout.base ?? 25) || result.prize.diamonds > 0);
 
   const start = () => {
     Sound.init();
@@ -110,7 +104,7 @@ export default function AdventureGame({ id }) {
             <p>{meta.blurb}</p>
             <p className="how">{meta.howTo}</p>
             <p className="goal">
-              Goal: <b>{meta.goal}</b> {meta.unit} · {meta.prize}
+              {meta.rule}
               {save.best[id] ? <span> · Best: {save.best[id]}</span> : null}
             </p>
             <button className="pill big" onClick={start} autoFocus>
@@ -122,23 +116,18 @@ export default function AdventureGame({ id }) {
 
       {mode === 'over' && result && (
         <div className="adv-overlay">
-          <div className={`adv-card${result.prize ? ' win' : ''}`}>
-            <Avatar size={84} equipped={profile.wallet.equipped} mood={result.prize ? 'sad' : 'smug'} />
-            <p className="kicker">{result.prize ? 'Goal reached' : 'Game over'}</p>
+          <div className={`adv-card${good ? ' win' : ''}`}>
+            <Avatar size={84} equipped={profile.wallet.equipped} mood={good ? 'sad' : 'smug'} />
+            <p className="kicker">{good ? 'Nice run' : 'Game over'}</p>
             <h2>
               {result.score} <small>{meta.unit}</small>
             </h2>
             <p>{result.newBest ? 'New best!' : `Best: ${result.best}`}</p>
-            <p className="quip">“{result.prize ? meta.quips.goal : meta.quips.fail}”</p>
-            {result.prize ? (
-              <p className="prize">
-                +{result.prize.coins} 🪙{result.prize.diamonds ? ` +${result.prize.diamonds} 💎` : ''}
-              </p>
-            ) : (
-              <p className="goal">
-                Reach {meta.goal} {meta.unit} to earn coins.
-              </p>
-            )}
+            <p className="quip">“{good ? meta.quips.goal : meta.quips.fail}”</p>
+            <p className={`prize${result.prize.coins || result.prize.diamonds ? '' : ' none'}`}>
+              +{result.prize.coins} 🪙{result.prize.diamonds ? ` +${result.prize.diamonds} 💎` : ''}
+            </p>
+            <p className="goal">{nextTier(meta, result)}</p>
             <div className="row">
               <Link href="/games" className="pill ghost">
                 Games
@@ -152,6 +141,14 @@ export default function AdventureGame({ id }) {
       )}
     </main>
   );
+}
+
+// The line under a run's payout: how far the next, better-paying tier was.
+function nextTier({ payout: p, unit }, { score, coins }) {
+  if (p.coins) return `${coins} coin${coins === 1 ? '' : 's'} grabbed. Every one is yours.`;
+  const tier = Math.floor(score / p.per) + 1;
+  const left = tier * p.per - score;
+  return `${left} more ${unit} and the next ${p.per} pay ${p.base * (tier + 1)} 🪙.`;
 }
 
 /* ---------- the canvas and its loop ---------- */
@@ -228,6 +225,7 @@ function Stage({ id, equipped, onOver }) {
     let raf = 0;
     let last = performance.now();
     let overFor = 0;
+    let played = 0; // seconds of unpaused play, sent with the run (the server checks the score against it)
     let reported = false;
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
@@ -236,10 +234,11 @@ function Stage({ id, equipped, onOver }) {
       last = now;
       if (!pausedRef.current && !reported) {
         game.update(dt);
+        played += dt;
         // let the crash play out for a moment before the results card
         if (game.over && (overFor += dt) > 0.9) {
           reported = true;
-          latest.current(Math.floor(game.score));
+          latest.current({ score: Math.floor(game.score), coins: Math.floor(game.coins ?? 0), ms: played * 1000 });
         }
       }
       // the bars around the 480x800 frame show the stage's own background

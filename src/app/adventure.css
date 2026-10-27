@@ -172,6 +172,14 @@
   font-weight: 700;
   animation: advPrize 1.8s ease-in-out 0.6s infinite;
 }
+/* a run that paid nothing: the pill stays, without the shine */
+.adv-card .prize.none {
+  background: color-mix(in srgb, var(--art, var(--btn)) 14%, transparent);
+  box-shadow: none;
+  color: var(--ink);
+  font-size: 18px;
+  animation: none;
+}
 @keyframes advPrize { 50% { box-shadow: 0 0 0 1px rgba(180, 120, 20, 0.25) inset, 0 8px 34px 0 rgba(255, 190, 40, 0.95); transform: scale(1.04); } }
 .adv-card .row { margin-top: 18px; }
 .adv-card .pill { text-decoration: none; }
@@ -234,7 +242,7 @@
   .adv::before, .adv::after, .adv-emoji, .adv-card .prize, .adv-card .pill::after { animation: none; }
 }
 
-/* reaching the goal: a soft rainbow halo breathes behind the results card */
+/* a good run (a full tier or more): a soft rainbow halo breathes behind the results card */
 .adv-card.win::after {
   content: '';
   position: absolute;
