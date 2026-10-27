@@ -542,16 +542,32 @@ body.puddle #puddle { height: 6vh; }
 .loser span { font-size: clamp(18px, 4vw, 28px); font-weight: 600; color: var(--ink); text-shadow: none; }
 
 .pill {
+  --edge: var(--btn-dark); /* the coloured rim under the pill */
   padding: 10px 20px;
   border: 0;
   border-radius: 999px;
   background: var(--btn);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);
   color: #fff;
   font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.14);
   cursor: pointer;
-  box-shadow: 0 4px 0 var(--btn-dark);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 0 var(--edge), 0 10px 20px -8px var(--edge);
+  transition: transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1), box-shadow 0.18s ease, filter 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.pill.ghost { background: transparent; color: var(--ink-soft); box-shadow: inset 0 0 0 2px var(--floor); }
+.pill:hover:not(:disabled) { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 0 var(--edge), 0 16px 26px -8px var(--edge); }
+.pill:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 0 var(--edge), 0 4px 8px -4px var(--edge); transition-duration: 0.06s; }
+.pill:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+.pill.ghost,
+.pill.ghost:hover:not(:disabled),
+.pill.ghost:active:not(:disabled) { background: transparent; color: var(--ink-soft); text-shadow: none; box-shadow: inset 0 0 0 2px var(--floor); }
+.pill.ghost:hover:not(:disabled) { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pill { transition: none; }
+  .pill:hover:not(:disabled), .pill:active:not(:disabled) { transform: none; }
+}
 
 .crash {
   width: min(100%, 360px);

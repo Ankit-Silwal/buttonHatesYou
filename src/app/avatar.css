@@ -10,6 +10,38 @@ body.boss .char { --c: var(--btn); --cd: var(--btn-dark); }
 /* outside the game: just stands where it's put */
 .char.static { position: relative; left: auto; top: auto; display: inline-block; flex: none; transform: none; }
 
+/* outside the game it gets the glossy, lit look: a soft gradient body,
+   a specular highlight and a grounded shadow */
+.char.static .body {
+  background:
+    radial-gradient(circle at 50% 125%, color-mix(in oklab, var(--c), #fff 28%) 0 20%, transparent 46%),
+    radial-gradient(circle at 36% 28%, color-mix(in oklab, var(--c), #fff 30%) 0%, var(--c) 46%, color-mix(in oklab, var(--c), var(--cd) 70%) 100%);
+  box-shadow:
+    inset 0 -7px 12px rgba(40, 10, 5, 0.18),
+    inset 0 3px 3px rgba(255, 255, 255, 0.4),
+    0 calc(var(--s) * 0.06) 0 var(--cd),
+    0 calc(var(--s) * 0.16) calc(var(--s) * 0.2) calc(var(--s) * -0.06) rgba(40, 20, 10, 0.3);
+}
+.char.static .body::before { /* specular highlight */
+  content: '';
+  position: absolute;
+  left: 16%;
+  top: 8%;
+  width: 40%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2) 45%, transparent 72%);
+  transform: rotate(-24deg);
+  pointer-events: none;
+}
+.char.static.press .body {
+  box-shadow:
+    inset 0 -5px 10px rgba(40, 10, 5, 0.2),
+    inset 0 3px 3px rgba(255, 255, 255, 0.4),
+    0 calc(var(--s) * 0.015) 0 var(--cd),
+    0 calc(var(--s) * 0.05) calc(var(--s) * 0.08) rgba(40, 20, 10, 0.3);
+}
+
 .char .ears, .char .scarf, .char .hat { display: none; position: absolute; pointer-events: none; }
 .char.disguised .ears, .char.disguised .scarf, .char.disguised .hat { display: none !important; }
 

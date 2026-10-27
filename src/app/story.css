@@ -53,8 +53,8 @@
 .part-chapters .lock a { color: var(--btn-dark); font-weight: 700; }
 
 .story-hero .pill { margin-top: 12px; }
-.story .pill.reveal { background: #8a6fb8; box-shadow: 0 4px 0 #64508a; }
-.story-btn { background: #8a6fb8; box-shadow: 0 4px 0 #64508a; }
+.story .pill.reveal { --edge: #64508a; background-color: #8a6fb8; }
+.story-btn { --edge: #64508a; background-color: #8a6fb8; }
 
 @media (max-width: 600px) {
   .story-hero { flex-direction: column; text-align: center; }
