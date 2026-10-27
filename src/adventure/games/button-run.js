@@ -173,12 +173,11 @@ export default function buttonRun({ look, sound }) {
       else if (kind === 'click') add({ kind, lane, z, len: 1.2, cy: 7, slammed: false });
     });
 
-    // coins down an open lane, or arcing over something jumpable
-    const open = row.map((k, l) => [k, l]).filter(([k]) => k === 'none' || k === 'block' || k === 'hole');
-    if (open.length && Math.random() < 0.6) {
-      const [k, l] = pick(open);
-      if (k === 'none') coinLine(l, z - 3, 6);
-      else coinLine(l, z - 4, 6, (cz) => 0.6 + Math.max(0, 1.7 * (1 - ((cz - z) / 4.5) ** 2)));
+    // coins arcing over something jumpable in this row
+    const open = row.map((k, l) => [k, l]).filter(([k]) => k === 'block' || k === 'hole');
+    if (open.length && Math.random() < 0.35) {
+      const [, l] = pick(open);
+      coinLine(l, z - 4, 6, (cz) => 0.6 + Math.max(0, 1.7 * (1 - ((cz - z) / 4.5) ** 2)));
     }
 
     // and now and then a power-up in an empty lane
@@ -189,6 +188,51 @@ export default function buttonRun({ look, sound }) {
       nextPower = dist + rand(200, 340);
     }
     rowZ = z + gap;
+    // and a coin pattern in the clear stretch before the next row
+    if (Math.random() < 0.75) coinPattern(z + 3, rowZ - 3);
+  };
+
+  // Coins laid out in a shape, between z0 and z1 (which is clear of obstacles).
+  const coinPattern = (z0, z1) => {
+    const len = Math.min(z1 - z0, 14);
+    if (len < 5) return;
+    const put = (x, y, z) => coins.push({ x, y, z });
+    const kind = pick(['zigzag', 'wave', 'hop', 'stack', 'diamond', 'line']);
+    if (kind === 'zigzag') {
+      // weaving from lane to lane
+      let lane = pick([0, 1, 2]);
+      let next = clamp(lane + pick([-1, 1]), 0, 2);
+      for (let z = 0, i = 0; z < len; z += 1.3, i++) {
+        const leg = (z % 4) / 4;
+        put(LANES[lane] + (LANES[next] - LANES[lane]) * clamp((leg - 0.55) / 0.45, 0, 1), 0.6, z0 + z);
+        if (leg + 1.3 / 4 >= 1) {
+          lane = next;
+          next = lane === 0 ? 1 : lane === 2 ? 1 : pick([0, 2]);
+        }
+      }
+    } else if (kind === 'wave') {
+      // a smooth S across all three lanes
+      const ph = rand(0, Math.PI * 2);
+      for (let z = 0; z < len; z += 1.2) put(Math.sin(z * 0.45 + ph) * LANE, 0.6, z0 + z);
+    } else if (kind === 'hop') {
+      // a bump in the air: jump for the middle ones
+      const lane = pick([0, 1, 2]);
+      for (let z = 0; z < len; z += 1.3) put(LANES[lane], 0.6 + Math.max(0, Math.sin((z / len) * Math.PI) * 2.2), z0 + z);
+    } else if (kind === 'stack') {
+      // towers of three, only the bottom one is free
+      const lane = pick([0, 1, 2]);
+      for (let z = 1; z < len; z += 4) for (const y of [0.6, 1.4, 2.2]) put(LANES[lane], y, z0 + z);
+    } else if (kind === 'diamond') {
+      const mid = z0 + len / 2;
+      const lane = pick([0, 1, 2]);
+      for (const [dl, dz] of [[0, -2.4], [-0.5, -1.2], [0.5, -1.2], [-1, 0], [0, 0], [1, 0], [-0.5, 1.2], [0.5, 1.2], [0, 2.4]]) {
+        const x = LANES[lane] + dl * LANE * 0.55;
+        if (Math.abs(x) <= LANE + 0.3) put(x, 0.6 + (dl === 0 && dz === 0 ? 0.5 : 0), mid + dz);
+      }
+    } else {
+      const lane = pick([0, 1, 2]);
+      for (let z = 0; z < len; z += 1.6) put(LANES[lane], 0.6, z0 + z);
+    }
   };
 
   const spawnDecor = (z) => {
