@@ -215,10 +215,11 @@ function Play({ cfg, n, save, muted, onMute, onDone, onExit }) {
     const g = new Game(canvas.current, { flags, onUi: setUi, onPause: () => setPaused((p) => !p) });
     game.current = g;
     if (process.env.NODE_ENV !== 'production') window.__reason = g; // poke at it from devtools
-    const fit = () => g.resize(wrap.current.clientWidth, wrap.current.clientHeight);
+    const box = wrap.current; // kept: a late resize callback can outlive the ref
+    const fit = () => g.resize(box.clientWidth, box.clientHeight);
     fit();
     const ro = new ResizeObserver(fit);
-    ro.observe(wrap.current);
+    ro.observe(box);
     const player = new Bobby(flags);
     let alive = true;
     (async () => {
