@@ -148,6 +148,13 @@ export function createWorld(look, POWERS) {
   keys.receiveShadow = sideKeys.receiveShadow = true;
   keys.castShadow = sideKeys.castShadow = false;
   scene.add(keys, sideKeys);
+  // a letter printed on each keycap, picked from an 8x8 atlas per instance
+  const letters = new THREE.InstancedMesh(geo('letterplane', () => new THREE.PlaneGeometry(0.46, 0.46).rotateX(-Math.PI / 2)), letterMaterial(), ROWS * 3);
+  const letterIds = new THREE.InstancedBufferAttribute(new Float32Array(ROWS * 3), 1);
+  letters.geometry = letters.geometry.clone();
+  letters.geometry.setAttribute('letter', letterIds);
+  letters.frustumCulled = false;
+  scene.add(letters);
 
   // far away: a row of giant app icons and the monitor you're watching on
   scene.add(backdrop());
@@ -240,6 +247,9 @@ export function createWorld(look, POWERS) {
         const gone = holes.some((o) => o.lane === l && z0 > o.z - 0.05 && z0 < o.z + o.len - 0.05);
         m4.makeTranslation(LANES[l], gone ? -50 : -0.22, -zc);
         keys.setMatrixAt(k * 3 + l, m4);
+        m4.makeTranslation(LANES[l] - 0.38, gone ? -50 : 0.006, -zc + 0.45);
+        letters.setMatrixAt(k * 3 + l, m4);
+        letterIds.setX(k * 3 + l, ((base + k) * 7 + l * 13 + ((base + k) % 5) * 3) % LETTERS.length);
         keys.setColorAt(k * 3 + l, color.set((base + k + l) % 2 ? '#f6f3ec' : '#e6e0d2'));
       }
       for (let side = 0; side < 2; side++) {
@@ -248,7 +258,8 @@ export function createWorld(look, POWERS) {
         sideKeys.setColorAt(k * 2 + side, color.set((base + k + side) % 3 ? '#4a4d5e' : '#5a5e72'));
       }
     }
-    keys.instanceMatrix.needsUpdate = sideKeys.instanceMatrix.needsUpdate = true;
+    keys.instanceMatrix.needsUpdate = sideKeys.instanceMatrix.needsUpdate = letters.instanceMatrix.needsUpdate = true;
+    letterIds.needsUpdate = true;
     keys.instanceColor.needsUpdate = sideKeys.instanceColor.needsUpdate = true;
 
     place(s.things, buildThing, (o, obj) => {
@@ -331,6 +342,31 @@ export function createWorld(look, POWERS) {
       c.drawImage(r.domElement, 0, 0, W, H);
     },
   };
+}
+
+const LETTERS = 'QWERTYUIOPASDFGHJKLZXCVBNM1234567890!?@#&*+=<>/';
+
+// Basic material reading one cell of the letter atlas per instance.
+function letterMaterial() {
+  return once('lettermat', () => {
+    const map = canvasTexture('letters', 512, 512, (c) => {
+      c.fillStyle = '#8a8478';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.font = `700 40px ${FONT}`;
+      [...LETTERS].forEach((ch, i) => c.fillText(ch, (i % 8) * 64 + 32, Math.floor(i / 8) * 64 + 34));
+    });
+    const m = new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, opacity: 0.85 });
+    m.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute float letter;')
+        .replace(
+          '#include <uv_vertex>',
+          '#include <uv_vertex>\nvMapUv = (uv + vec2(mod(letter, 8.0), 7.0 - floor(letter / 8.0))) / 8.0;'
+        );
+    };
+    return m;
+  });
 }
 
 /* ---------- builders ---------- */
