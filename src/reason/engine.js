@@ -481,6 +481,7 @@ export class Game {
     c.setTransform(k, 0, 0, k, 0, 0);
     c.clearRect(0, 0, W, H);
     drawSky(c, this);
+    this.art?.back?.(c, this); // optional extra layers a game can add (screen space)
 
     const cam = this.cam;
     c.save();
@@ -516,6 +517,7 @@ export class Game {
     c.globalAlpha = 1;
     for (const e of ents) if (!e.hidden) e.drawOver?.(c, this);
     c.restore();
+    this.art?.front?.(c, this);
 
     drawAtmosphere(c, this);
     drawEffects(c, this);

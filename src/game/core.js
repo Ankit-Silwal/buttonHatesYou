@@ -178,12 +178,13 @@ export function spot(ax, ay, minD = 180) {
 }
 
 /* ---------- feedback ---------- */
-export function say(text) {
+// `beat` gives a scripted story moment a bigger entrance than filler chatter.
+export function say(text, beat = false) {
   if (!text) return;
   dom.line.textContent = text;
-  dom.line.classList.remove('in');
+  dom.line.classList.remove('in', 'beat');
   void dom.line.offsetWidth;
-  dom.line.classList.add('in');
+  dom.line.classList.add(beat ? 'beat' : 'in');
 }
 
 export function floatText(text, x, y, cls = '') {
@@ -197,10 +198,47 @@ export function floatText(text, x, y, cls = '') {
 
 export function shake(el = dom.app, power = 8, ms = 400) {
   if (reducedMotion() || !el) return;
+  // Decaying jolts with a hint of rotation, so it settles instead of stopping dead.
   const frames = [];
-  for (let i = 0; i < 8; i++) frames.push({ transform: `translate(${rand(-power, power)}px, ${rand(-power, power)}px)` });
+  for (let i = 0; i < 9; i++) {
+    const k = power * (1 - i / 10);
+    frames.push({ transform: `translate(${rand(-k, k)}px, ${rand(-k, k)}px) rotate(${rand(-k, k) * 0.06}deg)` });
+  }
   frames.push({ transform: 'none' });
-  el.animate(frames, { duration: ms });
+  el.animate(frames, { duration: ms, easing: 'ease-out' });
+}
+
+// A press: a ring of light around the button, a soft glow, and sparks flying
+// off where you hit it.
+export function pressFx(cx, cy, hx = cx, hy = cy, color) {
+  if (!dom.fx) return;
+  const ring = h('i', 'ripple');
+  const glow = h('i', 'burst');
+  for (const el of [ring, glow]) {
+    el.style.left = cx + 'px';
+    el.style.top = cy + 'px';
+    if (color) el.style.setProperty('--rc', color);
+    dom.fx.append(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+  if (reducedMotion()) return;
+  const n = 9;
+  for (let i = 0; i < n; i++) {
+    const s = h('i', 'spark');
+    if (color) s.style.setProperty('--sc', color);
+    s.style.left = hx + 'px';
+    s.style.top = hy + 'px';
+    dom.fx.append(s);
+    const a = (i / n) * Math.PI * 2 + rand(-0.3, 0.3);
+    const d = rand(40, 90);
+    s.animate(
+      [
+        { transform: 'translate(-50%,-50%) scale(1.2)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(0.2)`, opacity: 0 },
+      ],
+      { duration: rand(380, 600), easing: 'cubic-bezier(.15,.75,.35,1)' }
+    ).onfinish = () => s.remove();
+  }
 }
 
 export function flash(color = '#fff') {
@@ -213,7 +251,7 @@ export function flash(color = '#fff') {
 export function confetti(n = 150) {
   const cols = ['#e2674f', '#f0c36d', '#9bbf9a', '#8fb8d8', '#f3a6a0', '#c4a6dc'];
   for (let i = 0; i < n; i++) {
-    const c = h('i', 'confetti');
+    const c = h('i', 'confetti ' + pick(['', 'round', 'strip']));
     c.style.background = pick(cols);
     c.style.left = innerWidth / 2 + 'px';
     c.style.top = innerHeight / 2 + 'px';
@@ -223,7 +261,7 @@ export function confetti(n = 150) {
     c.animate(
       [
         { transform: 'translate(0,0) rotate(0)', opacity: 1 },
-        { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + 300}px) rotate(${rand(-720, 720)}deg)`, opacity: 0 },
+        { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + 300}px) rotate(${rand(-720, 720)}deg) rotateX(${rand(360, 1080)}deg)`, opacity: 0 },
       ],
       { duration: rand(1400, 2600), easing: 'cubic-bezier(.1,.7,.3,1)', fill: 'forwards' }
     ).onfinish = () => c.remove();
@@ -234,6 +272,14 @@ export function updateHud() {
   if (G.mode === 'post') dom.counter.textContent = `${G.post} / ${POST_GOAL}`;
   else if (G.mode === 'done') dom.counter.textContent = `${GOAL} / ${GOAL} ✓`;
   else dom.counter.textContent = `${G.clicks} / ${GOAL}`;
+  const p = G.mode === 'post' ? G.post / POST_GOAL : Math.min(1, G.clicks / GOAL);
+  dom.counter.style.setProperty('--p', (p * 100).toFixed(1) + '%');
+  if (dom.counter._last !== dom.counter.textContent) {
+    dom.counter._last = dom.counter.textContent;
+    dom.counter.classList.remove('bump');
+    void dom.counter.offsetWidth;
+    dom.counter.classList.add('bump');
+  }
   const hits = G.clicks - BOSS_AT;
   [...dom.bossbar.children].forEach((s, i) => s.classList.toggle('gone', i < hits));
 }

@@ -2,7 +2,7 @@ import { Sound } from './sound';
 import {
   G, dom, hooks, scope, wait, rand, pick, clamp, h,
   BOSS_AT, BOSS_HITS, GOAL, FRIENDS, save, makeChar, place, setMood,
-  say, floatText, shake, flash, confetti, updateHud, showSkips,
+  say, floatText, shake, flash, confetti, updateHud, showSkips, pressFx,
 } from './core';
 import { openSkip, closeSkip, loserStamp } from './skip';
 
@@ -105,6 +105,19 @@ async function next(fresh = false) {
   showSkips(true);
 }
 
+// The boss going pop: two big rings of light rolling out from the middle.
+function shockwave() {
+  for (const [delay, cls] of [[0, 'ripple shock'], [140, 'ripple shock late']]) {
+    scope.later(() => {
+      const r = h('i', cls);
+      r.style.left = innerWidth / 2 + 'px';
+      r.style.top = innerHeight / 2 + 'px';
+      dom.fx.append(r);
+      r.addEventListener('animationend', () => r.remove());
+    }, delay);
+  }
+}
+
 function hit(line, count = 1) {
   if (busy) return;
   busy = true;
@@ -145,6 +158,7 @@ async function win() {
   await wait(1800);
   b.remove();
   flash();
+  shockwave();
   confetti(180);
   Sound.boom();
   Sound.win();
@@ -468,28 +482,80 @@ function climb(round, done) {
     }
   }
 
+  // A soft round glow, drawn with a gradient (cheaper than shadowBlur).
+  function glow(x, y, r, color) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // A glossy ball: lit from the top left, darker at the bottom.
+  function ball(x, y, r, light, mid, dark) {
+    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    g.addColorStop(0, light);
+    g.addColorStop(0.5, mid);
+    g.addColorStop(1, dark);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(x - r * 0.32, y - r * 0.5, r * 0.32, r * 0.16, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const groundFill = ctx.createLinearGradient(0, groundY, 0, H);
+  groundFill.addColorStop(0, '#3a2142');
+  groundFill.addColorStop(1, '#170c1c');
+
   function draw() {
     ctx.clearRect(0, 0, W, H);
     for (const p of plats) {
       if (p.state === 'gone') continue;
       const sx = p.state === 'shaking' ? rand(-2, 2) : 0;
-      ctx.fillStyle = p.ground ? '#2c1a33' : p.crumble ? '#d9a35a' : '#f0c36d';
-      rr(p.x + sx, p.y, p.w, p.ground ? H - p.y : 14, p.ground ? 0 : 7);
+      if (p.ground) {
+        ctx.fillStyle = groundFill;
+        ctx.fillRect(0, p.y, W, H - p.y);
+        ctx.fillStyle = 'rgba(255, 110, 140, 0.55)';
+        ctx.fillRect(0, p.y, W, 2);
+        continue;
+      }
+      const x = p.x + sx;
+      glow(x + p.w / 2, p.y + 7, p.w * 0.62, p.crumble ? 'rgba(217,163,90,0.18)' : 'rgba(240,195,109,0.2)');
+      const g = ctx.createLinearGradient(0, p.y, 0, p.y + 14);
+      g.addColorStop(0, p.crumble ? '#f0c690' : '#ffe2a0');
+      g.addColorStop(0.45, p.crumble ? '#d9a35a' : '#f0c36d');
+      g.addColorStop(1, p.crumble ? '#9c6c34' : '#c18f3c');
+      ctx.fillStyle = g;
+      rr(x, p.y, p.w, 14, 7);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      rr(x + 6, p.y + 2, p.w - 12, 2.5, 2);
     }
     const by = boss.y + Math.sin(t * 3) * 3;
-    ctx.fillStyle = '#ff4d3d';
-    ctx.beginPath();
-    ctx.arc(boss.x, by, boss.r, 0, Math.PI * 2);
-    ctx.fill();
+    glow(boss.x, by, boss.r * 2.4, `rgba(255,77,61,${0.32 + Math.sin(t * 4) * 0.08})`);
+    ball(boss.x, by, boss.r, '#ff9f8a', '#ff4d3d', '#a3201a');
     eyes(boss.x, by, boss.r, Math.sign(pl.x - boss.x), true);
-    ctx.fillStyle = '#ffb3a7';
     for (const o of orbs) {
-      ctx.beginPath();
-      ctx.arc(o.x, o.y, 10, 0, Math.PI * 2);
-      ctx.fill();
+      glow(o.x, o.y, 24, 'rgba(255,140,120,0.45)');
+      ball(o.x, o.y, 10, '#fff1ec', '#ffb3a7', '#e0705f');
     }
-    ctx.fillStyle = '#9bbf9a';
-    rr(pl.x - pl.s / 2, pl.y - pl.s / 2, pl.s, pl.s, 8);
+    // the player: a little green keycap with a soft shadow under it
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(pl.x, pl.y + pl.s / 2 + 2, pl.s * 0.5, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#5f8a5e';
+    rr(pl.x - pl.s / 2, pl.y - pl.s / 2 + 3, pl.s, pl.s, 8);
+    const pg = ctx.createLinearGradient(0, pl.y - pl.s / 2, 0, pl.y + pl.s / 2);
+    pg.addColorStop(0, '#c6e2c4');
+    pg.addColorStop(1, '#8db58c');
+    ctx.fillStyle = pg;
+    rr(pl.x - pl.s / 2, pl.y - pl.s / 2, pl.s, pl.s - 2, 8);
     eyes(pl.x, pl.y, pl.s * 0.6, pl.face, false);
   }
 
@@ -859,6 +925,7 @@ function mash(done) {
     boss.classList.add('press');
     setTimeout(() => boss.classList.remove('press'), 80);
     floatText(pick(['POW', 'BAM', 'OOF', 'ow', '!!']), e.clientX, e.clientY - 20, 'hot');
+    pressFx(boss._x, boss._y, e.clientX, e.clientY, 'rgba(255, 150, 90, 0.95)');
     shake(dom.app, 4 + count / 3, 200);
     size();
     if (count === 12) {
