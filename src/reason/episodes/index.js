@@ -7,6 +7,18 @@ import ep6 from './ep6';
 import ep7 from './ep7';
 import ep8 from './ep8';
 import ep9 from './ep9';
+import * as m1 from './ep1';
+import * as m2 from './ep2';
+import * as m3 from './ep3';
+import * as m4 from './ep4';
+import * as m5 from './ep5';
+import * as m6 from './ep6';
+import * as m7 from './ep7';
+import * as m8 from './ep8';
+import * as m9 from './ep9';
+import * as actors from '../actors';
+import * as bosses from '../bosses';
+import * as finale from '../finale';
 
 // The whole story, in order. `start` is what Bobby can already do when an
 // episode is played straight from the menu; story choices carry over from
@@ -31,3 +43,10 @@ export const EPISODES = [
 ];
 
 export const LAST = EPISODES.length;
+
+// Dev only: every level by name, so the art can be checked without playing up
+// to it (__reason.load(__reasonLevels.ep4.LEVEL)), plus the actor modules.
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+  window.__reasonLevels = { ep1: m1, ep2: m2, ep3: m3, ep4: m4, ep5: m5, ep6: m6, ep7: m7, ep8: m8, ep9: m9 };
+  window.__reasonMods = { actors, bosses, finale };
+}

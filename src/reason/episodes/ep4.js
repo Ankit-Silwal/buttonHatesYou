@@ -10,7 +10,7 @@ import { checkpointPost, coins, coreFragment, heartAt } from './common';
 // end with the Player's name.
 
 const W = 4300;
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'ruins',
   solids: [

@@ -10,7 +10,7 @@ import { checkpointPost, heartAt } from './common';
 
 const CLIMB_H = 1900;
 const FLOOR = CLIMB_H - 60;
-const CLIMB = {
+export const CLIMB = {
   w: 960,
   h: CLIMB_H,
   theme: 'tower',
@@ -35,7 +35,7 @@ const CLIMB = {
   spawn: { x: 100, y: FLOOR - 60 },
 };
 
-const CHAMBER = {
+export const CHAMBER = {
   w: 960,
   theme: 'chamber',
   coins: false,
