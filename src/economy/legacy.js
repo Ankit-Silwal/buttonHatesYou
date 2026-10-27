@@ -1,6 +1,8 @@
-// The wallet rules from before the economy rework (old prices, fixed rewards),
-// kept only to fold a guest's old event queue into a plain wallet once, so
-// nothing they earned or bought changes when prices go up. See store.js.
+// The wallet rules from before the economy rework (old outfit prices, fixed
+// rewards), kept only to fold a guest's old event queue into a plain wallet
+// once, so nothing they earned or bought changes when prices go up (see
+// migrate in store.js). Every other event (outfit changes, the house, needs)
+// goes through today's applyEvent.
 
 import { applyEvent, normalize } from './rules';
 
