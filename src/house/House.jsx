@@ -227,6 +227,11 @@ export default function House() {
             offer={food && !eating && !needs.asleep ? food.id : null}
             line={line}
             onPoke={poke}
+            onPick={(id) => {
+              if (trying === id) return;
+              setTab('furniture');
+              choose(id);
+            }}
           />
         </section>
 

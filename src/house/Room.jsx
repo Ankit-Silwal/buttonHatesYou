@@ -2,6 +2,7 @@
 
 import Avatar from '@/components/Avatar';
 import { Art, ART } from './art';
+import { HOUSE_ITEM } from '@/economy/house';
 
 // Paint order: things further back first.
 const ORDER = ['ceiling', 'wall-left', 'wall-right', 'corner', 'bed', 'rug', 'floor-right', 'floor-left'];
@@ -12,10 +13,12 @@ const aspect = (id) => {
   return `${w} / ${h}`;
 };
 
-function Piece({ spot, id, preview }) {
+function Piece({ spot, id, preview, onPick }) {
   return (
     <div
       className={`spot ${preview ? 'is-preview' : ''}`}
+      onClick={() => onPick?.(id)}
+      title={HOUSE_ITEM[id]?.name}
       data-spot={spot}
       data-item={id}
       style={{ '--w': ART[id].w, aspectRatio: aspect(id) }}
@@ -118,7 +121,7 @@ function WallScene({ wall }) {
 //   house     { wall, floor, place } to draw (already including any preview)
 //   preview   the spot (or 'wall' / 'floor') being previewed, for the outline
 //   mood, asleep, fx, eating: what the button is up to
-export default function Room({ house, preview, equipped, mood, asleep, fx, eating, offer, line, onPoke }) {
+export default function Room({ house, preview, equipped, mood, asleep, fx, eating, offer, line, onPoke, onPick }) {
   const placed = ORDER.filter((s) => house.place[s] && ART[house.place[s]]);
   const bed = house.place.bed;
   return (
@@ -132,7 +135,7 @@ export default function Room({ house, preview, equipped, mood, asleep, fx, eatin
       <i className="hs-shade" />
 
       {placed.filter((s) => BEHIND.has(s)).map((s) => (
-        <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} />
+        <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} onPick={onPick} />
       ))}
 
       <div className={`resident ${eating ? 'chomp' : ''}`} onClick={onPoke}>
@@ -155,7 +158,7 @@ export default function Room({ house, preview, equipped, mood, asleep, fx, eatin
       </div>
 
       {placed.filter((s) => !BEHIND.has(s)).map((s) => (
-        <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} />
+        <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} onPick={onPick} />
       ))}
 
       <i className="hs-dim" />
