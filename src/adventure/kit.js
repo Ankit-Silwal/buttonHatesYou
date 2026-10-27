@@ -244,6 +244,19 @@ export function bubble(c, x, y, str, { size = 15, bg = '#fff', color = '#2b1d17'
   text(c, str, bx + w / 2, by + h / 2 + 1, { size, color });
 }
 
+// A paid Continue brings the button back: a burst, a floating "Continue!"
+// and a grumble. `fx` needs .burst, `words` (optional) .float.
+const REVIVED = ['You PAID for this?', 'Diamonds. On me. Why.', 'I was finally free.', 'Round two. Ugh.', 'Back again. Great.'];
+export function reviveFx({ fx, words = fx, mouth, sound }, x, y, color = '#ffffff') {
+  fx.burst(x, y, '#8fe9ff', 20, 300);
+  fx.burst(x, y, color, 10, 200);
+  words.float?.(x, y + 36, 'Continue!', '#aef3ff');
+  mouth.say(pick(REVIVED), 2.2);
+  sound.win?.();
+}
+// The button blinks while it can't be hit (a few seconds after a Continue).
+export const blinkAlpha = (safe, t) => (safe > 0 && Math.floor(t * 12) % 2 ? 0.35 : 1);
+
 // Something the button says now and then: call `.say(text, sec)`, `.update(dt)`,
 // then `.draw(c, x, y)` above its head.
 export class Mouth {

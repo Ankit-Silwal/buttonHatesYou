@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, drawBobby, drawScore, Mouth } from '../kit';
+import { W, H, rand, pick, clamp, rr, drawBobby, drawScore, Mouth, reviveFx, blinkAlpha } from '../kit';
 import { Fx, sprite, sky, glow, softLight, rays, vignette, hash, rgba } from '../fx';
 
 // Sky Hop: the button bounces up cloud after cloud, as far from you as it can get.
@@ -32,6 +32,7 @@ export default function hop({ look, sound, keys }) {
   let nextMile = 500;
   let t = 0;
   let squash = 0;
+  let safe = 0; // blinks for a moment after a Continue
 
   // How far apart clouds are, and what kinds show up, depends on the height.
   const addCloud = (y, kind) => {
@@ -107,6 +108,21 @@ export default function hop({ look, sound, keys }) {
       pointer = null;
     },
 
+    // a paid Continue: a wide rescue cloud low on the screen catches the button
+    revive() {
+      g.over = false;
+      const y = cam + H * 0.74;
+      clouds.push({ x: W / 2, y, w: 200, kind: 'start', vx: 0, spring: null, sprung: 0, squish: 1, gone: false, fall: 0 });
+      me.x = W / 2;
+      me.y = y - FEET;
+      me.vx = 0;
+      me.vy = BOUNCE;
+      squash = 0.25;
+      safe = 1.5;
+      sound.jump();
+      reviveFx({ fx: sparks, mouth, sound }, me.x, y, look.color);
+    },
+
     update(dt) {
       t += dt;
       mouth.update(dt);
@@ -117,6 +133,7 @@ export default function hop({ look, sound, keys }) {
         sparks.mote(rand(0, W), cam + rand(0, H), '#ffffff', { vx: rand(-25, 25), vy: rand(-30, -8), r: rand(1, 2.2), life: rand(1.5, 3) });
       }
       squash = Math.max(0, squash - dt);
+      safe -= dt;
 
       // steer: keys push to full speed, a held pointer pulls toward its x
       let want = 0;
@@ -188,7 +205,7 @@ export default function hop({ look, sound, keys }) {
       for (const cl of clouds) cloud(c, cl, cl.y - cam, t, k);
 
       const mood = g.over ? 'shout' : me.vy < -1100 ? 'happy' : me.vy < 0 ? 'smug' : me.vy > 700 ? 'worried' : 'calm';
-      const opts = { look, t, mood, squash, facing: me.facing, angle: (me.vx / STEER) * 0.25, tears: g.over };
+      const opts = { look, t, mood, squash, facing: me.facing, angle: (me.vx / STEER) * 0.25, tears: g.over, alpha: blinkAlpha(safe, t) };
       const sy = me.y - cam;
       // a soft halo behind the button: sunlit by day, its own glow by night
       softLight(c, me.x, sy, SIZE * 1.3, '#ffffff', 0.35 * (1 - k));

@@ -1,4 +1,4 @@
-import { W, H, rand, clamp, drawBobby, drawScore, Mouth, Sparks, sprite, layer, scrollTile, vignette, glow, shadow, hash } from '../kit';
+import { W, H, rand, clamp, drawBobby, drawScore, Mouth, Sparks, reviveFx, blinkAlpha, sprite, layer, scrollTile, vignette, glow, shadow, hash } from '../kit';
 
 // Flappy Regret: tap to flap the button through gaps in the pipes.
 const GRAVITY = 1500;
@@ -21,6 +21,8 @@ export default function flap({ look, sound }) {
   let t = 0;
   let scroll = 0;
   let squash = 0;
+  let hold = false; // after a Continue: hover until the next tap
+  let safe = 0; // and pipes can't hit it for a moment after that
 
   const gap = () => clamp(210 - g.score * 3, 150, 210);
   const addPipe = (x) => {
@@ -45,6 +47,10 @@ export default function flap({ look, sound }) {
       started = true;
       addPipe(W + 60);
     }
+    if (hold) {
+      hold = false;
+      safe = 1.5;
+    }
     me.vy = FLAP;
     squash = 0.18;
     sparks.burst(me.x - 6, me.y + SIZE * 0.4, '#fff4ea', 3, 90); // a puff of air
@@ -65,9 +71,11 @@ export default function flap({ look, sound }) {
       mouth.update(dt);
       sparks.update(dt);
       squash = Math.max(0, squash - dt);
+      safe -= dt;
 
-      if (!started) {
+      if (!started || hold) {
         me.y = H * 0.42 + Math.sin(t * 3) * 10; // hover until the first tap
+        me.angle = 0;
         return;
       }
 
@@ -100,10 +108,21 @@ export default function flap({ look, sound }) {
         const nx = clamp(me.x, p.x, p.x + PIPE_W);
         const hitsTop = Math.hypot(me.x - nx, me.y - clamp(me.y, -100, p.top)) < r;
         const hitsBottom = Math.hypot(me.x - nx, me.y - clamp(me.y, p.top + p.size, H)) < r;
-        if (hitsTop || hitsBottom) crash();
+        if ((hitsTop || hitsBottom) && safe <= 0) crash();
       }
       if (pipes.length && pipes[0].x < -PIPE_W) pipes.shift();
       if (pipes[pipes.length - 1].x < W - SPACING) addPipe(W + 20);
+    },
+
+    // a paid Continue: clear the pipes near the button and hover until a tap
+    revive() {
+      g.over = false;
+      hold = true;
+      me.vy = 0;
+      me.y = H * 0.42;
+      for (let i = pipes.length - 1; i >= 0; i--) if (pipes[i].x < me.x + 220) pipes.splice(i, 1);
+      if (!pipes.length) addPipe(W + 60);
+      reviveFx({ fx: sparks, mouth, sound }, me.x, me.y, look.color);
     },
 
     draw(c) {
@@ -146,6 +165,7 @@ export default function flap({ look, sound }) {
         squash,
         mood: g.over ? 'sad' : me.vy < -150 ? 'shout' : 'worried',
         tears: g.over,
+        alpha: blinkAlpha(safe, t),
       });
       wing(c, me, 1, beat);
 
@@ -153,7 +173,8 @@ export default function flap({ look, sound }) {
       vignette(c, 0.42, '#12061f');
       mouth.draw(c, me.x, me.y - SIZE * 0.7);
 
-      if (started) drawScore(c, g.score);
+      if (hold) drawScore(c, g.score, 'Tap to flap on');
+      else if (started) drawScore(c, g.score);
       else drawScore(c, 'Tap to flap', 'It will complain. Ignore it.');
     },
   };

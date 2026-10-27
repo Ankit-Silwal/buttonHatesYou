@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, drawBobby, drawScore, bubble, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, drawBobby, drawScore, bubble, Mouth, Sparks, reviveFx } from '../kit';
 import { Fx, sprite, sky, glow, softLight, rays, shadow, vignette, hash, rgb } from '../fx';
 
 // Tower of Regret: drop swinging button clones on top of each other. Whatever
@@ -123,6 +123,21 @@ export default function stack({ look, sound }) {
     down: drop,
     key(code) {
       if (code === 'Space' || code === 'ArrowDown' || code === 'Enter') drop();
+    },
+
+    // a paid Continue: the missed clone falls away, the top of the tower
+    // grows back to a fair width, and a fresh clone swings in
+    revive() {
+      g.over = false;
+      debris.push({ x: slab.x, y: slab.y + SLAB_H / 2, w: slab.w, vx: slab.va * 30, vy: slab.vy, angle: slab.angle, va: slab.va, hue: hueOf(floors.length), scream: pick(SCREAMS) });
+      const last = floors[floors.length - 1];
+      last.w = Math.max(last.w, Math.min(START_W * 0.75, 2 * Math.min(last.x, W - last.x) - 24));
+      slab.angle = 0;
+      slab.va = 0;
+      nextSlab();
+      flash = 0.5;
+      fx.ring(last.x, top(), '#aef3ff', last.w * 0.8, 0.45, 8);
+      reviveFx({ fx, words: sparks, mouth, sound }, last.x, top() - 10, look.color);
     },
 
     update(dt) {

@@ -1,4 +1,4 @@
-import { W, H, pick, clamp, dist, text, drawBobby, drawScore, Mouth, Sparks, sprite, layer, vignette, glow, shadow, rgba, hash } from '../kit';
+import { W, H, pick, clamp, dist, text, drawBobby, drawScore, Mouth, Sparks, reviveFx, sprite, layer, vignette, glow, shadow, rgba, hash } from '../kit';
 
 // Copy Me: the button plays a tune on its four friends, you play it back.
 const CX = W / 2;
@@ -103,6 +103,16 @@ export default function simon({ look, sound }) {
     },
     key(code) {
       press(KEYS[code]);
+    },
+
+    // a paid Continue: the button plays the same tune again, and you try again
+    revive() {
+      g.over = false;
+      wrongPad = -1;
+      mode = 'wait';
+      step = 0;
+      timer = 1.6;
+      reviveFx({ fx: sparks, mouth, sound }, CX, CY, look.color);
     },
 
     update(dt) {

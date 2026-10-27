@@ -256,3 +256,60 @@
   pointer-events: none;
 }
 @keyframes advHalo { 50% { opacity: 1; transform: scale(1.03); } }
+
+/* ---------- the Continue offer (diamonds), over the frozen game ---------- */
+.adv-continue .adv-card { padding-top: 22px; }
+.cont-ring { position: relative; width: 92px; height: 92px; }
+.cont-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.cont-ring circle { fill: none; stroke-width: 7; }
+.cont-ring .track { stroke: color-mix(in srgb, var(--art, var(--btn)) 16%, transparent); }
+.cont-ring .left {
+  stroke: var(--art, var(--btn));
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--art, var(--btn)) 70%, transparent));
+  animation: contDrain var(--sec, 5s) linear forwards;
+}
+.cont-ring.paused .left { animation-play-state: paused; }
+@keyframes contDrain { to { stroke-dashoffset: 100; } }
+.cont-ring span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.adv-card h2.cont-title { margin-top: 10px; font-size: 40px; }
+.adv-card .cont-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.adv-card .cont-meta span {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--art, var(--btn)) 14%, transparent);
+  color: var(--ink);
+}
+.adv-card .cont-meta span.short { background: rgba(214, 60, 60, 0.14); color: #b3302a; }
+.adv-card .pill.cont-yes {
+  /* diamonds: a cool, gem-blue button instead of the usual red */
+  --btn: #3aa6ff;
+  --btn-dark: #1f6fc0;
+  color: #fff;
+}
+.adv-card .pill.cont-yes:disabled { filter: grayscale(0.85) opacity(0.55); cursor: not-allowed; transform: none; }
+.adv-card .pill.cont-yes:disabled::after { animation: none; }
+.adv-card .cont-hint { font-size: 14px; }
+.adv-card .cont-hint a { color: var(--ink); font-weight: 700; }
+.adv-card .pill.cont-no { margin-top: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .cont-ring .left { animation-timing-function: steps(5, end); }
+}

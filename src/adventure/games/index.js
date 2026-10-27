@@ -19,4 +19,11 @@ import buttonRun from './button-run';
 //   coins                   (Button Run) coins picked up, paid 1:1
 // and, optionally, the input it cares about (game coordinates):
 //   down(x, y), move(x, y), up(x, y), key(code)
+// and, optionally,
+//   revive()                a paid "Continue" (diamonds): called once the run
+//                           is over; sets `over` back to false and puts the
+//                           game in a fair, playable state at the same score
+//                           (clears what crashed it, gives back a life, time
+//                           or taps, a moment of blinking safety...). Games
+//                           without it never offer a Continue.
 export const CREATE = { flap, pop, catch: catchGame, simon, hop, whack, run, stack, slice, 'button-run': buttonRun };

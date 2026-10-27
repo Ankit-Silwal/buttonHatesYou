@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, heart, text, drawBobby, drawScore, Mouth, Sparks, sprite, layer, vignette, glow, softLight, shadow, hash } from '../kit';
+import { W, H, rand, pick, clamp, rr, heart, text, drawBobby, drawScore, Mouth, Sparks, reviveFx, blinkAlpha, sprite, layer, vignette, glow, softLight, shadow, hash } from '../kit';
 
 // Snack Attack: slide the button left and right to catch falling snacks and
 // dodge the bombs. Three lives; a missed snack costs nothing.
@@ -31,6 +31,7 @@ export default function catchGame({ look, sound, keys }) {
   let chomp = 0;
   let hurt = 0;
   let shake = 0;
+  let safe = 0; // bombs pass through for a moment after a Continue
 
   // the longer you last, the faster and thicker things fall
   const interval = () => clamp(0.95 - t * 0.01, 0.38, 0.95);
@@ -86,6 +87,22 @@ export default function catchGame({ look, sound, keys }) {
       held = false;
     },
 
+    // a paid Continue: one life back, the bombs in the air gone, a moment of safety
+    revive() {
+      g.over = false;
+      lives = Math.max(lives, 1);
+      hurt = 0;
+      safe = 2;
+      next = 0.8;
+      for (const it of items) {
+        if (it.kind !== 'bomb') continue;
+        it.done = true;
+        sparks.burst(it.x, it.y, '#cfd6e2', 6, 140);
+      }
+      for (let i = items.length - 1; i >= 0; i--) if (items[i].done) items.splice(i, 1);
+      reviveFx({ fx: sparks, mouth, sound }, me.x, me.y, look.color);
+    },
+
     update(dt) {
       t += dt;
       mouth.update(dt);
@@ -94,6 +111,7 @@ export default function catchGame({ look, sound, keys }) {
       chomp = Math.max(0, chomp - dt);
       hurt = Math.max(0, hurt - dt);
       shake = Math.max(0, shake - dt);
+      safe -= dt;
 
       const was = me.x;
       if (!g.over) {
@@ -130,6 +148,7 @@ export default function catchGame({ look, sound, keys }) {
           it.y + it.r > me.y - SIZE * 0.45 &&
           it.y < me.y + SIZE * 0.25 &&
           Math.abs(it.x - me.x) < SIZE * 0.5 + it.r * 0.4;
+        if (caught && it.kind === 'bomb' && safe > 0) continue;
         if (caught) {
           it.done = true;
           if (it.kind === 'bomb') boom(it);
@@ -187,6 +206,7 @@ export default function catchGame({ look, sound, keys }) {
         flash: hurt > 0.45,
         mood: g.over ? 'sad' : hurt ? 'angry' : incoming && !chomp ? 'shout' : chomp ? 'happy' : 'smug',
         tears: g.over,
+        alpha: blinkAlpha(safe, t),
       });
 
       sparks.draw(c);

@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, text, drawScore, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, text, drawScore, Mouth, Sparks, reviveFx } from '../kit';
 import { createWorld } from '../run3d/world';
 
 // Button Run: a 3D dash down three lanes of a giant keyboard, seen from just
@@ -470,7 +470,7 @@ export default function buttonRun({ look, sound }) {
       overT += dt;
       speed = Math.max(0, speed - 30 * dt);
       me.spin += dt * 5;
-    } else speed = Math.min(TOP_SPEED, START_SPEED + t * 0.16);
+    } else speed = Math.min(TOP_SPEED, START_SPEED + t * 0.16, speed + 6 * dt); // eases back up after a Continue
 
     const move = speed * dt;
     for (const o of things) o.z -= move + (o.moving && !g.over ? SPAM_SPEED * dt : 0);
@@ -561,6 +561,31 @@ export default function buttonRun({ look, sound }) {
       else if (code === 'ArrowRight' || code === 'KeyD') shift(1);
       else if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') jumpNow();
       else if (code === 'ArrowDown' || code === 'KeyS') slideNow();
+    },
+
+    // a paid Continue: clear the track near the button, put it back on the
+    // desk in its lane, and give it a couple of seconds of safety
+    revive() {
+      g.over = false;
+      for (let i = things.length - 1; i >= 0; i--) if (things[i].z < 28) things.splice(i, 1);
+      me.from = me.lane;
+      me.x = LANES[me.lane];
+      me.y = 0;
+      me.vy = 0;
+      me.ground = true;
+      me.slide = 0;
+      me.spin = 0;
+      me.pitch = 0;
+      speed = Math.max(speed, START_SPEED * 0.6);
+      overT = 0;
+      chase = 0;
+      buffer = 0;
+      press = null;
+      safe = 2.2;
+      flash = { color: '#8fe9ff', left: 0.35 };
+      lookBack(1.2);
+      const [sx, sy] = P(me.x, me.y + 0.5, 0);
+      reviveFx({ fx: sparks, mouth, sound }, sx, sy, look.color);
     },
 
     update(dt) {

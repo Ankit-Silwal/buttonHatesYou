@@ -145,8 +145,12 @@ function earn(ev) {
 
 // A finished Adventure run: { game, score, extra (Button Run's coins), ms of play }.
 // Returns the payout; the server works it out again from the same numbers.
-export const recordRun = ({ game, score, extra = 0, ms }) =>
-  earn({ type: 'run', game, score: Math.floor(score), extra: Math.floor(extra), ms: Math.round(ms), at: Date.now() });
+export const recordRun = ({ game, score, extra = 0, ms, continues = 0 }) =>
+  earn({ type: 'run', game, score: Math.floor(score), extra: Math.floor(extra), ms: Math.round(ms), at: Date.now(), ...(continues ? { continues } : {}) });
+
+// Paying diamonds for the nth Continue of a run (see economy/rules.js).
+// False when the wallet can't afford it.
+export const continueRun = (game, n) => tryRecord({ type: 'continue', game, n, at: Date.now() });
 
 // A finished story part (an id in STORY_REWARDS). Pays once; null after that.
 export const claimStory = (claim) => earn({ type: 'claim', claim });

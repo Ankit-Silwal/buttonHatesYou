@@ -7,11 +7,17 @@ import { DEFAULT_NEEDS, PLAY_COST, needsAt, normalizeNeeds } from './needs';
 // works offline) and queues them; the server replays the queue and its answer
 // becomes the new truth.
 //
-//   { id, type: 'run', game, score, extra, ms, at }
+//   { id, type: 'run', game, score, extra, ms, at, continues }
 //                                       finished an Adventure run: its score,
 //                                       `extra` (Button Run: coins picked up),
 //                                       `ms` of play and when it ended; the
-//                                       payout is worked out here, not sent
+//                                       payout is worked out here, not sent.
+//                                       `continues` (optional, informational):
+//                                       how many paid Continues it used; their
+//                                       play time is already in `ms`
+//   { id, type: 'continue', game, n, at }
+//                                       paid diamonds to carry on a run (see
+//                                       applyContinueEvent at the bottom)
 //   { id, type: 'claim', claim }        finished a story part (STORY_REWARDS);
 //                                       pays once per wallet, ever
 //   { id, type: 'reward', game }        old fixed payout from REWARDS: only
@@ -53,6 +59,8 @@ export function applyEvent(wallet, ev, now = Infinity) {
   wallet = normalize(wallet);
   const house = applyHouseEvent(wallet, ev, now);
   if (house !== undefined) return house;
+  const cont = applyContinueEvent(wallet, ev);
+  if (cont !== undefined) return cont;
 
   /* ---------- earning (economy) ---------- */
   if (ev.type === 'run') return applyRun(wallet, ev, now);
@@ -282,4 +290,28 @@ function applyHouseEvent(wallet, ev, now) {
   }
 
   return undefined;
+}
+
+/* =====================================================================
+   Continue with diamonds (Adventure)
+   =====================================================================
+   { id, type: 'continue', game, n, at }
+   When a run ends the player may pay diamonds to carry on from where it
+   ended, keeping the score: the nth Continue of a run costs
+   CONTINUE_COST[n - 1] diamonds, and a run has at most MAX_CONTINUES.
+   It only spends; the run event at the end still pays by the final score
+   through applyRun, whose caps already count the continued play time. */
+
+export const CONTINUE_COST = Object.freeze([1, 2, 3]);
+export const MAX_CONTINUES = CONTINUE_COST.length;
+export const continueCost = (n) => (Number.isInteger(n) && n >= 1 ? (CONTINUE_COST[n - 1] ?? null) : null);
+
+// The new wallet, null when the event is not allowed, or undefined when it
+// isn't a continue event at all.
+function applyContinueEvent(wallet, ev) {
+  if (ev.type !== 'continue') return undefined;
+  const game = own(GAME, ev.game);
+  const cost = continueCost(ev.n);
+  if (!game?.payout || cost == null || wallet.diamonds < cost) return null;
+  return { ...wallet, diamonds: wallet.diamonds - cost };
 }

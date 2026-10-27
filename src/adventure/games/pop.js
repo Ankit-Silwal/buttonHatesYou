@@ -1,4 +1,4 @@
-import { W, H, rand, pick, text, drawBobby, drawScore, Mouth, Sparks, sprite, layer, vignette, glow, softLight, hash } from '../kit';
+import { W, H, rand, pick, text, drawBobby, drawScore, Mouth, Sparks, reviveFx, sprite, layer, vignette, glow, softLight, hash } from '../kit';
 
 // Pop Tantrum: tap groups of 2+ same-colored buttons to pop them. 25 taps.
 const COLS = 8;
@@ -8,6 +8,7 @@ const GX = (W - COLS * CELL) / 2;
 const GY = 168;
 const FACE = 44;
 const TAPS = 25;
+const MORE_TAPS = 10; // a paid Continue adds this many
 const GOAL = 1500; // matches the catalog, only used for the ending mood
 const FALL = 2600;
 const ME = { x: 74, y: H - 46, size: 58 };
@@ -34,6 +35,7 @@ export default function pop({ look, sound }) {
   const mouth = new Mouth();
   const sparks = new Sparks();
   let used = 0;
+  let taps = TAPS; // grows with each Continue
   let t = 0;
   let squash = 0;
   let sulk = 0; // how long the main button stays upset after a pop
@@ -126,7 +128,7 @@ export default function pop({ look, sound }) {
     refill();
     if (!anyMove()) for (const col of cols) for (const cell of col) cell.k = Math.floor(Math.random() * PALETTE.length);
 
-    if (used >= TAPS) {
+    if (used >= taps) {
       g.over = true;
       mouth.say(pick(g.score >= GOAL ? DONE_GOOD : DONE_BAD), 3);
       if (g.score >= GOAL) sound.sob();
@@ -139,6 +141,15 @@ export default function pop({ look, sound }) {
     score: 0,
     over: false,
     down: tap,
+
+    // a paid Continue: more taps, same board, same score
+    revive() {
+      g.over = false;
+      taps = used + MORE_TAPS;
+      sulk = 0;
+      reviveFx({ fx: sparks, mouth, sound }, ME.x + 20, ME.y - 30, look.color);
+      sparks.float(W - 100, ME.y - 34, `+${MORE_TAPS} taps`, '#aef3ff');
+    },
 
     update(dt) {
       t += dt;
@@ -210,7 +221,7 @@ export default function pop({ look, sound }) {
         tears: g.over && g.score >= GOAL,
       });
       // taps left, on a glowing chip that turns red near the end
-      const left = TAPS - used;
+      const left = taps - used;
       const low = left <= 5;
       const pulse = low && !g.over ? 0.5 + Math.sin(t * 8) * 0.5 : 0;
       if (low) glow(c, W - 100, ME.y, 80, '#ff3a5a', 0.35 + pulse * 0.35);

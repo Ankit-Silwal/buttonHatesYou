@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, text, dist, drawBobby, drawScore, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, text, dist, drawBobby, drawScore, Mouth, Sparks, reviveFx, blinkAlpha } from '../kit';
 import { Fx, sprite, glow, rays, fade, shadow, vignette, hash } from '../fx';
 
 // Run Away: the button grew legs and sprints right, away from your cursor.
@@ -46,6 +46,7 @@ export default function run({ look, sound, keys }) {
   let cursorX = 80;
   let chatter = 3;
   let t = 0;
+  let safe = 0; // can't crash for a moment after a Continue
 
   const meters = () => Math.floor(ran / PER_METER);
 
@@ -129,6 +130,21 @@ export default function run({ look, sound, keys }) {
       if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') jumpNow();
     },
 
+    // a paid Continue: clear what's near, back on its feet, a moment of safety
+    revive() {
+      g.over = false;
+      for (let i = things.length - 1; i >= 0; i--) if (things[i].x < ME_X + 380) things.splice(i, 1);
+      ahead = Math.max(ahead, Math.min(TOP_SPEED, START_SPEED + t * 4) * 1.2);
+      me.y = GROUND - FOOT;
+      me.vy = 0;
+      me.ground = true;
+      me.angle = 0;
+      press = null;
+      safe = 2;
+      cursorX = 40;
+      reviveFx({ fx, words: sparks, mouth, sound }, ME_X, me.y, look.color);
+    },
+
     update(dt) {
       t += dt;
       mouth.update(dt);
@@ -141,6 +157,7 @@ export default function run({ look, sound, keys }) {
         fx.mote(ME_X - 10, GROUND - 3, '#e9c495', { vx: -speed * 0.5 + rand(-20, 20), vy: rand(-40, -10), r: rand(2, 3.5), life: 0.35, add: false });
       }
       squash = Math.max(0, squash - dt);
+      safe -= dt;
       buffer -= dt;
       coyote -= dt;
       duckLeft -= dt;
@@ -168,7 +185,7 @@ export default function run({ look, sound, keys }) {
       if (g.over) {
         speed = Math.max(0, speed - 900 * dt);
         me.angle += (me.ground ? 0 : -4) * dt;
-      } else speed = Math.min(TOP_SPEED, START_SPEED + t * 4);
+      } else speed = Math.min(TOP_SPEED, START_SPEED + t * 4, speed + 300 * dt); // eases back up after a Continue
 
       // run off the edge of a gap
       if (me.ground && overGap()) {
@@ -188,7 +205,7 @@ export default function run({ look, sound, keys }) {
           for (let i = 0; i < 7; i++) fx.mote(ME_X + rand(-18, 18), GROUND - 2, '#f3d2a2', { vx: rand(-140, 80), vy: rand(-50, -10), r: rand(3, 6), life: 0.5, add: false, drag: 3 });
           if (g.over) me.angle = 0;
           if (buffer > 0) jumpNow();
-        } else if (feet > GROUND + 10 && !g.over) crash(true);
+        } else if (feet > GROUND + 10 && !g.over && safe <= 0) crash(true);
       }
 
       // the cursor creeps closer, and pounces once it is over
@@ -216,7 +233,7 @@ export default function run({ look, sound, keys }) {
         if (o.kind === 'gap' || o.x + 4 > box.r || o.x + o.w - 4 < box.l) continue;
         const top = o.kind === 'ad' ? AD_BOTTOM - o.h : GROUND - o.h;
         const bottom = o.kind === 'ad' ? AD_BOTTOM : GROUND;
-        if (box.b > top + 4 && box.t < bottom - 2) {
+        if (box.b > top + 4 && box.t < bottom - 2 && safe <= 0) {
           crash(false);
           return;
         }
@@ -276,6 +293,7 @@ export default function run({ look, sound, keys }) {
         moving: !g.over && me.ground,
         mood: g.over ? 'sad' : duck > 0.2 ? 'worried' : !me.ground ? 'shout' : 'angry',
         tears: g.over,
+        alpha: blinkAlpha(safe, t),
       });
 
       cursor(c, cursorX, GROUND - 70 + Math.sin(t * 5) * 6, t);

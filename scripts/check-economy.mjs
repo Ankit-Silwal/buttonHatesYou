@@ -83,6 +83,27 @@ const old = legacyReplay({ coins: 50, diamonds: 0, owned: [], equipped: START.eq
 ]);
 assert.deepEqual([old.coins, old.owned, old.equipped.eyes], [28, ['eyes-sleepy'], 'eyes-sleepy']);
 
+// Continue with diamonds: 1, 2, then 3 diamonds, at most 3 per run
+const { continueCost, MAX_CONTINUES } = await import('../src/economy/rules.js');
+assert.deepEqual([continueCost(1), continueCost(2), continueCost(3), continueCost(4), MAX_CONTINUES], [1, 2, 3, null, 3]);
+let c = { ...START, coins: 0, diamonds: 7 };
+c = applyEvent(c, { type: 'continue', game: 'flap', n: 1, at: T });
+c = applyEvent(c, { type: 'continue', game: 'flap', n: 2, at: T + 1 });
+assert.equal(c.diamonds, 4);
+assert.equal(applyEvent({ ...c, diamonds: 2 }, { type: 'continue', game: 'flap', n: 3, at: T }), null, "can't afford");
+assert.equal(applyEvent(c, { type: 'continue', game: 'flap', n: 4, at: T }), null, 'at most 3');
+for (const n of [0, -1, 1.5, '1', null]) assert.equal(applyEvent(c, { type: 'continue', game: 'flap', n }), null);
+assert.equal(applyEvent(c, { type: 'continue', game: 'nope', n: 1 }), null);
+assert.equal(applyEvent(c, { type: 'continue', game: 'the-reason', n: 1 }), null, 'Adventure games only');
+// replayed like any other event: the queue can't overspend
+assert.equal(replay({ ...START, diamonds: 3 }, [1, 2, 3].map((n) => ({ type: 'continue', game: 'pop', n }))).diamonds, 0);
+// a continued run pays by its final score over all its play time: 3 segments
+// of 20 s with 12 pipes each still fit the 1.5 pipes/s cap
+const runEv = { type: 'run', game: 'flap', score: 36, ms: 60_000, at: T, continues: 2 };
+assert.equal(applyEvent({ ...START, coins: 0 }, runEv).coins, adventurePayout('flap', 36));
+// and old run events without `continues` pay the same
+assert.equal(applyEvent({ ...START, coins: 0 }, { ...runEv, continues: undefined }).coins, adventurePayout('flap', 36));
+
 // Print the tables for the README
 const typical = { flap: [10, 20, 30], pop: [1000, 2000, 3000], catch: [25, 50, 75], simon: [5, 10, 15], hop: [2000, 4000, 6000], whack: [20, 40, 60], run: [600, 1200, 1800], stack: [12, 24, 36], slice: [30, 60, 90] };
 for (const g of GAMES.filter((g) => g.payout && !g.payout.coins))

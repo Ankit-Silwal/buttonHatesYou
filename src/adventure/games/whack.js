@@ -1,9 +1,10 @@
-import { W, H, rand, pick, clamp, rr, heart, text, drawBobby, drawScore, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, heart, text, drawBobby, drawScore, Mouth, Sparks, reviveFx } from '../kit';
 import { Fx, sprite, makeCanvas, glow, rays, vignette, hash } from '../fx';
 
 // Whack-a-Button: clones of the button pop out of nine holes. Bonk them, but
 // not the ones holding a heart. 45 seconds on the clock.
 const TIME = 45;
+const MORE_TIME = 15; // seconds a paid Continue puts back on the clock
 const SIZE = 84;
 const COLS = [100, 240, 380];
 const ROWS = [330, 480, 630];
@@ -32,13 +33,14 @@ export default function whack({ look, sound }) {
   let pollen = 0;
   const talk = { x: W / 2, y: 260 };
   let left = TIME;
+  let extra = 0; // seconds added by Continues, so the pace keeps rising
   let t = 0;
   let next = 0.6; // seconds until the next clone pops up
   let chat = 4;
   let lastTick = TIME;
 
   // later clones come faster and duck sooner, and more of them at once
-  const played = () => TIME - left;
+  const played = () => TIME + extra - left;
   const interval = () => clamp(0.8 - played() * 0.011, 0.38, 0.8);
   const stay = () => clamp(1.05 - played() * 0.013, 0.5, 1.05);
   const most = () => Math.min(4, 1 + Math.floor(played() / 14));
@@ -133,6 +135,18 @@ export default function whack({ look, sound }) {
       swing(HOLES[i].x, cl ? centerY(cl) - SIZE * 0.3 : HOLES[i].y - 10);
       if (cl) bonk(cl);
       else sound.click();
+    },
+
+    // a paid Continue: more time on the clock, same score, same pace
+    revive() {
+      g.over = false;
+      extra += MORE_TIME;
+      left = MORE_TIME;
+      lastTick = Math.ceil(left);
+      next = 0.4;
+      reviveFx({ fx, words: sparks, mouth, sound }, W / 2, 250, look.color);
+      talk.x = W / 2;
+      talk.y = 230;
     },
 
     update(dt) {

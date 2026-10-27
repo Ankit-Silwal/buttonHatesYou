@@ -1,4 +1,4 @@
-import { W, H, rand, pick, clamp, rr, text, heart, drawBobby, drawScore, bubble, Mouth, Sparks } from '../kit';
+import { W, H, rand, pick, clamp, rr, text, heart, drawBobby, drawScore, bubble, Mouth, Sparks, reviveFx } from '../kit';
 import { Fx, sprite, glow, shadow, vignette, hash } from '../fx';
 
 // Slice Spree: fruit and junk are tossed up from the bottom. Swipe across them
@@ -190,6 +190,23 @@ export default function slice({ look, sound }) {
       if (!held) return;
       held = false;
       endSwipe();
+    },
+
+    // a paid Continue: a life back, everything in the air (the button too)
+    // cleared away, and a short breather before the next wave
+    revive() {
+      g.over = false;
+      lives = Math.max(lives, 1);
+      for (const it of items) fx.burst(it.x, it.y, '#cfefff', 8, 180);
+      items.length = 0;
+      queue.length = 0;
+      hurt = null;
+      shout = '';
+      flash = 0;
+      held = false;
+      hits = 0;
+      wave = 1.4;
+      reviveFx({ fx, words: sparks, mouth, sound }, W / 2, H / 2, look.color);
     },
 
     update(dt) {
