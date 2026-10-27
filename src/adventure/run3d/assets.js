@@ -13,7 +13,7 @@ export function getRenderer() {
       renderer.shadowMap.type = THREE.PCFShadowMap;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.1;
+      renderer.toneMappingExposure = 1.6;
     } catch (err) {
       console.error('Button Run needs WebGL', err);
       renderer = null;

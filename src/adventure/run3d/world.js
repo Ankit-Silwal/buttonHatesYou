@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { getRenderer, once, geo, mat, mesh, canvasTexture, labelPlane, cursor3d, rr, FONT } from './assets';
 import { buildButton } from './button';
 
@@ -15,7 +19,7 @@ const NEAR = -4;
 const FAR = 75;
 const DESK = -1; // the desk top; the keyboard's keys top out at y = 0
 const BODY_TOP = -0.42;
-const FOG = '#ffd3bd';
+const FOG = '#d98a86';
 const TRAIN_TOP = 2.4;
 const RAMP = 4;
 const AD_LOW = 1.15;
@@ -23,9 +27,9 @@ const ROWS = Math.ceil((FAR - NEAR) / TILE) + 2;
 
 // The sky drifts from sunset to night to morning and round again as you run.
 const SKIES = [
-  { top: '#4a4fd6', mid: '#ff9ec2', low: FOG, hemi: 1.1, sun: 2.6, env: 0.55, sunColor: '#fff0dc', disc: '#ffffff', stars: 0, glow: 0 },
-  { top: '#090b26', mid: '#33286a', low: '#3b3168', hemi: 0.25, sun: 0.55, env: 0.12, sunColor: '#a9b8ff', disc: '#c9d4ff', stars: 1, glow: 1 },
-  { top: '#4f9be8', mid: '#b8dcff', low: '#fde3cf', hemi: 1.3, sun: 2.9, env: 0.6, sunColor: '#fffaf0', disc: '#ffffff', stars: 0, glow: 0 },
+  { top: '#0d1130', mid: '#4a3a8a', low: FOG, hemi: 0.5, sun: 1.32, env: 0.33, sunColor: '#ffd6b8', disc: '#ffe2c8', stars: 0.35, glow: 0.35 },
+  { top: '#020309', mid: '#0d1433', low: '#1c2350', hemi: 0.15, sun: 0.28, env: 0.1, sunColor: '#8fa6ff', disc: '#d6e0ff', stars: 1, glow: 1 },
+  { top: '#1a3a74', mid: '#6b8fcc', low: '#e9bfa6', hemi: 0.61, sun: 1.49, env: 0.36, sunColor: '#fff3e6', disc: '#ffffff', stars: 0, glow: 0.15 },
 ];
 const SKY_LEG = 900; // meters per sky
 const lerpSky = (() => {
@@ -130,24 +134,31 @@ export function createWorld(look, POWERS) {
   light.shadow.normalBias = 0.03;
   scene.add(light, light.target);
 
-  const deskTex = canvasTexture('desk', 512, 512, paintWood, true);
-  deskTex.repeat.set(10, 10);
-  const desk = mesh(geo('deskplane', () => new THREE.PlaneGeometry(240, 240)), mat('#ffffff', { map: deskTex, roughness: 0.7 }), { cast: false, receive: true });
+  const deskTex = canvasTexture('deskmat', 512, 512, paintDesk, true);
+  deskTex.repeat.set(14, 14);
+  const desk = mesh(geo('deskplane', () => new THREE.PlaneGeometry(240, 240)), mat('#ffffff', { map: deskTex, roughness: 0.8 }), { cast: false, receive: true });
   desk.rotation.x = -Math.PI / 2;
   desk.position.set(0, DESK, -100);
   scene.add(desk);
 
   // the keyboard: a long dark body with keycaps on it
-  const kb = mesh(geo('kbbody', () => new RoundedBoxGeometry(6.2, -DESK + BODY_TOP, 260, 3, 0.15)), mat('#2a2c38', { roughness: 0.5 }), { receive: true });
+  const kb = mesh(geo('kbbody', () => new RoundedBoxGeometry(6.2, -DESK + BODY_TOP, 260, 3, 0.15)), mat('#1a1c22', { roughness: 0.35, metalness: 0.7 }), { receive: true });
   kb.position.set(0, (DESK + BODY_TOP) / 2, -120);
   scene.add(kb);
   const keyGeo = geo('key', () => new RoundedBoxGeometry(1.44, 0.44, TILE - 0.16, 3, 0.1));
-  const keys = new THREE.InstancedMesh(keyGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45 }), ROWS * 3);
+  const keys = new THREE.InstancedMesh(keyGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.55, metalness: 0.15 }), ROWS * 3);
   const sideGeo = geo('sidekey', () => new RoundedBoxGeometry(0.42, 0.44, TILE - 0.16, 3, 0.08));
   const sideKeys = new THREE.InstancedMesh(sideGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 }), ROWS * 2);
   keys.receiveShadow = sideKeys.receiveShadow = true;
   keys.castShadow = sideKeys.castShadow = false;
   scene.add(keys, sideKeys);
+  // neon strips glowing up between the lanes and along the edges
+  const neon = new THREE.MeshStandardMaterial({ color: '#000000', emissive: '#38d6ff', emissiveIntensity: 2.2 });
+  for (const x of [-0.8, 0.8, -2.36, 2.36]) {
+    const strip = mesh(geo('strip', () => new THREE.BoxGeometry(0.05, 0.05, 260)), neon, { cast: false });
+    strip.position.set(x, -0.16, -120);
+    scene.add(strip);
+  }
   // a letter printed on each keycap, picked from an 8x8 atlas per instance
   const letters = new THREE.InstancedMesh(geo('letterplane', () => new THREE.PlaneGeometry(0.46, 0.46).rotateX(-Math.PI / 2)), letterMaterial(), ROWS * 3);
   const letterIds = new THREE.InstancedBufferAttribute(new Float32Array(ROWS * 3), 1);
@@ -224,13 +235,15 @@ export function createWorld(look, POWERS) {
     sun.material.color.copy(p0.disc);
     stars.material.opacity = p0.stars;
     stars.visible = p0.stars > 0.01;
-    glow.intensity = p0.glow * 5;
+    glow.intensity = p0.glow * 3;
     if (scene.environment) scene.environmentIntensity = p0.env;
     // after dark the keyboard lights up like a gaming one
     keys.material.emissive.setHSL((t * 0.08) % 1, 0.9, 0.5);
-    keys.material.emissiveIntensity = p0.glow * 0.07;
+    keys.material.emissiveIntensity = p0.glow * 0.04;
+    neon.emissive.setHSL((0.53 + Math.sin(t * 0.3) * 0.08 + p0.glow * 0.25) % 1, 0.9, 0.55);
+    neon.emissiveIntensity = 1.8 + p0.glow * 1.6;
     sideKeys.material.emissive.setHSL((t * 0.08 + 0.5) % 1, 0.9, 0.5);
-    sideKeys.material.emissiveIntensity = p0.glow * 0.5;
+    sideKeys.material.emissiveIntensity = 0.15 + p0.glow * 0.5;
     glow.position.set(s.me.x, s.me.y + 1.2, 0.6);
     light.position.set(s.cam.x + 6, 16, 8);
     light.target.position.set(s.cam.x, 0, -10);
@@ -250,12 +263,12 @@ export function createWorld(look, POWERS) {
         m4.makeTranslation(LANES[l] - 0.38, gone ? -50 : 0.006, -zc + 0.45);
         letters.setMatrixAt(k * 3 + l, m4);
         letterIds.setX(k * 3 + l, ((base + k) * 7 + l * 13 + ((base + k) % 5) * 3) % LETTERS.length);
-        keys.setColorAt(k * 3 + l, color.set((base + k + l) % 2 ? '#f6f3ec' : '#e6e0d2'));
+        keys.setColorAt(k * 3 + l, color.set((base + k + l) % 2 ? '#30333c' : '#2a2d35'));
       }
       for (let side = 0; side < 2; side++) {
         m4.makeTranslation(side ? 2.68 : -2.68, -0.22, -zc);
         sideKeys.setMatrixAt(k * 2 + side, m4);
-        sideKeys.setColorAt(k * 2 + side, color.set((base + k + side) % 3 ? '#4a4d5e' : '#5a5e72'));
+        sideKeys.setColorAt(k * 2 + side, color.set((base + k + side) % 3 ? '#1d1f26' : '#24272f'));
       }
     }
     keys.instanceMatrix.needsUpdate = sideKeys.instanceMatrix.needsUpdate = letters.instanceMatrix.needsUpdate = true;
@@ -340,7 +353,25 @@ export function createWorld(look, POWERS) {
       const h = Math.round(H * k);
       const size = r.getSize(v);
       if (size.x !== w || size.y !== h) r.setSize(w, h, false);
-      r.render(scene, camera);
+      // glow on anything bright: neon, coins, fire, screens
+      const fx = once('composer', () => {
+        const composer = new EffectComposer(r);
+        const pass = new RenderPass(scene, camera);
+        const bloom = new UnrealBloomPass(new THREE.Vector2(w / 2, h / 2), 0.35, 0.2, 1.1);
+        composer.addPass(pass);
+        composer.addPass(bloom);
+        composer.addPass(new OutputPass());
+        return { composer, pass, bloom, w: 0, h: 0 };
+      });
+      if (fx.w !== w || fx.h !== h) {
+        fx.composer.setSize(w, h);
+        fx.bloom.resolution.set(w / 2, h / 2);
+        fx.w = w;
+        fx.h = h;
+      }
+      fx.pass.scene = scene;
+      fx.pass.camera = camera;
+      fx.composer.render();
       c.drawImage(r.domElement, 0, 0, W, H);
     },
   };
@@ -352,7 +383,7 @@ const LETTERS = 'QWERTYUIOPASDFGHJKLZXCVBNM1234567890!?@#&*+=<>/';
 function letterMaterial() {
   return once('lettermat', () => {
     const map = canvasTexture('letters', 512, 512, (c) => {
-      c.fillStyle = '#8a8478';
+      c.fillStyle = '#c9cfdb';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
       c.font = `700 40px ${FONT}`;
@@ -595,67 +626,70 @@ function buildDecor(d) {
   return g;
 }
 
-// Giant app icons on the horizon, a few clouds, and the monitor you're
-// watching all this on, with your cursor in it.
+// A city of glass towers on the horizon, lit window by window, and the
+// monitor you're watching all this on, with your cursor in it.
 function backdrop() {
   const g = new THREE.Group();
   const flat = (color) => once(`flat:${color}`, () => new THREE.MeshLambertMaterial({ color, fog: false }));
-  const icons = ['#e4a3c4', '#9fcfb6', '#93b4dd', '#e9cd8a', '#bba8de', '#e69c8c'];
-  for (let i = 0; i < 16; i++) {
-    const h = 8 + ((i * 37) % 14);
-    const icon = new THREE.Mesh(geo(`icon:${h}`, () => new RoundedBoxGeometry(11, h, 5, 3, 2)), flat(icons[i % icons.length]));
-    const x = (i - 7.5) * 16 + ((i * 13) % 7);
-    if (Math.abs(x) < 26) continue;
-    icon.position.set(x, DESK + h / 2, -190 - ((i * 23) % 30));
-    g.add(icon);
+  const tower = once('towermat', () => new THREE.MeshLambertMaterial({ color: '#1a1f33', emissive: '#ffffff', emissiveMap: windowTexture(), emissiveIntensity: 0.9, fog: false }));
+  for (let i = 0; i < 26; i++) {
+    const h = 14 + ((i * 37) % 46);
+    const w = 8 + ((i * 11) % 9);
+    const x = (i - 12.5) * 11 + ((i * 13) % 7);
+    if (Math.abs(x) < 30) continue;
+    const t = new THREE.Mesh(geo(`tower:${w}:${h}`, () => new THREE.BoxGeometry(w, h, 8)), tower);
+    t.position.set(x, DESK + h / 2, -200 - ((i * 23) % 40));
+    g.add(t);
   }
   const mon = new THREE.Group();
   mon.position.set(0, DESK, -200);
-  const bezel = new THREE.Mesh(geo('bezel', () => new RoundedBoxGeometry(46, 28, 3, 3, 1.6)), flat('#2b2d3a'));
+  const bezel = new THREE.Mesh(geo('bezel', () => new RoundedBoxGeometry(46, 27, 1.6, 3, 0.6)), flat('#0c0d11'));
   bezel.position.y = 22;
-  const stand = new THREE.Mesh(geo('stand', () => new THREE.BoxGeometry(6, 9, 2)), flat('#2b2d3a'));
+  const stand = new THREE.Mesh(geo('stand', () => new THREE.BoxGeometry(3, 9, 1.5)), flat('#2a2d36'));
   stand.position.set(0, 4.5, -1);
-  const screen = new THREE.Mesh(geo('screen', () => new THREE.PlaneGeometry(42.5, 24.2)), once('screenmat', () => new THREE.MeshBasicMaterial({ map: screenTexture(), fog: false })));
-  screen.position.set(0, 22, 1.6);
+  const screen = new THREE.Mesh(geo('screen', () => new THREE.PlaneGeometry(44.4, 25.4)), once('screenmat', () => new THREE.MeshBasicMaterial({ map: screenTexture(), fog: false })));
+  screen.position.set(0, 22, 0.85);
   mon.add(bezel, stand, screen);
   g.add(mon);
-  const cloud = flat('#fff5ee');
-  for (let i = 0; i < 7; i++) {
-    const c = new THREE.Group();
-    for (let j = 0; j < 4; j++) {
-      const puff = new THREE.Mesh(geo('puff', () => new THREE.SphereGeometry(5, 14, 10)), cloud);
-      puff.position.set(j * 6 - 9, Math.sin(j * 2) * 2, 0);
-      puff.scale.setScalar(0.8 + ((j * 7) % 3) * 0.3);
-      c.add(puff);
-    }
-    c.position.set((i - 3) * 45 + ((i * 17) % 20), 70 + ((i * 29) % 40), -260);
-    g.add(c);
-  }
   return g;
 }
 
 /* ---------- painted textures ---------- */
-function paintWood(c, w, h) {
-  c.fillStyle = '#d6a571';
+// A dark desk mat with a faint grid.
+function paintDesk(c, w, h) {
+  c.fillStyle = '#1b1c22';
   c.fillRect(0, 0, w, h);
-  const planks = 4;
-  for (let i = 0; i < planks; i++) {
-    const x = (i * w) / planks;
-    c.fillStyle = ['#d8a774', '#cf9c68', '#dcae7c', '#d29f6b'][i];
-    c.fillRect(x, 0, w / planks, h);
-    c.strokeStyle = 'rgba(120,70,30,0.18)';
-    c.lineWidth = 2;
-    for (let j = 0; j < 9; j++) {
-      c.beginPath();
-      const gx = x + 10 + j * 13;
-      c.moveTo(gx, 0);
-      for (let y = 0; y <= h; y += 32) c.lineTo(gx + Math.sin(y * 0.03 + i + j) * 4, y);
-      c.stroke();
-    }
-    c.fillStyle = 'rgba(80,40,15,0.35)';
-    c.fillRect(x, 0, 3, h);
-    c.fillRect(x, ((i * 197) % h), w / planks, 3);
+  for (let i = 0; i < 2500; i++) {
+    c.fillStyle = `rgba(255,255,255,${Math.random() * 0.035})`;
+    c.fillRect(Math.random() * w, Math.random() * h, 2, 2);
   }
+  c.strokeStyle = 'rgba(120,140,200,0.10)';
+  c.lineWidth = 2;
+  for (let x = 0; x <= w; x += 64) {
+    c.beginPath();
+    c.moveTo(x, 0);
+    c.lineTo(x, h);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(0, x);
+    c.lineTo(w, x);
+    c.stroke();
+  }
+}
+
+function windowTexture() {
+  return canvasTexture('windows', 128, 256, (c, w, h) => {
+    c.fillStyle = '#000000';
+    c.fillRect(0, 0, w, h);
+    for (let y = 6; y < h; y += 12) {
+      for (let x = 6; x < w; x += 12) {
+        const r = Math.random();
+        if (r < 0.55) continue;
+        c.fillStyle = r < 0.8 ? 'rgba(255,214,150,0.9)' : r < 0.93 ? 'rgba(120,200,255,0.9)' : 'rgba(255,120,200,0.9)';
+        c.fillRect(x, y, 6, 7);
+      }
+    }
+  });
 }
 
 function brickTexture() {
@@ -816,17 +850,17 @@ function voidTexture() {
 function screenTexture() {
   return canvasTexture('screen', 512, 292, (c, w, h) => {
     const g = c.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, '#a8dcff');
-    g.addColorStop(1, '#5b8fe0');
+    g.addColorStop(0, '#16224d');
+    g.addColorStop(1, '#3a56c9');
     c.fillStyle = g;
     c.fillRect(0, 0, w, h);
-    const icons = ['#f39ac0', '#7cc6a4', '#f2c14e', '#a58bd6'];
+    const icons = ['#ff5f8f', '#38d6ff', '#ffb020', '#8c6bff'];
     for (let i = 0; i < 4; i++) {
       c.fillStyle = icons[i];
       rr(c, 24, 20 + i * 64, 44, 44, 10);
       c.fill();
     }
-    c.fillStyle = 'rgba(255,255,255,0.85)';
+    c.fillStyle = 'rgba(10,12,20,0.75)';
     c.fillRect(0, h - 28, w, 28);
     // a big pointer, watching
     c.save();

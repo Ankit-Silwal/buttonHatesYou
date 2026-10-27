@@ -257,9 +257,9 @@ export default function buttonRun({ look, sound }) {
     for (const side of [-1, 1]) {
       const x = side * rand(3.2, 4.4);
       const r = Math.random();
-      if (r < 0.45) decor.push({ kind: 'pencil', x, z: z + rand(0, 3), h: rand(2.2, 4.6), color: pick(['#f2c14e', '#5b9bd5', '#7cc6a4', '#e2674f']) });
-      else if (r < 0.7) decor.push({ kind: 'mug', x, z: z + rand(0, 3), color: pick(['#ffffff', '#f39ac0', '#4a5a85']) });
-      else decor.push({ kind: 'books', x, z: z + rand(0, 3), n: pick([2, 3, 4]), colors: shuffle(['#c0392b', '#3b77ad', '#549c7c', '#c99a2e', '#7c63ad']) });
+      if (r < 0.45) decor.push({ kind: 'pencil', x, z: z + rand(0, 3), h: rand(2.2, 4.6), color: pick(['#c9ccd4', '#1d1f27', '#c9a36a', '#38d6ff']) });
+      else if (r < 0.7) decor.push({ kind: 'mug', x, z: z + rand(0, 3), color: pick(['#f2f2f2', '#1d1f27', '#b8bcc6']) });
+      else decor.push({ kind: 'books', x, z: z + rand(0, 3), n: pick([2, 3, 4]), colors: shuffle(['#2a2d36', '#8a2f2f', '#2f4a6b', '#d9d4c7', '#3c3f47']) });
     }
     decorZ = z + rand(5, 9);
   };

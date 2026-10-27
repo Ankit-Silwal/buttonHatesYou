@@ -23,7 +23,8 @@ export function buildButton(look) {
     mats.push(material);
     return material;
   };
-  const skin = m(look.color, { roughness: 0.32 });
+  const skin = new THREE.MeshPhysicalMaterial({ color: look.color, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 });
+  mats.push(skin);
   const dark = m(look.dark, { roughness: 0.45 });
   const ink = m(INK, { roughness: 0.7 });
   const white = m('#ffffff', { roughness: 0.15 });
@@ -71,7 +72,6 @@ export function buildButton(look) {
     pupils.push(pupil);
     const brow = add(face, box(0.19, 0.045, 0.04), ink, side * 0.17, 0.91, -0.01);
     brows.push(brow);
-    add(face, sphere(0.07), pink, side * 0.31, 0.62, 0.02).scale.set(1, 0.6, 0.3);
   }
   if (look.eyes === 'googly') for (const e of eyes) e.scale.multiplyScalar(1.3);
   if (look.eyes === 'sleepy') {
