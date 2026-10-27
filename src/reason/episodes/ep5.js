@@ -10,7 +10,7 @@ import { adminMonitor, checkpointPost, coins, coreFragment, heartAt } from './co
 
 const W = 4500;
 const DOOR_X = 1520;
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'lab',
   coins: true,

@@ -1,5 +1,5 @@
 import { sfx, initAudio, music } from './audio';
-import { drawSky, drawSolid, drawDeco, drawHud, drawEffects, SPEAKERS, setFont, FONTS } from './draw';
+import { drawSky, drawSolid, drawDeco, drawHud, drawEffects, drawAtmosphere, SPEAKERS, setFont, FONTS } from './draw';
 
 // The world is drawn at a fixed 960x540 and scaled to fit the screen.
 export const W = 960;
@@ -505,6 +505,7 @@ export class Game {
     for (const e of ents) if (!e.hidden) e.drawOver?.(c, this);
     c.restore();
 
+    drawAtmosphere(c, this);
     drawEffects(c, this);
     if (!this.fx.noHud) drawHud(c, this);
   }

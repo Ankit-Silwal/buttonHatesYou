@@ -9,7 +9,7 @@ import { heartAt } from './common';
 // Episode 9 — I HATE YOU. Bobby becomes the boss and the Player becomes
 // the cursor. Then the truth, an uneasy peace, THE ADMIN, and a hill.
 
-const ARENA = {
+export const ARENA = {
   w: 960,
   theme: 'void',
   coins: false,
@@ -19,7 +19,7 @@ const ARENA = {
 };
 
 const SEG = 120;
-const ADMIN_ARENA = {
+export const ADMIN_ARENA = {
   w: 960,
   theme: 'void',
   coins: false,
@@ -34,7 +34,7 @@ const ADMIN_ARENA = {
   spawn: { x: 460, y: GROUND - 60 },
 };
 
-const HILL = {
+export const HILL = {
   w: 1500,
   theme: 'epilogue',
   coins: false,

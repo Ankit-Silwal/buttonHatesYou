@@ -15,7 +15,7 @@ const GC = [2560, 3480];
 const BRIDGE = [3520, 4740];
 const GATE = 4740;
 
-const LEVEL = {
+export const LEVEL = {
   w: W,
   theme: 'tower',
   solids: [
@@ -318,7 +318,7 @@ export default async function play(g, p) {
   g.lock(false);
 }
 
-const QUIET = {
+export const QUIET = {
   w: 2600,
   theme: 'night',
   coins: false,
