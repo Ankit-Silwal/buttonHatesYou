@@ -100,6 +100,7 @@ const ADVENTURE = {
   run: { sec: 1.8, top: 420 },
   stack: { sec: 0.5, top: 500 },
   slice: { sec: 0.8, top: 530, taps: [0] },
+  'button-run': { sec: 2.2, top: 330 },
 };
 
 function seeded(seed) {

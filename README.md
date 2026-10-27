@@ -95,6 +95,7 @@ in whatever it's wearing:
 
 | Game | What you do | Goal |
 | --- | --- | --- |
+| Button Run | A 3D lane runner down a giant keyboard, with power-ups (magnet, wings, spring shoes, bubble wrap, incognito, x2) | 1500 points |
 | Flappy Regret | Tap to flap the button through pipes | 15 pipes |
 | Pop Tantrum | Pop groups of same-colored buttons in 25 taps | 1500 points |
 | Snack Attack | Catch falling snacks, dodge bombs | 40 snacks |
@@ -109,7 +110,7 @@ Every run that reaches the goal pays 8 🪙, and the first time in each game
 also pays 1 💎. Best scores are kept on the device.
 
 - `src/adventure/AdventureGame.jsx`: title card, canvas loop, pause, results
-  and payouts, shared by all nine (routed from `/games/adventure/[id]`)
+  and payouts, shared by all ten (routed from `/games/adventure/[id]`)
 - `src/adventure/kit.js`: the 480x800 canvas, the button drawn in its outfit,
   speech bubbles and particles
 - `src/adventure/games/<id>.js`: one file per game; `index.js` describes

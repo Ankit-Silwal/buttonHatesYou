@@ -115,6 +115,17 @@ export const GAMES = [
   },
   ...[
     {
+      id: 'button-run',
+      name: 'Button Run',
+      emoji: '⌨️',
+      color: '#cfd0ff',
+      blurb: 'A 3D dash down a giant keyboard. Swerve past firewalls, spam trains and your own cursor clicking down from the sky. Grab wings, magnets and bubble wrap on the way.',
+      howTo: 'Swipe, or use ← → to switch lanes, ↑ to jump and ↓ to slide. Tap to jump.',
+      goal: 1500,
+      unit: 'points',
+      quips: { goal: 'You chased me 1500 points. Get a hobby.', fail: 'Clicked. Of course I got clicked.' },
+    },
+    {
       id: 'flap',
       name: 'Flappy Regret',
       emoji: '🪽',

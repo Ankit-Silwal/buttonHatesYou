@@ -7,6 +7,7 @@ import whack from './whack';
 import run from './run';
 import stack from './stack';
 import slice from './slice';
+import buttonRun from './button-run';
 
 // Every Adventure game is a function that takes
 //   { look, sound, keys }   the outfit (see lookOf), the Sound kit, and the
@@ -17,4 +18,4 @@ import slice from './slice';
 //                           true the run ends and `score` is what counts
 // and, optionally, the input it cares about (game coordinates):
 //   down(x, y), move(x, y), up(x, y), key(code)
-export const CREATE = { flap, pop, catch: catchGame, simon, hop, whack, run, stack, slice };
+export const CREATE = { flap, pop, catch: catchGame, simon, hop, whack, run, stack, slice, 'button-run': buttonRun };
