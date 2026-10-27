@@ -33,10 +33,11 @@ Without these the game still works fully as a guest; sign-in just shows "soon".
 ### How saving works (offline first)
 
 Coins, diamonds, outfits, the house and the button's needs live in the browser cache (localStorage) first, so
-everything works offline. Every change is recorded as an event (`reward`, `buy`,
-`equip`) in an outbox. When you're signed in and online, the outbox goes to
+everything works offline. Every change is recorded as an event (`run`, `claim`,
+`buy`, `equip`, and the house and needs events) in an outbox. When you're signed in and online, the outbox goes to
 `/api/sync`. The server replays the events with the same rules
-(`src/economy/rules.js`), using its own price and reward table, skips anything
+(`src/economy/rules.js`), using its own price and reward table (an Adventure
+run sends its score, never its payout; see [Economy](#economy)), skips anything
 it has already seen, and its answer becomes the new truth. Guest progress is
 uploaded the first time you sign in.
 
@@ -120,27 +121,108 @@ E talk / use · Esc pause. Phones get an on-screen pad.
 - `src/reason/episodes/epN.js`: one file per episode; `index.js` lists them
   and what Bobby can already do when one is started from the menu
 
+## Economy
+
+Coins (🪙) come from playing; diamonds (💎) are rare. All numbers live in
+`src/economy/catalog.js` (`STORY_REWARDS`, `RUN_LIMITS`, each Adventure
+game's `payout`) and the rules in `src/economy/rules.js`, which the browser
+and the server both run. `node scripts/check-economy.mjs` checks them.
+
+**Adventure runs pay every time, by score, in rising tiers.** A game's first
+`per` units pay `base` coins in total, the next `per` pay `2 × base`, then
+`3 × base`, and so on; a partial tier pays its share, rounded down. Flappy
+Regret (`per` 10 pipes, `base` 25): 10 pipes pay 25, 15 pay 50, 20 pay 75,
+30 pay 150, 40 pay 250. Every game uses `base` 25, with `per` set so the old
+"goal" score is about one and a half tiers:
+
+| Game | per tier | decent run | great run |
+| --- | --- | --- | --- |
+| Flappy Regret | 10 pipes | 15 → 50 | 30 → 150 |
+| Pop Tantrum | 1000 points | 1500 → 50 | 3000 → 150 |
+| Snack Attack | 25 snacks | 40 → 55 | 75 → 150 |
+| Copy Me | 5 rounds | 8 → 55 | 15 → 150 |
+| Sky Hop | 2000 m | 3000 → 50 | 6000 → 150 |
+| Whack-a-Button | 20 bonks | 30 → 50 | 60 → 150 |
+| Run Away | 600 m | 1000 → 58 | 1800 → 150 |
+| Tower of Regret | 12 floors | 20 → 58 | 36 → 150 |
+| Slice Spree | 30 slices | 50 → 58 | 90 → 150 |
+
+Button Run instead pays exactly the coins the button picked up (the counter in
+the corner; x2 coins count double), typically 30 to 100 a run.
+
+Diamonds from runs: 1 💎 the first time a run in a game pays 100+, and 1 more
+for a run paying 200+ that is at least 1.5 times that game's best payout so
+far. That is at most about three per game, ever.
+
+**Story games pay big, once.** The first finish of each part pays, and the
+wallet remembers it (`claimed`), so replays (or wiping a story save) pay
+nothing, on the server too:
+
+| Story | Each part | Finale | Total |
+| --- | --- | --- | --- |
+| The Reason (9 episodes) | 200 🪙 | 1500 🪙 + 10 💎 | 3100 🪙 + 10 💎 |
+| How I Met Your Cursor (6 chapters) | 200 🪙 | 1200 🪙 + 8 💎 | 2200 🪙 + 8 💎 |
+| Please Don't | | 800 🪙 + 5 💎 | 800 🪙 + 5 💎 |
+
+**Prices** (outfits; coins about ×8, diamonds ×2, so a new player starts with
+300 🪙, enough for one cheap item):
+
+| Old | New |
+| --- | --- |
+| 30 🪙 | 250 🪙 |
+| 40 🪙 | 300 🪙 |
+| 50 🪙 | 400 🪙 |
+| 60 🪙 | 450 🪙 |
+| 70 🪙 | 550 🪙 |
+| 80 🪙 | 600 🪙 |
+| 90 🪙 | 700 🪙 |
+| 100 🪙 | 800 🪙 |
+| 120 🪙 | 950 🪙 |
+| 2 / 3 / 5 💎 | 4 / 6 / 10 💎 |
+
+The balance, with a typical run worth about 50 🪙: a cheap item (250 to 400)
+takes 5 to 8 runs, a mid one (450 to 600) about 10, the dearest coin items
+(700 to 950, or house items up to 3000) a few evenings, and diamond items real
+dedication: the story games give 23 💎 in total and Adventure runs a few each,
+while the outfits alone cost 36 💎. A run costs 10 energy in the house's needs;
+food that restores that costs about 15 🪙, so playing always comes out ahead.
+
+**Anti-cheat.** A run event carries `{ game, score, extra (coins grabbed), ms
+(time played), at }`, never a payout. The server recomputes the payout with
+the same function and clamps the inputs: the score (or coins) can't exceed
+the game's `rate` per second of play plus half a tier of slack; runs can't
+overlap (each run's play time must fit between the end of the previous run and
+this one's end, and `at` is capped at the server clock), so all paid play time
+fits in real time; one run counts at most 30 minutes and pays at most 400 🪙;
+and past 3000 🪙 from runs in a (UTC) day, further runs pay a quarter. Story
+rewards are paid once per claim id, and event ids are never applied twice.
+
+**Old saves.** Events queued before this change still work: old `reward`
+events pay their old small amounts (a limited number of times each). A guest's
+old queue is folded once into a plain wallet under the old prices (so nothing
+already bought is re-priced), and still uploaded when they first sign in.
+
 ## Adventure games
 
 The Games screen has two shelves: **Story** (How I Met Your Cursor, The Reason,
 Please Don't) and **Adventure**, nine short arcade games starring the button
 in whatever it's wearing:
 
-| Game | What you do | Goal |
+| Game | What you do | How a run pays |
 | --- | --- | --- |
-| Button Run | A 3D lane runner down a giant keyboard, with power-ups (magnet, wings, spring shoes, bubble wrap, incognito, x2) | 1500 points |
-| Flappy Regret | Tap to flap the button through pipes | 15 pipes |
-| Pop Tantrum | Pop groups of same-colored buttons in 25 taps | 1500 points |
-| Snack Attack | Catch falling snacks, dodge bombs | 40 snacks |
-| Copy Me | Repeat the button's growing tune | 8 rounds |
-| Sky Hop | Bounce up from cloud to cloud | 3000 meters |
-| Whack-a-Button | Bonk clones, spare the ones holding a heart | 30 bonks |
-| Run Away | Jump and duck while the button flees the cursor | 1000 meters |
-| Tower of Regret | Drop swinging clones to stack a tower | 20 floors |
-| Slice Spree | Swipe to slice what flies up, just not the button | 50 slices |
+| Button Run | A 3D lane runner down a giant keyboard, with power-ups (magnet, wings, spring shoes, bubble wrap, incognito, x2) | 1 🪙 per coin grabbed (2 with x2) |
+| Flappy Regret | Tap to flap the button through pipes | 25 🪙 per 10 pipes, rising |
+| Pop Tantrum | Pop groups of same-colored buttons in 25 taps | 25 🪙 per 1000 points, rising |
+| Snack Attack | Catch falling snacks, dodge bombs | 25 🪙 per 25 snacks, rising |
+| Copy Me | Repeat the button's growing tune | 25 🪙 per 5 rounds, rising |
+| Sky Hop | Bounce up from cloud to cloud | 25 🪙 per 2000 meters, rising |
+| Whack-a-Button | Bonk clones, spare the ones holding a heart | 25 🪙 per 20 bonks, rising |
+| Run Away | Jump and duck while the button flees the cursor | 25 🪙 per 600 meters, rising |
+| Tower of Regret | Drop swinging clones to stack a tower | 25 🪙 per 12 floors, rising |
+| Slice Spree | Swipe to slice what flies up, just not the button | 25 🪙 per 30 slices, rising |
 
-Every run that reaches the goal pays 8 🪙, and the first time in each game
-also pays 1 💎. Best scores are kept on the device.
+Every run pays, by how it went; there is no goal score. See [Economy](#economy).
+Best scores are kept on the device.
 
 - `src/adventure/AdventureGame.jsx`: title card, canvas loop, pause, results
   and payouts, shared by all ten (routed from `/games/adventure/[id]`)
@@ -189,7 +271,7 @@ To test a section, open `/games/please-dont?at=55` to jump to any click count (t
 
 ### Adding a mini-game
 
-Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, category, reward) and it shows up on its shelf of the Games screen (`/games`). Its card picture comes from `PAINT` in `src/components/gameArt.js` (story games draw a scene with the game's own drawing code; Adventure games list how long to run and where to crop); without one the card shows the emoji. Give it a page under `src/app/games/`, and call `grantReward('<id>')` from `@/profile/store` when the player finishes.
+Add it to `GAMES` in `src/economy/catalog.js` (id, name, emoji, card color, page, category, reward) and it shows up on its shelf of the Games screen (`/games`). Its card picture comes from `PAINT` in `src/components/gameArt.js` (story games draw a scene with the game's own drawing code; Adventure games list how long to run and where to crop); without one the card shows the emoji. Give it a page under `src/app/games/`, and when the player finishes, call `claimStory('<id>')` from `@/profile/store` (a one-time reward listed in `STORY_REWARDS`) or, for an Adventure game, give it a `payout` and let `AdventureGame.jsx` call `recordRun`.
 
 A quick arcade game is easier: write `src/adventure/games/<id>.js`, list it in
 `src/adventure/games/index.js`, and add an `adventure` entry to `GAMES` with its
