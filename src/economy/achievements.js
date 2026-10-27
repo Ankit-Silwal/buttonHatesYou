@@ -51,7 +51,6 @@ export function statsOf(w) {
   const st = { ...EMPTY_STATS, ...w?.stats };
   const claimed = Array.isArray(w?.claimed) ? w.claimed : [];
   const owned = Array.isArray(w?.owned) ? w.owned : [];
-  const has = (id) => claimed.includes(id);
 
   // Wallets from before stats only remember each game's best payout; the
   // lowest score that pays that much is a fair floor for the best score.
@@ -65,7 +64,6 @@ export function statsOf(w) {
 
   const reason = count(claimed, (c) => typeof c === 'string' && c.startsWith('reason:'));
   const cursor = count(claimed, (c) => typeof c === 'string' && c.startsWith('cursor:'));
-  const pleaseDont = has('please-dont') ? 3 : has('please-dont:beat') ? 2 : has('please-dont:boss') ? 1 : 0;
 
   return {
     best,
@@ -78,8 +76,6 @@ export function statsOf(w) {
     bestStreak: num(st.bestStreak),
     reason,
     cursor,
-    pleaseDont,
-    stories: count(['reason:9', 'cursor:6', 'please-dont'], has),
     outfits: count(owned, (id) => !!ITEM[id]?.price),
     furniture: count(owned, (id) => HOUSE_ITEM[id]?.kind === 'furniture' && !!HOUSE_ITEM[id].price),
     rooms: count(owned, (id) => (HOUSE_ITEM[id]?.kind === 'wall' || HOUSE_ITEM[id]?.kind === 'floor') && !!HOUSE_ITEM[id].price),
@@ -117,7 +113,6 @@ const ach = (id, cat, icon, name, stat, goal, levels) => ({
 });
 
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-const PD_STEPS = ['', "Make it to the boss in Please Don't", "Beat the boss in Please Don't", "Finish Please Don't (all 20 extra clicks)"];
 
 export const ACHIEVEMENTS = [
   /* ---------- Adventure ---------- */
@@ -137,8 +132,8 @@ export const ACHIEVEMENTS = [
   /* ---------- Story ---------- */
   ach('story-reason', 'story', '🗡️', 'Emotional Damage', (s) => s.reason, (n) => (n === 9 ? 'Finish The Reason (all 9 episodes)' : `Finish ${plural(n, 'episode')} of The Reason`), [[1, 1], [5, 3], [9, 8]]),
   ach('story-cursor', 'story', '💍', 'Hopeless Romantic', (s) => s.cursor, (n) => (n === 6 ? 'Finish How I Met Your Cursor (all 6 chapters)' : `Finish ${plural(n, 'chapter')} of How I Met Your Cursor`), [[1, 1], [3, 3], [6, 6]]),
-  ach('story-please-dont', 'story', '🔴', 'You Monster', (s) => s.pleaseDont, (n) => PD_STEPS[n], [[1, 1], [2, 2], [3, 4]]),
-  ach('stories', 'story', '📚', 'Bookworm', (s) => s.stories, (n) => (n === 3 ? 'Finish all three stories' : `Finish ${plural(n, 'whole story', 'whole stories')}`), [[1, 1], [2, 2], [3, 4]]),
+  // (Please Don't has no achievement: it pays nothing, on purpose. ??? 🎁)
+  ach('stories', 'story', '📚', 'Bookworm', (s) => s.reason + s.cursor, (n) => (n === 15 ? 'Finish both platformer stories (all 15 parts)' : `Finish ${n} episodes or chapters, in any story`), [[3, 1], [8, 2], [15, 4]]),
 
   /* ---------- Home & Wardrobe ---------- */
   ach('outfits', 'home', '🎩', 'Drip Check', (s) => s.outfits, (n) => `Own ${plural(n, 'outfit item')}`, [[1, 1], [6, 2], [15, 4]]),

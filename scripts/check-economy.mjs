@@ -106,11 +106,11 @@ const NOW = T + 2 * 86_400_000;
 assert.equal(applyEvent(st, { type: 'wake', at: T - 30 * 86_400_000 }, NOW)?.stats.days ?? 2, 2);
 
 // an old profile (no stats) loads, and its best payouts become best scores
-const oldProfile = { coins: 900, diamonds: 7, owned: ['eyes-sleepy', 'plant-cactus', 'wall-mint'], equipped: START.equipped, runs: { flap: 150, 'button-run': 80 }, claimed: ['reason:1', 'reason:2', 'please-dont'] };
+const oldProfile = { coins: 900, diamonds: 7, owned: ['eyes-sleepy', 'plant-cactus', 'wall-mint'], equipped: START.equipped, runs: { flap: 150, 'button-run': 80 }, claimed: ['reason:1', 'reason:2', 'reason:3', 'reason:4', 'reason:5', 'cursor:1', 'cursor:2', 'cursor:3', 'please-dont'] };
 const on = normalize(oldProfile);
 assert.deepEqual([on.coins, on.diamonds, on.stats.runs, on.achieved, on.pantry], [900, 7, 0, {}, {}]);
 const os = statsOf(on);
-assert.deepEqual([os.best.flap, os.best['button-run'], os.reason, os.pleaseDont, os.stories, os.outfits, os.furniture, os.rooms], [30, 80, 2, 3, 1, 1, 1, 1]);
+assert.deepEqual([os.best.flap, os.best['button-run'], os.reason, os.cursor, os.outfits, os.furniture, os.rooms], [30, 80, 5, 3, 1, 1, 1]);
 
 /* ---------- achievements ---------- */
 assert.ok(ACHIEVEMENTS.length >= 15 && ACHIEVEMENTS.length <= 25);
@@ -124,15 +124,18 @@ for (const a of ACHIEVEMENTS) {
 }
 // claiming: in order, only when the stat is there, once
 let ac = normalize(oldProfile);
-assert.equal(readyCount(ac), 1 + 1 + 1 + 1 + 1 + 3 + 1 + 1); // flap B, button-run B, reason B, please-dont B/S/G, stories B, outfits B, rooms B
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-please-dont', level: 2 }), null); // not in order
-ac = applyEvent(ac, { type: 'achieve', id: 'story-please-dont', level: 1 });
-ac = applyEvent(ac, { type: 'achieve', id: 'story-please-dont', level: 2 });
-ac = applyEvent(ac, { type: 'achieve', id: 'story-please-dont', level: 3 });
-assert.equal(ac.diamonds, 7 + 1 + 2 + 4);
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-please-dont', level: 3 }), null); // once
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-please-dont', level: 4 }), null); // no level 4
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-reason', level: 2 }), null); // 2 of 5 episodes
+assert.equal(readyCount(ac), 11); // flap B+S, button-run B, reason B+S, cursor B+S, bookworm B+S, outfits B, rooms B
+assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 2 }), null); // not in order
+ac = applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 1 });
+ac = applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 2 });
+assert.equal(ac.diamonds, 7 + 1 + 3);
+assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 3 }), null); // 3 of 6 chapters
+for (const n of [4, 5, 6]) ac = applyEvent(ac, { type: 'claim', claim: 'cursor:' + n });
+ac = applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 3 });
+assert.equal(ac.diamonds, 7 + 1 + 3 + 6);
+assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 3 }), null); // once
+assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 4 }), null); // no level 4
+assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-reason', level: 2 }), null); // not in order
 assert.equal(applyEvent(ac, { type: 'achieve', id: 'score-flap', level: 2 }), null); // not in order
 assert.equal(applyEvent(ac, { type: 'achieve', id: 'nope', level: 1 }), null);
 assert.equal(applyEvent(ac, { type: 'achieve', id: '__proto__', level: 1 }), null);

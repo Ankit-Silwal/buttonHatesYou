@@ -66,14 +66,13 @@ const storyRewards = (story, parts, each, finale) =>
   Object.fromEntries(Array.from({ length: parts }, (_, i) => [`${story}:${i + 1}`, i + 1 === parts ? finale : each]));
 
 // Coins only: the diamonds the finales used to pay now come from the story
-// achievements (achievements.js). Please Don't also marks reaching and
-// beating its boss, for its achievement's first two levels.
+// achievements (achievements.js).
 export const STORY_REWARDS = {
   ...storyRewards('reason', 9, { coins: 200, diamonds: 0 }, { coins: 1500, diamonds: 0 }),
   ...storyRewards('cursor', 6, { coins: 200, diamonds: 0 }, { coins: 1200, diamonds: 0 }),
-  'please-dont:boss': { coins: 100, diamonds: 0 },
-  'please-dont:beat': { coins: 150, diamonds: 0 },
-  'please-dont': { coins: 800, diamonds: 0 },
+  // Please Don't pays nothing: finishing it is its own (mysterious) reward.
+  // The claim still records that it was finished.
+  'please-dont': { coins: 0, diamonds: 0 },
 };
 
 // Adventure runs pay by performance (see adventurePayout in rules.js). Each
@@ -155,7 +154,7 @@ export const GAMES = [
     blurb: 'Press the button 65 times. It really, really does not want you to.',
     href: '/games/please-dont',
     category: 'story',
-    prize: '+1050 🪙 in all, once',
+    prize: '??? Mystery prize',
   },
   ...[
     {
