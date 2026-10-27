@@ -1,5 +1,7 @@
-import { START, applyEvent, replay, normalize } from '@/economy/rules';
+import { START, applyEvent, replay, normalize, chestFor } from '@/economy/rules';
 import { legacyReplay } from '@/economy/legacy';
+import { newlyReady } from '@/economy/achievements';
+import { chestLoot } from '@/economy/chest';
 
 // The player's profile, offline first.
 //
@@ -23,7 +25,7 @@ const BATCH = 200;
 const RESYNC_MS = 60_000;
 
 const VERSION = 2;
-const fresh = () => ({ user: null, owner: null, base: START, outbox: [], legacy: [], v: VERSION });
+const fresh = () => ({ user: null, owner: null, base: { ...START, seed: uid() }, outbox: [], legacy: [], v: VERSION });
 
 let data = null;
 let net = 'idle'; // idle | syncing | error
@@ -52,6 +54,8 @@ function init() {
   }
   data.outbox.forEach((e) => delete e.inflight); // a reload cut off the last request
   if (data.v < VERSION) migrate();
+  // A guest's daily chest needs a seed of its own (an account's comes from the server).
+  if (!data.owner && !data.base.seed) data.base = { ...data.base, seed: uid() };
   recompute();
 }
 
@@ -134,13 +138,14 @@ function tryRecord(ev) {
 }
 
 /* ---------- earning (the economy, see economy/rules.js) ---------- */
-// What an event added to the wallet, or null when it isn't allowed.
+// What an event added to the wallet, or null when it isn't allowed, plus the
+// achievements it made claimable (`ready`, for an "Achievement ready!" line).
 function earn(ev) {
   const before = getProfile().wallet;
   const after = applyEvent(before, ev);
   if (!after) return null;
   record(ev);
-  return { coins: after.coins - before.coins, diamonds: after.diamonds - before.diamonds };
+  return { coins: after.coins - before.coins, diamonds: after.diamonds - before.diamonds, ready: newlyReady(before, after) };
 }
 
 // A finished Adventure run: { game, score, extra (Button Run's coins), ms of play }.
@@ -151,6 +156,19 @@ export const recordRun = ({ game, score, extra = 0, ms }) =>
 // A finished story part (an id in STORY_REWARDS). Pays once; null after that.
 export const claimStory = (claim) => earn({ type: 'claim', claim });
 export const isClaimed = (wallet, claim) => !!wallet.claimed?.includes(claim);
+
+// Achievements and the daily chest (see economy/achievements.js and chest.js).
+// Claims the next level of an achievement: what it paid, or null.
+export const claimAchievement = (id, level) => earn({ type: 'achieve', id, level });
+// Opens today's chest: { coins, diamonds, food, energy, big, streak }, or null
+// when it was already opened today.
+export function openChest() {
+  const at = Date.now();
+  const before = getProfile().wallet;
+  const { ready, streak } = chestFor(before, at);
+  if (!ready || !earn({ type: 'chest', at })) return null;
+  return { ...chestLoot(before.seed, Math.floor(at / 86_400_000), streak), streak };
+}
 
 export const buy = (item) => tryRecord({ type: 'buy', item });
 export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });

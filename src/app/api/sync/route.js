@@ -1,6 +1,6 @@
 import { currentUser } from '@/server/auth';
-import { updateUser, newUser } from '@/server/db';
-import { applyEvent, isEventId, normalize } from '@/economy/rules';
+import { updateUser, newUser, walletOf } from '@/server/db';
+import { applyEvent, isEventId } from '@/economy/rules';
 
 const MAX_EVENTS = 200;
 const SEEN_KEEP = 1000;
@@ -25,7 +25,7 @@ export async function POST(req) {
     u ??= newUser(me);
     const seen = new Set(u.seen);
     const now = Date.now() + CLOCK_SKEW;
-    let wallet = normalize(u.wallet); // profiles from before the house get defaults
+    let wallet = walletOf(u); // older profiles get defaults (and a chest seed)
     for (const ev of events) {
       if (!isEventId(ev?.id) || seen.has(ev.id)) continue;
       seen.add(ev.id);

@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { START } from '@/economy/rules';
+import { createHash } from 'crypto';
+import { START, normalize } from '@/economy/rules';
 
 // User records live in MongoDB when MONGODB_URI is set, otherwise in a JSON
 // file under ./data. The file is fine for local development; hosts without a
@@ -14,7 +15,15 @@ const shared = (globalThis.__buttonHatesYouDb ??= { queue: Promise.resolve(), mo
 
 export function newUser(profile) {
   const now = Date.now();
-  return { ...profile, wallet: START, seen: [], createdAt: now, updatedAt: now };
+  return { ...profile, wallet: walletOf({ id: profile.id, wallet: START }), seen: [], createdAt: now, updatedAt: now };
+}
+
+// A user's wallet, with defaults for anything added since it was saved, and
+// the daily chest's seed: made from the account id, so it is the same every
+// time and the browser can't pick it (no event can change it).
+export function walletOf(user) {
+  const w = normalize(user.wallet);
+  return w.seed ? w : { ...w, seed: createHash('sha256').update(`chest:${user.id}`).digest('hex').slice(0, 16) };
 }
 
 export const getUser = (id) => (process.env.MONGODB_URI ? mongoGet(id) : fileGet(id));

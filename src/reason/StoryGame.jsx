@@ -6,6 +6,7 @@ import Wallet from '@/components/Wallet';
 import { useProfile } from '@/profile/useProfile';
 import { useEnergyGate } from '@/house/EnergyGate';
 import { claimStory } from '@/profile/store';
+import { ReadyLine } from '@/achievements/Chest';
 import { Game } from './engine';
 import { Bobby } from './actors';
 import { SPEAKERS } from './draw';
@@ -183,6 +184,7 @@ function Finished({ cfg, n, prize, skipped, onClose, onNext }) {
         ) : (
           !skipped && <p>Already paid out. Replays are just for fun.</p>
         )}
+        <ReadyLine ready={prize?.ready} />
         <div className="row">
           <button className="pill ghost" onClick={onClose}>
             {cfg.unit}s

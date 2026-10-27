@@ -65,10 +65,15 @@ export const DEFAULT_LOOK = {
 const storyRewards = (story, parts, each, finale) =>
   Object.fromEntries(Array.from({ length: parts }, (_, i) => [`${story}:${i + 1}`, i + 1 === parts ? finale : each]));
 
+// Coins only: the diamonds the finales used to pay now come from the story
+// achievements (achievements.js). Please Don't also marks reaching and
+// beating its boss, for its achievement's first two levels.
 export const STORY_REWARDS = {
-  ...storyRewards('reason', 9, { coins: 200, diamonds: 0 }, { coins: 1500, diamonds: 10 }),
-  ...storyRewards('cursor', 6, { coins: 200, diamonds: 0 }, { coins: 1200, diamonds: 8 }),
-  'please-dont': { coins: 800, diamonds: 5 },
+  ...storyRewards('reason', 9, { coins: 200, diamonds: 0 }, { coins: 1500, diamonds: 0 }),
+  ...storyRewards('cursor', 6, { coins: 200, diamonds: 0 }, { coins: 1200, diamonds: 0 }),
+  'please-dont:boss': { coins: 100, diamonds: 0 },
+  'please-dont:beat': { coins: 150, diamonds: 0 },
+  'please-dont': { coins: 800, diamonds: 0 },
 };
 
 // Adventure runs pay by performance (see adventurePayout in rules.js). Each
@@ -83,9 +88,8 @@ export const RUN_LIMITS = {
   maxRunMs: 30 * 60_000, // a single run counts at most 30 minutes of play
   dailyFull: 3000, // coins from runs per day at full rate...
   overCap: 0.25, // ...then this fraction of each payout
-  diamondAt: 100, // 1 diamond the first time a run in a game pays this much
-  recordAt: 200, // and 1 more for a run paying this much and
-  recordBy: 1.5, // at least this many times the game's best payout before it
+  // (runs used to pay diamonds for a game's first 100+ run and big personal
+  // bests; those now come from the "score N in <game>" achievements)
 };
 
 // Rewards from before the economy rework. Only events still queued from back
@@ -151,7 +155,7 @@ export const GAMES = [
     blurb: 'Press the button 65 times. It really, really does not want you to.',
     href: '/games/please-dont',
     category: 'story',
-    prize: '+800 🪙  +5 💎, once',
+    prize: '+1050 🪙 in all, once',
   },
   ...[
     {

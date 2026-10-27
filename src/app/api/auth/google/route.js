@@ -1,6 +1,5 @@
 import { verifyGoogle, startSession, publicUser } from '@/server/auth';
-import { updateUser, newUser } from '@/server/db';
-import { normalize } from '@/economy/rules';
+import { updateUser, newUser, walletOf } from '@/server/db';
 
 // The browser signs in with Google Identity Services and posts the ID token here.
 export async function POST(req) {
@@ -19,5 +18,5 @@ export async function POST(req) {
 
   const user = await updateUser(profile.id, (u) => (u ? { ...u, ...profile, updatedAt: Date.now() } : newUser(profile)));
   await startSession(profile);
-  return Response.json({ user: publicUser(user), state: normalize(user.wallet) });
+  return Response.json({ user: publicUser(user), state: walletOf(user) });
 }
