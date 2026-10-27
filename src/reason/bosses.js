@@ -2,6 +2,7 @@ import { GRAVITY, moveBody, overlap, clamp, rand, cx, cy } from './engine';
 import { sfx } from './audio';
 import { rr, text, popupWindow, sword, drawButton, adminFace, heart } from './draw';
 import { Shot, Slime, Thing, Bat, Enemy, bark } from './actors';
+import { glow, shadow, boxShadow, fadeStrip, fadeStripX } from './fx';
 
 /* ======================================================================
    THE UNSKIPPABLE AD (Episode 3)
@@ -40,8 +41,12 @@ export class UnskippableAd {
         return true;
       },
       look(c) {
+        glow(c, this.x + this.w / 2, this.y + this.h / 2, 46, '#ff2a3a', 0.6);
         c.fillStyle = '#ff2a3a';
         rr(c, this.x, this.y, this.w, this.h, 8);
+        c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.3)';
+        rr(c, this.x + 3, this.y + 2, this.w - 6, this.h / 2 - 2, 6);
         c.fill();
         text(c, '✕', this.x + this.w / 2, this.y + this.h / 2 + 1, { size: 26, color: '#fff' });
         text(c, 'CLOSE!!', this.x + this.w / 2, this.y - 10, { size: 11, color: '#ff2a3a' });
@@ -54,6 +59,7 @@ export class UnskippableAd {
         return true;
       },
       look(c, g) {
+        glow(c, this.x + 13, this.y + 13, 30, '#ffffff', 0.3 + 0.2 * Math.sin(g.time * 8));
         c.strokeStyle = `rgba(255,255,255,${0.35 + 0.35 * Math.sin(g.time * 8)})`;
         c.lineWidth = 2;
         c.beginPath();
@@ -161,17 +167,18 @@ export class UnskippableAd {
     if (this.dead) return;
     const { x, y, w, h } = this;
     const buffering = this.state === 'buffer';
-    c.save();
-    c.shadowColor = 'rgba(0,0,0,0.35)';
-    c.shadowBlur = 24;
+    // a sickly yellow glow and a soft drop shadow (both cached sprites)
+    glow(c, x + w / 2, y + h / 2, w * 0.95, '#ffb800', 0.28 + 0.08 * Math.sin(this.t * 3));
+    boxShadow(c, x, y, w, h, 0.45, 26, 14);
     c.fillStyle = this.flash ? '#fff' : '#ffffff';
     rr(c, x, y, w, h, 12);
     c.fill();
-    c.restore();
     c.fillStyle = '#ffb800';
     rr(c, x, y, w, 26, 12);
     c.fill();
     c.fillRect(x, y + 14, w, 12);
+    c.fillStyle = 'rgba(255,255,255,0.4)';
+    c.fillRect(x + 10, y + 2, w - 20, 2);
     text(c, 'SPONSORED · Ad 1 of 37', x + 12, y + 13, { size: 12, color: '#4a3000', align: 'left' });
     const hue = (this.t * 120) % 360;
     c.fillStyle = buffering ? '#555' : `hsl(${hue}, 85%, 60%)`;
@@ -186,6 +193,22 @@ export class UnskippableAd {
     } else {
       text(c, pickBy(this.t, ['BUY BUTTONS', 'CLICK HERE', 'LIMITED TIME', 'YOU NEED THIS']), cx(this), y + 34 + (h - 70) / 2, { size: 26, color: '#fff' });
     }
+    // glossy screen: a sheen sweeps across every few seconds
+    c.save();
+    c.beginPath();
+    c.rect(x + 10, y + 34, w - 20, h - 70);
+    c.clip();
+    c.drawImage(fadeStrip('#ffffff', 0.22, 0, 0.5), x + 10, y + 34, w - 20, (h - 70) * 0.5);
+    const sweep = ((this.t * 0.45) % 1.6) * (w + 120) - 60;
+    c.globalCompositeOperation = 'lighter';
+    c.fillStyle = 'rgba(255,255,255,0.18)';
+    c.beginPath();
+    c.moveTo(x + sweep, y + 34);
+    c.lineTo(x + sweep + 40, y + 34);
+    c.lineTo(x + sweep - 20, y + h - 36);
+    c.lineTo(x + sweep - 60, y + h - 36);
+    c.fill();
+    c.restore();
     // the "skip" box that never gets there
     c.fillStyle = 'rgba(0,0,0,0.7)';
     rr(c, x + w - 120, y + h - 32, 110, 24, 4);
@@ -312,19 +335,34 @@ export class GarbageCollector extends Enemy {
     const shake = this.shakeX ? (Math.random() - 0.5) * this.shakeX * 2 : 0;
     c.save();
     c.translate(shake, 0);
+    if (this.ground) shadow(c, x + w / 2, y + h, w * 0.6, 0.4, 10);
     const lid = this.state === 'suck' ? -0.5 : this.state === 'toss' ? -0.3 : 0;
     // wheels
-    c.fillStyle = '#1d1f26';
     for (const wx of [x + 30, x + w - 30]) {
+      c.fillStyle = '#1d1f26';
       c.beginPath();
       c.arc(wx, y + h - 12, 14, 0, Math.PI * 2);
       c.fill();
+      c.fillStyle = '#6a6e7a';
+      c.beginPath();
+      c.arc(wx, y + h - 12, 5, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.25)';
+      c.fillRect(wx - 8, y + h - 23, 8, 2);
     }
     c.fillStyle = this.flash ? '#fff' : this.state === 'dazed' || this.stunned > 0 ? '#7fae5a' : '#5d8a44';
     rr(c, x, y + 20, w, h - 32, 10);
     c.fill();
+    if (!this.flash) {
+      // a rounded metal bin: lit on the left, dark on the right, grimy at the bottom
+      c.drawImage(fadeStripX('#ffffff', 0.18, 0), x + 2, y + 22, w * 0.3, h - 36);
+      c.drawImage(fadeStripX('#000000', 0, 0.3), x + w * 0.6, y + 22, w * 0.4 - 2, h - 36);
+      c.drawImage(fadeStrip('#1a2a10', 0, 0.35), x + 2, y + h - 60, w - 4, 46);
+    }
     c.fillStyle = 'rgba(0,0,0,0.2)';
     for (let i = 1; i < 5; i++) c.fillRect(x + i * (w / 5), y + 30, 4, h - 52);
+    c.fillStyle = 'rgba(255,255,255,0.12)';
+    for (let i = 1; i < 5; i++) c.fillRect(x + i * (w / 5) - 2, y + 30, 2, h - 52);
     // lid
     c.save();
     c.translate(this.facing > 0 ? x : x + w, y + 22);
@@ -340,6 +378,10 @@ export class GarbageCollector extends Enemy {
     c.fillStyle = this.state === 'dazed' ? '#333' : '#ff3b3b';
     c.fillRect(fx - 20 + this.facing * 3, y + 47, 6, 6);
     c.fillRect(fx + 16 + this.facing * 3, y + 47, 6, 6);
+    if (this.state !== 'dazed') {
+      glow(c, fx - 17 + this.facing * 3, y + 50, 16, '#ff3b3b', 0.7);
+      glow(c, fx + 19 + this.facing * 3, y + 50, 16, '#ff3b3b', 0.7);
+    }
     c.fillStyle = '#1d1f26';
     rr(c, fx - 24, y + 66, 48, this.state === 'suck' ? 22 : 10, 4);
     c.fill();

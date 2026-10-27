@@ -1,4 +1,4 @@
-import { hash, sprite, glow, softLight, shadow, fadeStrip, fadeStripX, pattern, speckle, gradeOverlay, vignetteSprite, rgba, mix, lighten, darken } from './fx';
+import { hash, sprite, glow, softLight, shadow, boxShadow, fadeStrip, fadeStripX, pattern, speckle, gradeOverlay, vignetteSprite, rgba, mix, lighten, darken } from './fx';
 
 // Everything is drawn with plain canvas shapes: no sprites, no assets.
 // Coordinates are in world pixels (the camera transform is already applied),
@@ -1913,6 +1913,8 @@ export function adminFace(c, x, y, r, g) {
   const blink = Math.sin(g.time * 1.3) > 0.97 ? 0.2 : 1;
   c.fillRect(x - r * 0.38, y - r * 0.25, r * 0.22, r * 0.06 * blink + 1);
   c.fillRect(x + r * 0.16, y - r * 0.25, r * 0.22, r * 0.06 * blink + 1);
+  glow(c, x - r * 0.27, y - r * 0.22, r * 0.4, '#8dffc8', 0.55 * blink);
+  glow(c, x + r * 0.27, y - r * 0.22, r * 0.4, '#8dffc8', 0.55 * blink);
 }
 
 // Blades. kind: wood | steel | cursed | tabby (Tabby's chipped wooden sword) | glitch
@@ -2377,11 +2379,8 @@ export function drawEffects(c, g) {
   if (f.ads?.length) {
     f.ads = f.ads.filter((a) => a.until > g.time);
     for (const a of f.ads) {
-      c.save();
-      c.shadowColor = 'rgba(0,0,0,0.4)';
-      c.shadowBlur = 20;
+      boxShadow(c, a.x, a.y, a.w, a.h, 0.5, 22, 10);
       popupWindow(c, a.x, a.y, a.w, a.h, '', '#ff3bb0');
-      c.restore();
       text(c, a.label, a.x + a.w / 2, a.y + a.h / 2 + 4, { size: 15, color: '#d4145a' });
       text(c, 'Close in ' + Math.ceil(a.until - g.time) + '…', a.x + a.w / 2, a.y + a.h - 16, { size: 11, color: '#777' });
     }
