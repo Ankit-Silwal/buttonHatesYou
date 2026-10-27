@@ -32,13 +32,46 @@ Without these the game still works fully as a guest; sign-in just shows "soon".
 
 ### How saving works (offline first)
 
-Coins, diamonds and outfits live in the browser cache (localStorage) first, so
+Coins, diamonds, outfits, the house and the button's needs live in the browser cache (localStorage) first, so
 everything works offline. Every change is recorded as an event (`reward`, `buy`,
 `equip`) in an outbox. When you're signed in and online, the outbox goes to
 `/api/sync`. The server replays the events with the same rules
 (`src/economy/rules.js`), using its own price and reward table, skips anything
 it has already seen, and its answer becomes the new truth. Guest progress is
 uploaded the first time you sign in.
+
+## The house and the button's needs
+
+`/house` is the button's room. He lives there in his outfit, breathes, blinks
+and pulls faces that match how he feels.
+
+- **Decorate.** Buy wallpapers (Cozy Cream, Night City, Space Station…),
+  floors, and furniture for fixed spots: ceiling, two wall spots, the bed,
+  a corner, floor left/right and a rug. Everything is a hand-drawn SVG
+  (`src/house/art.jsx`). Tapping an item previews it in the real room, lit and
+  animated, with a "Previewing" tag; nothing is charged until you press Buy.
+- **Feed him.** Silly button food: a browser cookie, a USB stick sandwich, an
+  AA battery smoothie, hot glue hot dogs… Each restores hunger and/or energy
+  (the meters show a ghost of the result before you buy) and some have side
+  effects (hiccups, a sugar rush, a glow, a glitch).
+- **Needs.** Hunger and energy run 0–100 and drift down with real time, even
+  while the app is closed, but time alone never drags them below 15.
+- **Sleep.** Put him to bed (everyone has a free old mattress). The lights
+  dim, Zzz float up and energy refills over about an hour; he wakes on his own
+  when it's full, or when you wake him.
+- **Energy gates games.** An Adventure run costs 10 energy, a story
+  episode/chapter or Please Don't costs 15. Too tired or asleep, and he refuses
+  with a link home. Food is cheap and naps are free, so nobody is stuck.
+
+Code: the catalog and foods are in `src/economy/house.js`, the needs math in
+`src/economy/needs.js`, and the new wallet events (`decor`, `feed`, `sleep`,
+`wake`, `play`) in `applyHouseEvent` in `src/economy/rules.js`, so the server
+validates purchases and needs exactly like outfits. Needs events carry the time
+they happened; the server never accepts one later than its own clock or earlier
+than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
+`src/house/EnergyGate.jsx` the `useEnergyGate(kind)` hook every game calls when
+it starts. Profiles saved before the house existed get defaults
+(`normalize()` in rules.js).
 
 ## How I Met Your Cursor
 
@@ -139,6 +172,7 @@ Progress is saved in localStorage, and every boss hit is a checkpoint.
 
 ## Code
 
+- `src/house/` is the button's house (`/house`): the room, its art, the shop and the energy gate
 - `src/components/Hub.jsx` is the home room; `Wardrobe.jsx` is the shop; `Account.jsx` is Google sign-in
 - `src/economy/` has the catalog (items, prices, games and their rewards) and the wallet rules shared by browser and server
 - `src/profile/store.js` is the offline-first profile cache and sync

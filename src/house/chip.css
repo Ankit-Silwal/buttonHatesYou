@@ -23,3 +23,19 @@
 @media (prefers-reduced-motion: reduce) {
   .energy-chip.low { animation: none; }
 }
+
+/* The wardrobe's "trying on" bar, to match the house's preview bar. */
+.buybar .try-tag {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #3b2a20;
+  color: #ffe9b8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+.buybar .pill { white-space: nowrap; }
