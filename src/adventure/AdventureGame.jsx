@@ -146,6 +146,7 @@ export default function AdventureGame({ id }) {
 // The line under a run's payout: how far the next, better-paying tier was.
 function nextTier({ payout: p, unit }, { score, coins }) {
   if (p.coins) return `${coins} coin${coins === 1 ? '' : 's'} grabbed. Every one is yours.`;
+  if (score < p.per) return `The first ${p.per} ${unit} pay ${p.base} 🪙, the next ${p.per} pay ${p.base * 2}.`;
   const tier = Math.floor(score / p.per) + 1;
   const left = tier * p.per - score;
   return `${left} more ${unit} and the next ${p.per} pay ${p.base * (tier + 1)} 🪙.`;
