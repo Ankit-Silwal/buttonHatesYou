@@ -26,6 +26,16 @@ const CRACKS = [
   'M44 80 L46 74 L42 69 L48 63',
 ];
 
+// Dust floating in the sunbeam: left, top (inside the beam) and drift delay.
+const MOTES = [
+  ['12%', '20%', '0s'],
+  ['30%', '42%', '-3s'],
+  ['46%', '64%', '-6s'],
+  ['22%', '74%', '-1.5s'],
+  ['56%', '30%', '-4.5s'],
+  ['64%', '82%', '-7.5s'],
+];
+
 export default function Game() {
   const root = useRef(null);
 
@@ -34,9 +44,24 @@ export default function Game() {
   useEffect(() => startGame(root.current), []);
 
   return (
-    <div ref={root}>
+    <div ref={root} className="pd">
       <div id="app">
         <div id="room" aria-hidden="true">
+          {/* the room's light and depth: wall, window, sunbeam, floor, rug */}
+          <div className="pd-wall" />
+          <div className="pd-hole" />
+          <div className="pd-window">
+            <i className="pd-sky" />
+            <i className="pd-sun" />
+          </div>
+          <div className="pd-floor" />
+          <div className="pd-rug" />
+          <div className="pd-beam" />
+          <div className="pd-motes">
+            {MOTES.map((m, i) => (
+              <i key={i} style={{ '--mx': m[0], '--my': m[1], '--md': m[2] }} />
+            ))}
+          </div>
           {DECOR.map((d, i) => (
             <span
               key={i}
@@ -48,11 +73,16 @@ export default function Game() {
             </span>
           ))}
           <svg id="cracks" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {CRACKS.map((d) => <path key={'hl' + d} className="hl" d={d} />)}
             {CRACKS.map((d) => <path key={d} d={d} />)}
           </svg>
           <div id="dents" />
           <div id="graves" />
           <div id="puddle" />
+          {/* evening and the final collapse fade in over everything */}
+          <div className="pd-tint dusk" />
+          <div className="pd-tint dark" />
+          <div className="pd-dust" />
         </div>
         <div id="world" />
         <div id="arena" hidden />

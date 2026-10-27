@@ -7,7 +7,7 @@ import {
   G, dom, hooks, scope, wait, $, rand, pick, clamp, h,
   GOAL, BOSS_AT, POST_GOAL, RICKROLL, FRIENDS,
   save, load, wipeSave, makeChar, place, setMood, area, spot,
-  say, floatText, shake, updateHud, setScene, showSkips, setLook,
+  say, floatText, shake, updateHud, setScene, showSkips, setLook, pressFx,
 } from './core';
 
 const REWARD = REWARDS['please-dont'];
@@ -155,6 +155,12 @@ function moveHero(p) {
   followers();
 }
 
+// A scripted event lands with a little camera punch on the room.
+function punch() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  dom.room.animate([{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: 650, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+
 const hop = () => moveHero(spot(hero._x, hero._y, 200));
 const center = () => moveHero({ x: innerWidth / 2, y: innerHeight * 0.55 });
 
@@ -188,6 +194,7 @@ function onHeroClick(e) {
   updateHud();
   Sound.click(G.clicks);
   press(hero);
+  pressFx(hero._x, hero._y, e.clientX || hero._x, e.clientY || hero._y);
   floatText('+1', e.clientX || hero._x, (e.clientY || hero._y) - 40);
   advance(G.clicks);
 }
@@ -195,7 +202,8 @@ function onHeroClick(e) {
 function advance(n) {
   const ev = STORY[n];
   if (ev) {
-    say(ev.say);
+    say(ev.say, true);
+    if (ev.run) punch();
     if (ev.mood) setMood(hero, ev.mood);
     ev.run?.();
   } else {
@@ -693,6 +701,7 @@ function postClick() {
   updateHud();
   Sound.click(G.post * 3);
   press(hero);
+  pressFx(hero._x, hero._y, hero._x, hero._y, 'rgba(170, 225, 190, 0.9)');
   say(POST_LINES[G.post - 1]);
   setMood(hero, G.post <= 5 || (G.post >= 16 && G.post < 20) ? 'calm' : 'smug');
 
