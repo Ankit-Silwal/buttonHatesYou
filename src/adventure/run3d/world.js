@@ -21,6 +21,30 @@ const RAMP = 4;
 const AD_LOW = 1.15;
 const ROWS = Math.ceil((FAR - NEAR) / TILE) + 2;
 
+// The sky drifts from sunset to night to morning and round again as you run.
+const SKIES = [
+  { top: '#4a4fd6', mid: '#ff9ec2', low: FOG, hemi: 1.1, sun: 2.6, env: 0.55, sunColor: '#fff0dc', disc: '#ffffff', stars: 0, glow: 0 },
+  { top: '#090b26', mid: '#33286a', low: '#3b3168', hemi: 0.25, sun: 0.55, env: 0.12, sunColor: '#a9b8ff', disc: '#c9d4ff', stars: 1, glow: 1 },
+  { top: '#4f9be8', mid: '#b8dcff', low: '#fde3cf', hemi: 1.3, sun: 2.9, env: 0.6, sunColor: '#fffaf0', disc: '#ffffff', stars: 0, glow: 0 },
+];
+const SKY_LEG = 900; // meters per sky
+const lerpSky = (() => {
+  const out = {};
+  const ca = new THREE.Color();
+  const cb = new THREE.Color();
+  return (dist) => {
+    const leg = Math.floor(dist / SKY_LEG);
+    const a = SKIES[leg % SKIES.length];
+    const b = SKIES[(leg + 1) % SKIES.length];
+    const f = THREE.MathUtils.smoothstep((dist / SKY_LEG) % 1, 0.75, 1);
+    for (const k of Object.keys(a)) {
+      if (typeof a[k] === 'number') out[k] = a[k] + (b[k] - a[k]) * f;
+      else out[k] = (out[k] ?? new THREE.Color()).copy(ca.set(a[k])).lerp(cb.set(b[k]), f);
+    }
+    return out;
+  };
+})();
+
 export function createWorld(look, POWERS) {
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(FOG, 30, 90);
@@ -78,7 +102,25 @@ export function createWorld(look, POWERS) {
     scene.environment = once('env', () => new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture);
     scene.environmentIntensity = 0.55;
   }
-  scene.add(new THREE.HemisphereLight('#dfe4ff', '#c99a6c', 1.1));
+  const hemi = new THREE.HemisphereLight('#dfe4ff', '#c99a6c', 1.1);
+  scene.add(hemi);
+  // the button glows a little in the dark
+  const glow = new THREE.PointLight('#ffb27a', 0, 9, 1.5);
+  scene.add(glow);
+  const stars = new THREE.Points(
+    geo('stars', () => {
+      const pts = [];
+      for (let i = 0; i < 400; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const h = 0.08 + Math.random() * 0.9;
+        const r = Math.sqrt(1 - h * h) * 280;
+        pts.push(Math.cos(a) * r, h * 280, Math.sin(a) * r);
+      }
+      return new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    }),
+    once('starmat', () => new THREE.PointsMaterial({ color: '#ffffff', size: 1.6, sizeAttenuation: false, transparent: true, fog: false, depthWrite: false }))
+  );
+  scene.add(stars);
   const light = new THREE.DirectionalLight('#fff0dc', 2.6);
   light.castShadow = true;
   light.shadow.mapSize.set(2048, 2048);
@@ -100,9 +142,9 @@ export function createWorld(look, POWERS) {
   kb.position.set(0, (DESK + BODY_TOP) / 2, -120);
   scene.add(kb);
   const keyGeo = geo('key', () => new RoundedBoxGeometry(1.44, 0.44, TILE - 0.16, 3, 0.1));
-  const keys = new THREE.InstancedMesh(keyGeo, mat('#ffffff', { roughness: 0.45 }), ROWS * 3);
+  const keys = new THREE.InstancedMesh(keyGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45 }), ROWS * 3);
   const sideGeo = geo('sidekey', () => new RoundedBoxGeometry(0.42, 0.44, TILE - 0.16, 3, 0.08));
-  const sideKeys = new THREE.InstancedMesh(sideGeo, mat('#ffffff', { roughness: 0.5 }), ROWS * 2);
+  const sideKeys = new THREE.InstancedMesh(sideGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 }), ROWS * 2);
   keys.receiveShadow = sideKeys.receiveShadow = true;
   keys.castShadow = sideKeys.castShadow = false;
   scene.add(keys, sideKeys);
@@ -153,10 +195,36 @@ export function createWorld(look, POWERS) {
     const jy = shake ? (Math.random() - 0.5) * shake * 0.6 : 0;
     camera.fov = 58 + (s.speed - 13) * 0.45;
     camera.updateProjectionMatrix();
-    camera.position.set(s.cam.x + jx, s.cam.y + 1.1 + jy, 6.2);
-    camera.lookAt(s.cam.x * 0.85, s.cam.y - 2.2, -10);
+    // the intro starts in front of the button, looking at its face, then
+    // swings round behind it
+    const k = THREE.MathUtils.smootherstep(s.intro, 0, 1);
+    const rad = 6.2 - 1.6 * k;
+    const orbit = k * Math.PI;
+    camera.position.set(s.cam.x + Math.sin(orbit) * rad * 0.9 + jx, s.cam.y + 1.1 - 2.5 * k + jy, Math.cos(orbit) * rad);
+    const f = THREE.MathUtils.smoothstep(k, 0, 0.45);
+    camera.lookAt(s.cam.x * 0.85 * (1 - f) + s.me.x * f, s.cam.y - 2.2 + (0.75 - s.cam.y + 2.2) * f, -10 + 10 * f);
     camera.updateMatrixWorld();
     sky.position.copy(camera.position);
+    stars.position.copy(camera.position);
+    const p0 = lerpSky(s.dist);
+    sky.material.uniforms.top.value.copy(p0.top);
+    sky.material.uniforms.mid.value.copy(p0.mid);
+    sky.material.uniforms.low.value.copy(p0.low);
+    scene.fog.color.copy(p0.low);
+    hemi.intensity = p0.hemi;
+    light.intensity = p0.sun;
+    light.color.copy(p0.sunColor);
+    sun.material.color.copy(p0.disc);
+    stars.material.opacity = p0.stars;
+    stars.visible = p0.stars > 0.01;
+    glow.intensity = p0.glow * 5;
+    if (scene.environment) scene.environmentIntensity = p0.env;
+    // after dark the keyboard lights up like a gaming one
+    keys.material.emissive.setHSL((t * 0.08) % 1, 0.9, 0.5);
+    keys.material.emissiveIntensity = p0.glow * 0.07;
+    sideKeys.material.emissive.setHSL((t * 0.08 + 0.5) % 1, 0.9, 0.5);
+    sideKeys.material.emissiveIntensity = p0.glow * 0.5;
+    glow.position.set(s.me.x, s.me.y + 1.2, 0.6);
     light.position.set(s.cam.x + 6, 16, 8);
     light.target.position.set(s.cam.x, 0, -10);
 

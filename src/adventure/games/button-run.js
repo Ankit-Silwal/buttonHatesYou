@@ -27,6 +27,7 @@ const TRAIN_TOP = 2.4;
 const RAMP = 4;
 const AD_LOW = 1.15; // popup ads float just high enough to slide under
 const COIN = 5;
+const INTRO = 1.8; // seconds of staring at you before the run starts
 
 export const POWERS = {
   magnet: { icon: '🧲', name: 'Magnet', color: '#e0453a', time: 10 },
@@ -82,10 +83,14 @@ export default function buttonRun({ look, sound }) {
   let phase = 0; // the running stride
   let glance = 0; // 0 facing ahead .. 1 turned round to look at you
   let glanceFor = 0;
+  let intro = INTRO;
 
   const world = createWorld(look, POWERS);
   const P = world.project;
   const lookBack = (sec) => (glanceFor = Math.max(glanceFor, sec));
+  const skipIntro = () => {
+    intro = Math.min(intro, 0.45);
+  };
 
   /* ---------- building the track ---------- */
   const coinLine = (lane, z0, n, height = () => 0.6) => {
@@ -427,6 +432,7 @@ export default function buttonRun({ look, sound }) {
     over: false,
 
     down(x, y) {
+      if (intro > 0) return skipIntro();
       press = { x, y, done: false };
     },
     move(x, y) {
@@ -444,6 +450,7 @@ export default function buttonRun({ look, sound }) {
       press = null;
     },
     key(code) {
+      if (intro > 0) return skipIntro();
       if (code === 'ArrowLeft' || code === 'KeyA') shift(-1);
       else if (code === 'ArrowRight' || code === 'KeyD') shift(1);
       else if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') jumpNow();
@@ -459,9 +466,15 @@ export default function buttonRun({ look, sound }) {
       safe -= dt;
       chase -= dt;
 
-      // small steps, so nothing thin gets skipped over at top speed
-      const n = Math.ceil(dt / (1 / 90));
-      for (let i = 0; i < n; i++) step(dt / n);
+      if (intro > 0) {
+        if (intro === INTRO) mouth.say('Oh no. Not you again.', 1.4);
+        intro -= dt;
+        if (intro <= 0) mouth.say(pick(['Bye!', 'Catch me if you can.', 'Run, legs, RUN.']), 1.2);
+      } else {
+        // small steps, so nothing thin gets skipped over at top speed
+        const n = Math.ceil(dt / (1 / 90));
+        for (let i = 0; i < n; i++) step(dt / n);
+      }
 
       if (!g.over) {
         for (const k of Object.keys(active)) {
@@ -502,6 +515,7 @@ export default function buttonRun({ look, sound }) {
         chase,
         over: g.over,
         overT,
+        intro: clamp(intro / 1.2, 0, 1),
         pose: {
           t,
           phase,
