@@ -93,6 +93,20 @@ the **Bedroom**.
   energy gives him dark circles. The decoration shop is still at `/house`
   (the Decorate button).
 
+## More Adventure games
+
+Five more quick games (each one file in `src/adventure/games/`, listed in
+`GAMES` in `src/economy/catalog.js`):
+
+- **Freeze!** (`redlight`): run while the cursor looks away, stop when it turns.
+- **Inbox Zero** (`spam`): sort mail, spam left and real mail right.
+- **Shaken Not Stirred** (`fizz`): shake the soda and release in the green.
+- **Cursor Pong** (`pong`): the cursor is the ball, you are the paddle.
+- **Wobble Walk** (`tightrope`): lean against the wind on a tightrope.
+
+They pay like the other Adventure games (rising tiers, `rate` anti-cheat) and
+have no achievements of their own, so the diamond supply is unchanged.
+
 ## How I Met Your Cursor
 
 The story before The Reason, and the opposite of it: funny, romantic and
