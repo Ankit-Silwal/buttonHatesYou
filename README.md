@@ -123,7 +123,9 @@ E talk / use · Esc pause. Phones get an on-screen pad.
 
 ## Economy
 
-Coins (🪙) come from playing; diamonds (💎) are rare. All numbers live in
+Coins (🪙) come from playing; diamonds (💎) come only from
+[achievements](#achievements-and-the-daily-chest) (plus, rarely, the daily
+chest). All numbers live in
 `src/economy/catalog.js` (`STORY_REWARDS`, `RUN_LIMITS`, each Adventure
 game's `payout`) and the rules in `src/economy/rules.js`, which the browser
 and the server both run. `node scripts/check-economy.mjs` checks them.
@@ -150,9 +152,9 @@ Regret (`per` 10 pipes, `base` 25): 10 pipes pay 25, 15 pay 50, 20 pay 75,
 Button Run instead pays exactly the coins the button picked up (the counter in
 the corner; x2 coins count double), typically 30 to 100 a run.
 
-Diamonds from runs: 1 💎 the first time a run in a game pays 100+, and 1 more
-for a run paying 200+ that is at least 1.5 times that game's best payout so
-far. That is at most about three per game, ever.
+Runs pay coins only. (They used to pay 1 💎 for a game's first 100+ run and
+for big personal bests; that value now lives in each game's "score N"
+achievement.)
 
 **Story games pay big, once.** The first finish of each part pays, and the
 wallet remembers it (`claimed`), so replays (or wiping a story save) pay
@@ -160,8 +162,8 @@ nothing, on the server too:
 
 | Story | Each part | Finale | Total |
 | --- | --- | --- | --- |
-| The Reason (9 episodes) | 200 🪙 | 1500 🪙 + 10 💎 | 3100 🪙 + 10 💎 |
-| How I Met Your Cursor (6 chapters) | 200 🪙 | 1200 🪙 + 8 💎 | 2200 🪙 + 8 💎 |
+| The Reason (9 episodes) | 200 🪙 | 1500 🪙 | 3100 🪙 |
+| How I Met Your Cursor (6 chapters) | 200 🪙 | 1200 🪙 | 2200 🪙 |
 | Please Don't | | ??? (nothing: the prize is a mystery) | — |
 
 **Prices** (outfits; coins about ×8, diamonds ×2, so a new player starts with
@@ -183,8 +185,10 @@ nothing, on the server too:
 The balance, with a typical run worth about 50 🪙: a cheap item (250 to 400)
 takes 5 to 8 runs, a mid one (450 to 600) about 10, the dearest coin items
 (700 to 950, or house items up to 3000) a few evenings, and diamond items real
-dedication: the story games give 23 💎 in total and Adventure runs a few each,
-while the outfits alone cost 36 💎. A run costs 10 energy in the house's needs;
+dedication: achievements pay 169 💎 in all (the story finales' diamonds moved
+there), while the diamond outfits cost 36 💎 and the diamond house items 42.
+The rest goes on continues in Adventure (1, 2, then 3 💎 per crash in a run)
+and the odd Floppy Disk Waffle. A run costs 10 energy in the house's needs;
 food that restores that costs about 15 🪙, so playing always comes out ahead.
 
 **Anti-cheat.** A run event carries `{ game, score, extra (coins grabbed), ms
@@ -201,6 +205,75 @@ rewards are paid once per claim id, and event ids are never applied twice.
 events pay their old small amounts (a limited number of times each). A guest's
 old queue is folded once into a plain wallet under the old prices (so nothing
 already bought is re-priced), and still uploaded when they first sign in.
+Diamonds already earned the old way are kept.
+
+## Achievements and the daily chest
+
+**Achievements** (`/achievements`, the 🏆 on the home screen, whose badge
+counts the levels ready to claim) are the only steady source of diamonds.
+Each has three medals, Bronze, Silver and Gold, claimed by hand and in order
+with a Claim button. The table lives in `src/economy/achievements.js`:
+
+| Achievement | Goal | Bronze | Silver | Gold |
+| --- | --- | --- | --- | --- |
+| Pipe Dreams | pipes in Flappy Regret | 10 · 1 💎 | 20 · 2 💎 | 40 · 3 💎 |
+| Family Feud | points in Pop Tantrum | 1000 · 1 | 2000 · 2 | 4000 · 3 |
+| Stress Eater | snacks in Snack Attack | 25 · 1 | 50 · 2 | 100 · 3 |
+| Elephant Brain | rounds in Copy Me | 5 · 1 | 10 · 2 | 20 · 3 |
+| Social Distancing | meters in Sky Hop | 2000 · 1 | 4000 · 2 | 8000 · 3 |
+| Anger Management | bonks in Whack-a-Button | 20 · 1 | 40 · 2 | 80 · 3 |
+| Restraining Order | meters in Run Away | 600 · 1 | 1200 · 2 | 2400 · 3 |
+| Back Problems | floors in Tower of Regret | 12 · 1 | 24 · 2 | 48 · 3 |
+| Knife to Meet You | slices in Slice Spree | 30 · 1 | 60 · 2 | 120 · 3 |
+| Coin Goblin | coins grabbed in one Button Run | 50 · 1 | 100 · 2 | 200 · 3 |
+| Professional Loser | Adventure runs finished | 10 · 1 | 50 · 3 | 200 · 6 |
+| Capitalism Enjoyer | 🪙 earned from runs | 1000 · 1 | 10000 · 3 | 50000 · 6 |
+| Emotional Damage | episodes of The Reason | 1 · 1 | 5 · 3 | 9 · 8 |
+| Hopeless Romantic | chapters of How I Met Your Cursor | 1 · 1 | 3 · 3 | 6 · 6 |
+| Bookworm | story parts in all | 3 · 1 | 8 · 2 | 15 · 4 |
+| Drip Check | outfit items owned | 1 · 1 | 6 · 2 | 15 · 4 |
+| Interior Disaster | furniture owned | 3 · 1 | 8 · 2 | 15 · 4 |
+| Feng Shui Crimes | wallpapers and floors owned | 1 · 1 | 4 · 2 | 8 · 4 |
+| Feeding Frenzy | snacks fed | 10 · 1 | 50 · 2 | 200 · 4 |
+| Nap Champion | naps | 3 · 1 | 15 · 2 | 50 · 4 |
+| Can't Stay Away | different days played | 3 · 1 | 10 · 3 | 30 · 6 |
+| Treasure Goblin | daily chests opened | 5 · 1 | 25 · 2 | 100 · 4 |
+| Streak Freak | chest streak (days in a row) | 3 · 1 | 7 · 2 | 30 · 5 |
+
+That is 23 achievements, 69 medals and 169 💎. Score medals sit at one, two
+and four of the game's pay tiers, so a new player's first decent run (10
+pipes, say) is already a Bronze, and ten runs another. Please Don't has no
+achievement: it pays nothing, on purpose.
+
+**Stats the server can check.** Achievements look at `statsOf(wallet)`, built
+only from what the shared `applyEvent` has already accepted: `wallet.stats`
+(per-game best score as `applyRun` clamped it, runs, coins paid by runs, snacks
+eaten, naps, distinct UTC days with a timed event, chests and streaks) plus
+what the wallet already proves (story parts in `claimed`, items in `owned`).
+Wallets from before stats start counting from zero, except best scores, which
+start at the lowest score that pays the game's remembered best payout. A
+continued Adventure run is still one `run` event, with its final score.
+
+**Claiming** is an `{ type: 'achieve', ach, level }` event (`ach` is the
+achievement id; `id` is the event's own id). It is accepted only for the next
+unclaimed level (`wallet.achieved[ach] + 1`) and only once that level's stat is
+there; then it pays that level's diamonds. The server replays it with the same
+function, so a claim the browser made up is just dropped. After a run or a
+story part makes a level claimable, its results card says "Achievement ready!".
+
+**The daily chest** (🎁 on the home screen and the top of the achievements
+page) opens once per UTC day with an `{ type: 'chest', at }` event. Its loot
+comes from `chestLoot(wallet.seed, day, streak)` in `src/economy/chest.js`, a
+seeded generator: the seed is made from the account id on the server (a guest
+gets a random one), and no event can change it, so the browser can show the
+loot right away and can't choose it. A chest holds 50 to 150 🪙, a 40% chance
+of a free snack (kept in `wallet.pantry`; the house eats free snacks before
+paying for one), a 25% chance of full energy, and a 4% chance of 1 💎. Every
+7th day of a streak is a big chest: 300 to 500 🪙, a Floppy Disk Waffle, full
+energy and 1 💎. The day is the event's `at`, capped at the server clock; it
+must be later than the last chest's day and at most 7 days old (so a chest
+opened offline still counts, but nobody can backdate a year of them). Days
+played use the same 7-day limit.
 
 ## Adventure games
 
