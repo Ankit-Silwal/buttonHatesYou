@@ -8,6 +8,11 @@ import run from './run';
 import stack from './stack';
 import slice from './slice';
 import buttonRun from './button-run';
+import redlight from './redlight';
+import spam from './spam';
+import fizz from './fizz';
+import pong from './pong';
+import tightrope from './tightrope';
 
 // Every Adventure game is a function that takes
 //   { look, sound, keys }   the outfit (see lookOf), the Sound kit, and the
@@ -26,4 +31,4 @@ import buttonRun from './button-run';
 //                           (clears what crashed it, gives back a life, time
 //                           or taps, a moment of blinking safety...). Games
 //                           without it never offer a Continue.
-export const CREATE = { flap, pop, catch: catchGame, simon, hop, whack, run, stack, slice, 'button-run': buttonRun };
+export const CREATE = { flap, pop, catch: catchGame, simon, hop, whack, run, stack, slice, 'button-run': buttonRun, redlight, spam, fizz, pong, tightrope };

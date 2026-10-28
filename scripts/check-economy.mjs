@@ -220,7 +220,7 @@ assert.ok(ACHIEVEMENT_DIAMONDS > itemDiamonds, 'every diamond item is reachable'
 assert.ok(ACHIEVEMENT_DIAMONDS < itemDiamonds * 3, 'but diamonds stay scarce');
 
 // Print the tables for the README
-const typical = { flap: [10, 20, 30], pop: [1000, 2000, 3000], catch: [25, 50, 75], simon: [5, 10, 15], hop: [2000, 4000, 6000], whack: [20, 40, 60], run: [600, 1200, 1800], stack: [12, 24, 36], slice: [30, 60, 90] };
+const typical = { flap: [10, 20, 30], pop: [1000, 2000, 3000], catch: [25, 50, 75], simon: [5, 10, 15], hop: [2000, 4000, 6000], whack: [20, 40, 60], run: [600, 1200, 1800], stack: [12, 24, 36], slice: [30, 60, 90], redlight: [500, 1000, 1500], spam: [25, 50, 75], fizz: [5, 10, 15], pong: [20, 40, 60], tightrope: [400, 800, 1200] };
 for (const g of GAMES.filter((g) => g.payout && !g.payout.coins))
   console.log(g.id.padEnd(6), typical[g.id].map((s) => `${s} ${g.unit} -> ${adventurePayout(g, s)}`).join(' | '));
 const coinPrices = ITEMS.filter((i) => i.price?.coins).map((i) => i.price.coins);

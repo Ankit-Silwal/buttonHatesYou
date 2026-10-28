@@ -237,6 +237,11 @@ const ADVENTURE = {
   stack: { sec: 0.5, top: 500 },
   slice: { sec: 1.0, top: 530, taps: [0] },
   'button-run': { sec: 4.6, top: 395 },
+  redlight: { sec: 1.5, top: 250 },
+  spam: { sec: 1.5, top: 200 },
+  fizz: { sec: 0.5, top: 200 },
+  pong: { sec: 2, top: 200 },
+  tightrope: { sec: 1.5, top: 250 },
 };
 
 function seeded(seed) {
