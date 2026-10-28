@@ -7,6 +7,7 @@ import Account from './Account';
 import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
 import EnergyChip from '@/house/EnergyChip';
+import HubPerks from '@/achievements/HubPerks';
 import { useProfile } from '@/profile/useProfile';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -107,6 +108,7 @@ export default function Hub() {
         </div>
         <Account user={user} ready={ready} />
       </header>
+      {!panel && <HubPerks />}
 
       <p className="hub-line" key={line.n} aria-live="polite">
         {line.text}

@@ -1,6 +1,11 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
 import { HOUSE_ITEM, DEFAULT_HOUSE, SPOT, FOOD } from './house';
 import { DEFAULT_NEEDS, PLAY_COST, needsAt, normalizeNeeds } from './needs';
+import { tierPayout } from './tiers';
+import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
+import { CHEST, chestLoot } from './chest';
+
+export { tierPayout };
 
 // A wallet only ever changes through events, and the browser and the server
 // run the very same `applyEvent`. The browser applies them right away (so it
@@ -24,6 +29,8 @@ import { DEFAULT_NEEDS, PLAY_COST, needsAt, normalizeNeeds } from './needs';
 //                                       events queued before the economy rework
 //   { id, type: 'buy', item }           bought an item
 //   { id, type: 'equip', slot, item }   put an owned item on
+//   { id, type: 'achieve', ach, level } claimed an achievement level (pays diamonds)
+//   { id, type: 'chest', at }           opened the daily chest
 //
 // Economy fields a wallet picks up as it is used (all optional, so wallets
 // saved before them still work):
@@ -31,6 +38,8 @@ import { DEFAULT_NEEDS, PLAY_COST, needsAt, normalizeNeeds } from './needs';
 //   runs     { [game]: best payout of a single run } (for the diamonds)
 //   day      { n: day number (UTC), coins: run coins earned that day, ms: play time }
 //   legacy   { [REWARDS id]: times paid } (old events are paid a limited number of times)
+//   stats    what achievements count (see achievements.js); achieved { [id]: levels claimed }
+//   seed     the daily chest's seed (set by the server); pantry { [food]: free snacks from chests }
 //
 // The house and the button's needs have their own events, handled by
 // applyHouseEvent below.
@@ -42,6 +51,9 @@ export const START = Object.freeze({
   equipped: DEFAULT_LOOK,
   house: DEFAULT_HOUSE, // see house.js
   needs: DEFAULT_NEEDS, // see needs.js
+  stats: EMPTY_STATS, // see achievements.js
+  achieved: Object.freeze({}),
+  pantry: Object.freeze({}),
 });
 
 const pick = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
@@ -57,6 +69,13 @@ export const canAfford = (wallet, item) =>
 export function applyEvent(wallet, ev, now = Infinity) {
   if (!ev || typeof ev !== 'object') return null;
   wallet = normalize(wallet);
+  const next = applyAnyEvent(wallet, ev, now);
+  return next && countDay(next, ev, now); // see "Achievements" below
+}
+
+function applyAnyEvent(wallet, ev, now) {
+  const achieved = applyAchievementEvent(wallet, ev, now);
+  if (achieved !== undefined) return achieved;
   const house = applyHouseEvent(wallet, ev, now);
   if (house !== undefined) return house;
   const cont = applyContinueEvent(wallet, ev);
@@ -104,16 +123,7 @@ const add = (wallet, prize) => ({
   diamonds: wallet.diamonds + prize.diamonds,
 });
 
-// Rising tiers: the first `per` units pay `base`, the next `per` pay 2*base,
-// then 3*base, and so on; a partial tier pays its share, rounded down.
-// e.g. per 10, base 25: 10 -> 25, 15 -> 50, 20 -> 75, 30 -> 150, 40 -> 250.
-export function tierPayout(score, per, base) {
-  score = Math.floor(num(score));
-  if (score <= 0) return 0;
-  const n = Math.floor(score / per);
-  const part = score - n * per;
-  return Math.floor((base * (n * (n + 1) * per + 2 * (n + 1) * part)) / (2 * per));
-}
+// tierPayout (the rising tiers) lives in tiers.js.
 
 // What an Adventure run is worth before any anti-cheat or daily limits.
 // `game` is a GAMES entry or id; `extra` is Button Run's coins picked up.
@@ -123,17 +133,6 @@ export function adventurePayout(game, score, extra = 0) {
   if (!p) return 0;
   const coins = p.coins ? Math.floor(num(extra)) : tierPayout(score, p.per, p.base);
   return clamp(coins, 0, RUN_LIMITS.maxPayout);
-}
-
-// The diamonds a run's payout earns, given the game's best payout before it:
-// one the first time a run pays `diamondAt`, and one for a run paying at
-// least `recordAt` that beats a best of `diamondAt`+ by `recordBy` times.
-export function runDiamonds(payout, best = 0) {
-  const L = RUN_LIMITS;
-  let d = 0;
-  if (payout >= L.diamondAt && best < L.diamondAt) d++;
-  if (best >= L.diamondAt && payout >= L.recordAt && payout >= best * L.recordBy) d++;
-  return d;
 }
 
 // The anti-cheat part. The browser's word is taken for the score, but only up
@@ -164,12 +163,13 @@ function applyRun(wallet, ev, now) {
   const full = clamp(L.dailyFull - day.coins, 0, raw);
   const coins = full + Math.floor((raw - full) * L.overCap);
   const best = num(wallet.runs?.[game.id]);
-  const diamonds = runDiamonds(raw, best);
 
+  // Runs pay coins only: diamonds come from achievements.
   return {
-    ...add(wallet, { coins, diamonds }),
+    ...add(wallet, { coins, diamonds: 0 }),
     runs: { ...wallet.runs, [game.id]: Math.max(best, raw) },
     day: { n, coins: day.coins + raw, ms: day.ms + ms, end: at },
+    stats: countRun(wallet.stats, game.id, p.coins ? extra : score, coins),
   };
 }
 
@@ -215,10 +215,13 @@ const pay = (wallet, price) => ({
 // Wallets saved before the house existed have no `house` or `needs`.
 export function normalize(w) {
   if (!w || typeof w !== 'object') return START;
-  if (w.house?.place && w.needs && w.equipped && Array.isArray(w.owned)) return w;
+  if (w.house?.place && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
   return {
     ...START,
     ...w,
+    stats: { ...EMPTY_STATS, ...w.stats, best: { ...w.stats?.best } },
+    achieved: { ...w.achieved },
+    pantry: { ...w.pantry },
     owned: Array.isArray(w.owned) ? w.owned : [],
     equipped: { ...DEFAULT_LOOK, ...w.equipped },
     house: { ...DEFAULT_HOUSE, ...w.house, place: { ...DEFAULT_HOUSE.place, ...w.house?.place } },
@@ -269,9 +272,11 @@ function applyHouseEvent(wallet, ev, now) {
   if (ev.type === 'feed') {
     const food = own(FOOD, ev.item);
     const needs = food && needsFor(wallet, ev, now);
-    if (!needs || needs.asleep || !canAfford(wallet, food)) return null;
+    const free = food ? num(wallet.pantry[food.id]) : 0; // snacks from the daily chest go first
+    if (!needs || needs.asleep || (!free && !canAfford(wallet, food))) return null;
     return {
-      ...pay(wallet, food.price),
+      ...(free ? { ...wallet, pantry: { ...wallet.pantry, [food.id]: free - 1 } } : pay(wallet, food.price)),
+      stats: { ...wallet.stats, eaten: num(wallet.stats.eaten) + 1 },
       needs: { ...needs, hunger: r2(Math.min(100, needs.hunger + food.hunger)), energy: r2(Math.min(100, needs.energy + food.energy)) },
     };
   }
@@ -279,7 +284,8 @@ function applyHouseEvent(wallet, ev, now) {
   if (ev.type === 'sleep' || ev.type === 'wake') {
     const needs = needsFor(wallet, ev, now);
     if (!needs || needs.asleep === (ev.type === 'sleep')) return null;
-    return { ...wallet, needs: { ...needs, asleep: ev.type === 'sleep' } };
+    const naps = num(wallet.stats.naps) + (ev.type === 'sleep' ? 1 : 0);
+    return { ...wallet, needs: { ...needs, asleep: ev.type === 'sleep' }, stats: { ...wallet.stats, naps } };
   }
 
   if (ev.type === 'play') {
@@ -314,4 +320,107 @@ function applyContinueEvent(wallet, ev) {
   const cost = continueCost(ev.n);
   if (!game?.payout || cost == null || wallet.diamonds < cost) return null;
   return { ...wallet, diamonds: wallet.diamonds - cost };
+}
+
+/* =====================================================================
+   Achievements, stats and the daily chest (see achievements.js, chest.js)
+   =====================================================================
+   { id, type: 'achieve', ach, level } claims level `level` (1 = Bronze) of an
+                                       achievement: only the next unclaimed
+                                       one, and only once its stat is there.
+                                       Pays that level's diamonds.
+   { id, type: 'chest', at }           opens the daily chest: once per UTC day
+                                       (the day of `at`, capped at the server's
+                                       clock, later than the last chest's day,
+                                       and at most CHEST.window days old). The
+                                       loot comes from the wallet's seed and
+                                       the day, never from the event.
+   Stats are counted where the events are applied (runs in applyRun, food and
+   naps in applyHouseEvent) and days played in countDay, for every event. */
+
+// A run counted into the stats: one more run, the coins it paid, and the
+// game's best score (coins grabbed for Button Run), as applyRun clamped it.
+// A continued run is still one run event, with its final score.
+function countRun(stats, game, score, coins) {
+  const s = { ...EMPTY_STATS, ...stats };
+  return {
+    ...s,
+    best: { ...s.best, [game]: Math.max(num(s.best[game]), Math.floor(score)) },
+    runs: num(s.runs) + 1,
+    runCoins: num(s.runCoins) + coins,
+  };
+}
+
+const TIMED = new Set(['run', 'feed', 'sleep', 'wake', 'play', 'chest']);
+
+// When a timed event happened, as far as stats go: capped at `now`, or null
+// when it has no time or (on the server, which passes a real `now`) is too
+// old to count, so nobody can backdate a year of daily chests.
+function eventTime(ev, now) {
+  const at = num(ev.at);
+  if (at <= 0) return null;
+  const t = Math.min(at, now);
+  if (Number.isFinite(now) && t < now - CHEST.window * DAY_MS) return null;
+  return t;
+}
+
+// Days played: an accepted timed event on a later UTC day than the last one counted.
+function countDay(wallet, ev, now) {
+  if (!TIMED.has(ev.type)) return wallet;
+  const t = eventTime(ev, now);
+  if (t == null) return wallet;
+  const day = Math.floor(t / DAY_MS);
+  const s = wallet.stats;
+  if (day <= num(s.lastDay)) return wallet;
+  return { ...wallet, stats: { ...s, days: num(s.days) + 1, lastDay: day } };
+}
+
+// The new wallet, null when not allowed, undefined when not one of these.
+function applyAchievementEvent(wallet, ev, now) {
+  if (ev.type === 'achieve') {
+    const a = own(ACHIEVEMENT, ev.ach);
+    const done = levelOf(wallet, a?.id);
+    const level = a?.levels[done];
+    if (!level || ev.level !== done + 1) return null; // in order, once each
+    if (a.stat(statsOf(wallet)) < level.at) return null;
+    return {
+      ...wallet,
+      diamonds: wallet.diamonds + level.diamonds,
+      achieved: { ...wallet.achieved, [a.id]: done + 1 },
+    };
+  }
+
+  if (ev.type === 'chest') {
+    const t = eventTime(ev, now);
+    if (t == null) return null;
+    const day = Math.floor(t / DAY_MS);
+    const s = wallet.stats;
+    if (day <= num(s.chestDay)) return null; // one a day
+    const streak = day === num(s.chestDay) + 1 ? num(s.streak) + 1 : 1;
+    const loot = chestLoot(wallet.seed, day, streak);
+    const next = {
+      ...add(wallet, loot),
+      stats: { ...s, chests: num(s.chests) + 1, chestDay: day, streak, bestStreak: Math.max(num(s.bestStreak), streak) },
+    };
+    if (loot.food) next.pantry = { ...wallet.pantry, [loot.food]: num(wallet.pantry[loot.food]) + 1 };
+    if (loot.energy) {
+      const needs = needsFor(wallet, { at: t }, now);
+      if (needs) next.needs = { ...needs, energy: 100 };
+    }
+    return next;
+  }
+
+  return undefined;
+}
+
+// The chest for today: whether it can be opened at `t`, the streak it would
+// make and what's in it (for the chest's preview and its open animation).
+export function chestFor(wallet, t = Date.now()) {
+  const s = normalize(wallet).stats;
+  const day = Math.floor(t / DAY_MS);
+  const ready = day > num(s.chestDay);
+  const streak = !ready ? num(s.streak) : day === num(s.chestDay) + 1 ? num(s.streak) + 1 : 1;
+  // a streak is alive if the last chest was today or yesterday
+  const alive = day - num(s.chestDay) <= 1 ? num(s.streak) : 0;
+  return { ready, streak, alive, day, next: (day + 1) * DAY_MS };
 }

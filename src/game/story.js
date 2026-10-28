@@ -734,9 +734,10 @@ function postClick() {
     G.done = true;
     save();
     // Queued in the profile before the redirect; it syncs now or on the next visit.
-    // Pays the first time only (the wallet remembers), even after a wipe.
-    const prize = !G.testRun && claimStory('please-dont');
-    if (prize) floatText(`+${prize.coins} 🪙  +${prize.diamonds} 💎`, hero._x, hero._y - 90, 'reward');
+    // It pays nothing; the claim only records that it was finished. The prize
+    // is the mystery below.
+    if (!G.testRun) claimStory('please-dont');
+    floatText('??? 🎁', hero._x, hero._y - 90, 'reward');
     dom.loadbar.querySelector('.fill').style.width = '100%';
     Sound.win();
     // Same-tab navigation, so no popup blocker gets in the way.

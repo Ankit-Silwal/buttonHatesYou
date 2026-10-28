@@ -12,6 +12,7 @@ import { GAME } from '@/economy/catalog';
 import { Sound } from '@/game/sound';
 import { W, H, lookOf } from './kit';
 import { CREATE } from './games';
+import { ReadyLine } from '@/achievements/Chest';
 
 const SAVE_KEY = 'buttonHatesYou.adventure.v1';
 
@@ -136,6 +137,7 @@ export default function AdventureGame({ id }) {
             <p className={`prize${result.prize.coins || result.prize.diamonds ? '' : ' none'}`}>
               +{result.prize.coins} 🪙{result.prize.diamonds ? ` +${result.prize.diamonds} 💎` : ''}
             </p>
+            <ReadyLine ready={result.prize.ready} />
             <p className="goal">{nextTier(meta, result)}</p>
             <div className="row">
               <Link href="/games" className="pill ghost">
