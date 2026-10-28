@@ -225,4 +225,23 @@ for (const g of GAMES.filter((g) => g.payout && !g.payout.coins))
   console.log(g.id.padEnd(6), typical[g.id].map((s) => `${s} ${g.unit} -> ${adventurePayout(g, s)}`).join(' | '));
 const coinPrices = ITEMS.filter((i) => i.price?.coins).map((i) => i.price.coins);
 console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coinPrices));
+
+// Playing needs a fed tummy; a paid wake-up wakes him and gives energy back
+{
+  const T0 = Date.UTC(2026, 9, 28, 12);
+  const base = normalize({ ...START, coins: 100, needs: { hunger: 10, energy: 90, asleep: false, at: T0 } });
+  assert.equal(applyEvent(base, { type: 'play', kind: 'adventure', at: T0 }), null, 'too hungry to play');
+  const fed = { ...base, needs: { ...base.needs, hunger: 50 } };
+  assert.ok(applyEvent(fed, { type: 'play', kind: 'adventure', at: T0 }));
+  const asleep = { ...fed, needs: { ...fed.needs, energy: 30, asleep: true } };
+  assert.equal(applyEvent(fed, { type: 'wake', item: 'wake-alarm', at: T0 }), null, 'awake: nothing to wake');
+  const up = applyEvent(asleep, { type: 'wake', item: 'wake-alarm', at: T0 });
+  assert.equal(up.needs.asleep, false);
+  assert.equal(up.needs.energy, 42);
+  assert.equal(up.coins, 60);
+  assert.equal(applyEvent(asleep, { type: 'wake', item: 'nope', at: T0 }), null, 'unknown wake option');
+  assert.equal(applyEvent({ ...asleep, coins: 0 }, { type: 'wake', item: 'wake-alarm', at: T0 }), null, 'cannot afford');
+  assert.equal(applyEvent(asleep, { type: 'wake', at: T0 }).needs.energy, 30, 'free wake gives nothing');
+}
+
 console.log('all economy checks passed');

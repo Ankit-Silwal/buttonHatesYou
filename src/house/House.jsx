@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Wallet from '@/components/Wallet';
-import { useNeeds } from '@/profile/needs';
+import { useNeeds, faceOf } from '@/profile/needs';
 import { buy, decorate, feed, sleep, wake } from '@/profile/store';
 import { owns, canAfford } from '@/economy/rules';
 import { HOUSE_ITEMS, HOUSE_ITEM, FOODS, FOOD, SPOT } from '@/economy/house';
@@ -188,7 +188,8 @@ export default function House() {
     say(pick(POKES), pick(['annoyed', 'angry', 'smug']), 2200);
   }
 
-  const mood = line.mood ?? (needs.mood === 'hungry' ? 'sad' : needs.mood === 'sleep' ? 'sleep' : needs.mood);
+  const face = faceOf(needs);
+  const mood = line.mood ?? (needs.mood === 'sad' ? 'sad' : face.mood);
   const ghost = food && !needs.asleep ? { hunger: needs.hunger + food.hunger, energy: needs.energy + food.energy } : null;
   const wakeIn = needs.asleep ? Math.max(0, Math.ceil((wakesAt(needs) - Date.now()) / 60000)) : 0;
   const short = (it) =>
@@ -221,6 +222,7 @@ export default function House() {
             preview={previewAt}
             equipped={wallet.equipped}
             mood={eating ? 'scared' : mood}
+            sleepy={face.sleepy}
             asleep={needs.asleep}
             fx={fx}
             eating={eating}
@@ -245,7 +247,7 @@ export default function House() {
                   ? `Sleeping. Energy +${Math.round(NEEDS.sleepEnergyPerHour / 60 * 10) / 10} a minute${wakeIn ? `, up in about ${wakeIn} min` : ''}.`
                   : needs.energy < 25
                     ? 'Too tired for most games. Feed him or let him nap.'
-                    : 'Games cost energy: Adventure 10, Story 15.'}
+                    : 'Games cost energy (Adventure 10, Story 15) and need a fed tummy.'}
               </p>
               <button className={`pill sleep-btn ${needs.asleep ? 'awake' : ''}`} onClick={toggleSleep}>
                 {needs.asleep ? '☀️ Wake up' : '🌙 Sleep'}

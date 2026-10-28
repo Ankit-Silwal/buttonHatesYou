@@ -121,7 +121,7 @@ function WallScene({ wall }) {
 //   house     { wall, floor, place } to draw (already including any preview)
 //   preview   the spot (or 'wall' / 'floor') being previewed, for the outline
 //   mood, asleep, fx, eating: what the button is up to
-export default function Room({ house, preview, equipped, mood, asleep, fx, eating, offer, line, onPoke, onPick }) {
+export default function Room({ sleepy, house, preview, equipped, mood, asleep, fx, eating, offer, line, onPoke, onPick }) {
   const placed = ORDER.filter((s) => house.place[s] && ART[house.place[s]]);
   const bed = house.place.bed;
   return (
@@ -140,7 +140,7 @@ export default function Room({ house, preview, equipped, mood, asleep, fx, eatin
 
       <div className={`resident ${eating ? 'chomp' : ''}`} onClick={onPoke}>
         <i className="res-shadow" />
-        <Avatar size="var(--res-s)" equipped={equipped} mood={mood} className="has-legs" />
+        <Avatar size="var(--res-s)" equipped={equipped} mood={mood} sleepy={sleepy} className="has-legs" />
         {asleep && <i className="blanket" />}
         {eating && (
           <span className="bite" key={eating.n}>

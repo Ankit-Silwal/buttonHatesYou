@@ -36,6 +36,15 @@ export default function Arcade() {
         </div>
       </div>
 
+      <Shelves equipped={equipped} />
+    </main>
+  );
+}
+
+// Every category's shelf of game cards (also the Games panel on the home screen).
+export function Shelves({ equipped }) {
+  return (
+    <>
       {CATEGORIES.map((cat) => (
         <section key={cat.id} className="shelf" aria-labelledby={`shelf-${cat.id}`}>
           <div className="shelf-head">
@@ -53,7 +62,7 @@ export default function Arcade() {
           </ul>
         </section>
       ))}
-    </main>
+    </>
   );
 }
 

@@ -74,6 +74,25 @@ than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
 it starts. Profiles saved before the house existed get defaults
 (`normalize()` in rules.js).
 
+## The home screen: four rooms
+
+Swipe (or use the dock at the bottom, or the left/right arrow keys) between
+**Games**, the **Living Room** (home, where he starts), the **Kitchen** and
+the **Bedroom**.
+
+- **Games** has every mini-game and says what is stopping him from playing.
+- **Living Room** is his room, redrawn: a window that follows the real time of
+  day, a live wall clock, a rug, sofa, shelf and plant. It dims at night.
+- **Kitchen** is the fridge: tap a food to buy and feed it in one go.
+- **Bedroom** puts him to bed. Waking him for free leaves him as sleepy as he
+  was; the paid wake-up options (Cold Water Splash, Alarm Clock, Espresso Shot,
+  Marching Band, `WAKE_OPTIONS` in `src/economy/house.js`) wake him on the spot
+  and give energy back. The server checks the price like any other purchase.
+- **He needs both to play.** A game needs the energy *and* hunger of at least
+  20 (`PLAY_MIN_HUNGER`). Hungry (under 25) makes him look bored; under 40
+  energy gives him dark circles. The decoration shop is still at `/house`
+  (the Decorate button).
+
 ## How I Met Your Cursor
 
 The story before The Reason, and the opposite of it: funny, romantic and
