@@ -207,7 +207,10 @@ function applyLegacyReward(wallet, ev) {
                                        no room means the bedroom.)
    Needs events carry `at`, when they happened (ms). Hunger and energy drift
    with the clock between events (see needs.js).
-   { id, type: 'feed', item, at }      bought a food and ate it
+   { id, type: 'feed', item, at }      ate a food: from the pantry when there is one
+                                       (free), otherwise bought and eaten in one go
+   { id, type: 'stock', item }         bought a food for the pantry (not eaten): pays
+                                       its price, pantry[item] + 1 (at most STOCK_MAX)
    { id, type: 'sleep', at }           went to bed
    { id, type: 'wake', at, item? }     got up; `item` (a WAKE_OPTIONS id) is a paid
                                        wake-up that also gives some energy back
@@ -216,6 +219,7 @@ function applyLegacyReward(wallet, ev) {
    { id, type: 'wash', at }            soaped and showered: no more dirt
    (he won't go to bed when his dirt is FILTHY_AT or more) */
 
+export const STOCK_MAX = 99;
 const own = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
 const r2 = (v) => Math.round(v * 100) / 100;
 const pay = (wallet, price) => ({
@@ -298,6 +302,12 @@ function applyHouseEvent(wallet, ev, now) {
     }
     if (!cfg.required.every((s) => place[s])) return null; // the bed and its lamp stay
     return put({ ...here, place });
+  }
+
+  if (ev.type === 'stock') {
+    const food = own(FOOD, ev.item);
+    if (!food || !canAfford(wallet, food) || num(wallet.pantry[food.id]) >= STOCK_MAX) return null;
+    return { ...pay(wallet, food.price), pantry: { ...wallet.pantry, [food.id]: num(wallet.pantry[food.id]) + 1 } };
   }
 
   if (ev.type === 'feed') {

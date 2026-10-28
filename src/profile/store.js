@@ -180,6 +180,8 @@ export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 // The house and the button's needs (see economy/house.js and needs.js).
 export const decorate = (spot, item, room = 'living') => tryRecord({ type: 'decor', spot, item, ...(room === 'living' ? {} : { room }) });
 export const feed = (item) => tryRecord({ type: 'feed', item, at: Date.now() });
+// Buys a food for the pantry (it is not eaten); feed() then eats from the stock.
+export const stockFood = (item) => tryRecord({ type: 'stock', item });
 export const sleep = () => tryRecord({ type: 'sleep', at: Date.now() });
 // `item`: a paid wake-up (WAKE_OPTIONS id), or nothing for a free one.
 export const wake = (item) => tryRecord({ type: 'wake', at: Date.now(), ...(item ? { item } : {}) });
