@@ -7,12 +7,14 @@ import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
 import EnergyChip from '@/house/EnergyChip';
 import HubPerks from '@/achievements/HubPerks';
-import Room, { skyOf } from '@/house/Room';
+import RoomScene, { skyOf } from '@/hub/RoomScene';
 import DecorSheet from '@/house/DecorSheet';
 import GamesPane from '@/hub/GamesPane';
 import FoodPane from '@/hub/FoodPane';
 import SleepPane from '@/hub/SleepPane';
 import BathPane from '@/hub/BathPane';
+import BuySheet from '@/hub/BuySheet';
+import WakeSheet from '@/hub/WakeSheet';
 import '@/hub/hub-panes.css';
 import { useNeeds, faceOf } from '@/profile/needs';
 import { roomOf } from '@/economy/house';
@@ -39,7 +41,40 @@ const PANES = [
   { id: 'bath', name: 'Bathroom', icon: '🛁' },
 ];
 const HOME = 1;
-const PANE_OF = { living: 1, kitchen: 2, bedroom: 3 };
+
+// Which panel the page opens on. A fresh visit to `/` is always the Living
+// Room. Coming back with the browser's Back button (from a game or the story)
+// returns to the panel he left from, which is kept per tab in sessionStorage.
+const PANE_KEY = 'bhy.pane';
+const indexOf = (id) => PANES.findIndex((p) => p.id === id);
+let traversedAt = 0; // the last Back/Forward within this page (soft navigation)
+let documentLoad = true; // the first Hub of this document may be a Back reload
+if (typeof window !== 'undefined') window.addEventListener('popstate', () => (traversedAt = Date.now()));
+
+function cameBack() {
+  const soft = Date.now() - traversedAt < 4000;
+  traversedAt = 0;
+  let hard = false;
+  if (documentLoad) {
+    try {
+      hard = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+    } catch {}
+  }
+  documentLoad = false;
+  return soft || hard;
+}
+const savedPane = () => {
+  try {
+    return indexOf(sessionStorage.getItem(PANE_KEY));
+  } catch {
+    return -1;
+  }
+};
+const savePane = (i) => {
+  try {
+    sessionStorage.setItem(PANE_KEY, PANES[i].id);
+  } catch {}
+};
 
 function greeting({ user, wallet }, face) {
   if (face.dirty === 2) return ["Do you smell that? That's me. Bathroom. Please.", 'sad'];
@@ -57,18 +92,20 @@ const MOANS = {
   dirty: ['I smell like a gym bag. Bathroom?', 'Is that a fly? It is. It lives here now.', 'I will not sleep like this. Wash me first.'],
 };
 
-export default function Hub() {
+// `initial`: the panel to open on ('games' for /games, otherwise the living room).
+export default function Hub({ initial = 'home' }) {
   const needs = useNeeds();
   const { profile } = needs;
   const { wallet, user, ready } = profile;
   const face = faceOf(needs);
-  const [panel, setPanel] = useState(null); // null | 'wardrobe' | 'decor'
+  const [panel, setPanel] = useState(null); // null | 'wardrobe' | 'decor' | 'buy' | 'wake'
   const [decor, setDecor] = useState(null); // the room being decorated
   const [decorView, setDecorView] = useState(null); // { house, at }: what is being tried in it
   const [sky, setSky] = useState('day');
   const [preview, setPreview] = useState(null);
   const [line, setLine] = useState({ text: '', mood: null, n: 0 });
-  const [at, setAt] = useState(HOME); // the panel in view
+  const [at, setAt] = useState(Math.max(0, indexOf(initial))); // the panel in view
+  const [quip, setQuip] = useState(null); // a remark a sheet makes in a room: { pane, text, n }
   const pokes = useRef(0);
   const calmTimer = useRef(0);
   const pager = useRef(null);
@@ -98,10 +135,17 @@ export default function Hub() {
     say(...greeting(profile, face));
   }, [ready, needs.ready, profile, face, say]);
 
-  // Open on Living Room, between Games and Kitchen.
+  // Open on the panel asked for, before the first paint. Only a Back
+  // navigation to the living room returns to where he was.
   useLayoutEffect(() => {
     const el = pager.current;
-    if (el) el.scrollLeft = el.clientWidth * HOME;
+    if (!el) return;
+    let i = Math.max(0, indexOf(initial));
+    if (initial === 'home' && cameBack() && savedPane() >= 0) i = savedPane();
+    el.scrollLeft = el.clientWidth * i;
+    setAt(i);
+    savePane(i);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Which panel is in view, from the scroll position.
@@ -110,7 +154,10 @@ export default function Hub() {
     cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(() => {
       const el = pager.current;
-      if (el) setAt(Math.round(el.scrollLeft / el.clientWidth));
+      if (!el) return;
+      const i = Math.min(PANES.length - 1, Math.max(0, Math.round(el.scrollLeft / Math.max(1, el.clientWidth))));
+      setAt(i);
+      savePane(i);
     });
   }, []);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
@@ -167,13 +214,14 @@ export default function Hub() {
   // Decorating a room: the sheet opens, the panel stays on that room and
   // shows whatever is being tried in it.
   const openDecor = useCallback((room) => {
-    pager.current?.children[PANE_OF[room]]?.scrollTo?.(0, 0);
     setDecor(room);
     setDecorView(null);
     setPanel('decor');
   }, []);
   const tryingIn = (room) => (panel === 'decor' && decor === room ? decorView : null);
   const houseOf = (room) => tryingIn(room)?.house ?? roomOf(wallet, room);
+
+  const roomSay = useCallback((pane, text) => setQuip({ pane, text, n: Date.now() }), []);
 
   const mood = line.mood ?? face.mood;
   const equipped = preview ?? wallet.equipped;
@@ -185,54 +233,49 @@ export default function Hub() {
           <GamesPane needs={needs} equipped={wallet.equipped} go={go} />
         </section>
 
-        <section className="pane pane-home" aria-label="Living Room" inert={at !== HOME}>
-          <div className="rm-living">
-            <div className="rm-wrap">
-              <Room
-                room="living"
-                sky={sky}
-                house={houseOf('living')}
-                preview={tryingIn('living')?.at}
-                equipped={equipped}
-                mood={mood}
-                sleepy={face.sleepy}
-                dirty={face.dirty}
-                grime={face.grime}
-                asleep={needs.asleep}
-                line={line}
-                onPoke={poke}
-              />
-            </div>
-          </div>
-
-          {!panel && (
-            <nav className="hub-actions">
-              <Link className="pill big play" href="/games" style={{ '--i': 0 }}>
-                <span className="ico">🎮</span> Play
-              </Link>
-              <button className="pill big alt" onClick={() => setPanel('wardrobe')} style={{ '--i': 1 }}>
-                <span className="ico">👕</span> Wardrobe
-              </button>
-              <Link className="pill big story-btn" href="/story" style={{ '--i': 2 }}>
-                <span className="ico">📖</span> Story
-              </Link>
-              <button className="pill big house-btn" onClick={() => openDecor('living')} style={{ '--i': 3 }}>
-                <span className="ico">🛋️</span> Decorate
-              </button>
-            </nav>
-          )}
+        <section className="pane pane-room pane-home" aria-label="Living Room" inert={at !== HOME}>
+          <RoomScene
+            kind="living"
+            sky={sky}
+            house={houseOf('living')}
+            preview={tryingIn('living')?.at}
+            equipped={equipped}
+            mood={mood}
+            sleepy={face.sleepy}
+            dirty={face.dirty}
+            grime={face.grime}
+            asleep={needs.asleep}
+            line={line}
+            onPoke={poke}
+            tray={
+              <nav className="rs-pills" aria-label="Living room">
+                <button className="pill play" onClick={() => go(0)} style={{ '--i': 0 }}>
+                  <span className="ico">🎮</span> Play
+                </button>
+                <button className="pill alt" onClick={() => setPanel('wardrobe')} style={{ '--i': 1 }}>
+                  <span className="ico">👕</span> Wardrobe
+                </button>
+                <Link className="pill story-btn" href="/story" style={{ '--i': 2 }}>
+                  <span className="ico">📖</span> Story
+                </Link>
+                <button className="pill house-btn" onClick={() => openDecor('living')} style={{ '--i': 3 }}>
+                  <span className="ico">🛋️</span> Decorate
+                </button>
+              </nav>
+            }
+          />
         </section>
 
-        <section className="pane pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} onDecorate={() => openDecor('kitchen')} />
+        <section className="pane pane-room pane-food" aria-label="Kitchen" inert={at !== 2}>
+          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} />
         </section>
 
-        <section className="pane pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} view={tryingIn('bedroom')} onDecorate={() => openDecor('bedroom')} />
+        <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
+          <SleepPane needs={needs} wallet={wallet} go={go} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} />
         </section>
 
-        <section className="pane pane-bath" aria-label="Bathroom" inert={at !== 4}>
-          <BathPane needs={needs} wallet={wallet} active={at === 4} />
+        <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
+          <BathPane needs={needs} wallet={wallet} active={at === 4} sky={sky} />
         </section>
       </div>
 
@@ -262,6 +305,8 @@ export default function Hub() {
       )}
 
       {panel === 'wardrobe' && <Wardrobe wallet={wallet} onPreview={setPreview} onSay={say} onClose={close} />}
+      {panel === 'buy' && <BuySheet wallet={wallet} onClose={close} />}
+      {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
       {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} onClose={close} />}
     </main>
   );

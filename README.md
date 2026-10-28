@@ -64,7 +64,10 @@ blinks and pulls faces that match how he feels.
 - **Feed him.** In the Kitchen the fridge holds silly button food: a browser
   cookie, a USB stick sandwich, an AA battery smoothie, hot glue hot dogs… Each
   restores hunger and/or energy and some have side effects (hiccups, a sugar
-  rush, a glow, a glitch). One tap buys and feeds.
+  rush, a glow, a glitch). Food is **stock**: the Buy food sheet (a grid of the
+  whole menu) buys one dish into the fridge (`stock` event, cap 99); the strip in
+  the Kitchen shows only what he owns, and tapping one feeds it (free, from the
+  pantry). Chest snacks land in the same strip.
 - **Needs.** Hunger and energy run 0–100 and drift down with real time, even
   while the app is closed, but time alone never drags them below 15.
 - **Sleep.** The Bedroom is a dim room with his bedside lamp on. Tap the lamp
@@ -103,18 +106,31 @@ Swipe (or use the dock at the bottom, or the left/right arrow keys) between
 **Bedroom** and the **Bathroom**.
 
 - **Games** has every mini-game and says what is stopping him from playing.
-- **Living Room** is a view of the room you decorated, with the button in it.
-  The window follows the real time of day. Play, Wardrobe, Story and Decorate
-  sit below it.
-- **Kitchen** is a real kitchen (built-in fridge and counter with sink, window,
-  tiles) with the button standing in it. The fridge below it is the menu: tap a
-  dish to buy and feed it in one go.
-- **Bedroom** is the room with the lamp (see Sleep above). Waking him for free
-  leaves him as sleepy as he was; the paid wake-up options (Cold Water Splash,
-  Alarm Clock, Espresso Shot, Marching Band, `WAKE_OPTIONS` in
-  `src/economy/house.js`) wake him on the spot and give energy back. The server
-  checks the price like any other purchase. If he is filthy the lamp does not
-  work: he refuses and a Bathroom button appears.
+- **Living Room** is the hand-drawn room (window on the real sky, clock, shelf,
+  sofa, plant, lamp) with the button on the floor, his speech bubble above and a
+  row of pills (Play slides to Games, Wardrobe, Story, Decorate) at the bottom.
+- **Kitchen, Bedroom and Bathroom** use the same chassis (`src/hub/RoomScene.jsx`,
+  `scene.css`, props in `scene-art.jsx`): wall with wainscot, window, floor in
+  perspective, shaft of light, dust, night tint from the real time. Each room
+  fits the screen with no scrolling (sizes come from container units).
+  What you decorated shows on top: wallpapers and floors repaint the chassis
+  (reusing `room.css`), furniture is drawn in its spot and hides the default prop
+  there; the Decorate sheet previews live.
+- **Kitchen**: counter with sink, fridge, stove and hood, table. The food he owns
+  is a sliding strip; **Buy food** opens the menu grid sheet.
+- **Bedroom**: the bed and bedside lamp (the sleep switch). Lights out and the
+  room goes dark. **Wake-up options** (a sheet, only while asleep): Cold Water
+  Splash, Alarm Clock, Espresso Shot, Marching Band (`WAKE_OPTIONS` in
+  `src/economy/house.js`); the server checks the price like any purchase. If he
+  is filthy the lamp refuses and a Bathroom pill appears. Energy is a small HUD.
+- **Bathroom**: drag the soap over him, then drag him into the shower stall
+  (Scrub / shower pills are the keyboard fallback).
+
+**Routing.** A fresh visit to `/` always opens the Living Room. `/games` renders
+the same `Hub` with `initial="games"`. Play and the dock only slide the pager.
+Coming back with the browser Back button restores the panel he left (kept in
+`sessionStorage` key `bhy.pane`; `Hub.jsx` detects a Back via `popstate` or the
+`back_forward` navigation type).
 - **He needs both to play.** A game needs the energy *and* hunger of at least
   20 (`PLAY_MIN_HUNGER`). Hungry (under 25) makes him look bored; under 40
   energy gives him dark circles.
