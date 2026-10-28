@@ -7,7 +7,7 @@ import { useNeeds, faceOf } from '@/profile/needs';
 import { buy, decorate, feed, sleep, wake } from '@/profile/store';
 import { owns, canAfford } from '@/economy/rules';
 import { HOUSE_ITEMS, HOUSE_ITEM, FOODS, FOOD, SPOT } from '@/economy/house';
-import { NEEDS, wakesAt } from '@/economy/needs';
+import { NEEDS, wakesAt, FILTHY_AT } from '@/economy/needs';
 import { Art } from './art';
 import Room from './Room';
 
@@ -177,6 +177,7 @@ export default function House() {
       say(needs.energy > 90 ? 'Good morning. I still hate you.' : 'Ugh. Five more minutes would have been nice.', 'annoyed');
     } else {
       if (needs.energy >= 99) return say("I'm not tired. Nice try.", 'smug');
+      if ((needs.dirt ?? 0) >= FILTHY_AT) return say("Ew, no. I'm not getting into bed like this. Take me to the bathroom first.", 'sad', 4200);
       if (!sleep()) return;
       cancel();
       say('Lights out. Do not press anything.', 'tired', 2400);
@@ -247,7 +248,7 @@ export default function House() {
                   ? `Sleeping. Energy +${Math.round(NEEDS.sleepEnergyPerHour / 60 * 10) / 10} a minute${wakeIn ? `, up in about ${wakeIn} min` : ''}.`
                   : needs.energy < 25
                     ? 'Too tired for most games. Feed him or let him nap.'
-                    : 'Games cost energy (Adventure 10, Story 15) and need a fed tummy.'}
+                    : 'Games cost a little energy (Adventure 2, Story 5) and need a fed tummy.'}
               </p>
               <button className={`pill sleep-btn ${needs.asleep ? 'awake' : ''}`} onClick={toggleSleep}>
                 {needs.asleep ? '☀️ Wake up' : '🌙 Sleep'}

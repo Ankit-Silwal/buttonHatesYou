@@ -319,3 +319,180 @@
   .hero-zz i, .zz i { opacity: 1; }
   .pager { scroll-behavior: auto; }
 }
+
+/* =====================================================================
+   Getting dirty, and the bathroom
+   ===================================================================== */
+
+/* grime on the button: smudges that fade with --grime, and at "filthy" a
+   fly and a stink cloud */
+.char[data-dirty] .body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: clamp(0.25, calc(var(--grime, 0.5) * 1.3), 0.95);
+  background:
+    radial-gradient(circle at 24% 62%, rgba(70, 48, 25, 0.5) 0 7%, transparent 9%),
+    radial-gradient(circle at 70% 70%, rgba(58, 40, 20, 0.55) 0 9%, transparent 11%),
+    radial-gradient(circle at 48% 86%, rgba(80, 60, 30, 0.45) 0 8%, transparent 10%),
+    radial-gradient(circle at 78% 36%, rgba(70, 48, 25, 0.4) 0 5%, transparent 7%),
+    radial-gradient(circle at 30% 30%, rgba(90, 70, 40, 0.35) 0 4%, transparent 6%),
+    radial-gradient(ellipse at 50% 100%, rgba(60, 42, 22, 0.35), transparent 60%);
+}
+.char[data-dirty='2'] .body::after { filter: saturate(1.2); }
+.char[data-dirty='2']::before {
+  content: '🪰';
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 4%;
+  font-size: calc(var(--s) * 0.16);
+  line-height: 1;
+  pointer-events: none;
+  animation: dirtFly 2.6s linear infinite;
+}
+.char[data-dirty='2']::after {
+  content: '〰';
+  position: absolute;
+  z-index: 5;
+  left: 8%;
+  top: -4%;
+  color: #8fb05a;
+  font-size: calc(var(--s) * 0.22);
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  animation: dirtStink 3s ease-in-out infinite;
+}
+@keyframes dirtFly {
+  0% { transform: translate(-60%, 0) rotate(0); }
+  25% { transform: translate(60%, -40%) rotate(20deg); }
+  50% { transform: translate(130%, 30%) rotate(-10deg); }
+  75% { transform: translate(10%, 60%) rotate(30deg); }
+  100% { transform: translate(-60%, 0) rotate(0); }
+}
+@keyframes dirtStink { 0% { opacity: 0; transform: translateY(10px); } 40% { opacity: 0.8; } 100% { opacity: 0; transform: translateY(-24px) rotate(8deg); } }
+
+/* ---------- the bathroom ---------- */
+.pane-bath {
+  padding: 76px 16px 104px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 30%),
+    repeating-linear-gradient(0deg, transparent 0 55px, rgba(70, 130, 140, 0.18) 55px 57px),
+    repeating-linear-gradient(90deg, transparent 0 55px, rgba(70, 130, 140, 0.18) 55px 57px),
+    linear-gradient(180deg, #cfeff1, #a9dde3);
+}
+.bp { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.bp .ph-bubble { margin-bottom: 4px; }
+.bath {
+  position: relative;
+  width: min(100%, 560px);
+  height: clamp(300px, 46vh, 420px);
+  overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #e9fafb, #c6ebee 70%, #9ccfd6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8), 0 3px 6px rgba(40, 100, 110, 0.2), 0 24px 40px -18px rgba(40, 100, 110, 0.5);
+}
+.bath::after { /* bath mat */
+  content: '';
+  position: absolute;
+  left: 4%;
+  bottom: 4%;
+  width: 52%;
+  height: 12%;
+  border-radius: 50%;
+  background: repeating-linear-gradient(90deg, #f3a6a0 0 14px, #f9cfc9 14px 28px);
+  box-shadow: 0 4px 8px rgba(40, 100, 110, 0.3);
+  z-index: 0;
+}
+.bath-mirror { position: absolute; left: 7%; top: 8%; width: 26%; aspect-ratio: 4 / 5; border-radius: 50% 50% 14px 14px; background: linear-gradient(135deg, #f2fcff 0 40%, #cfeaf2 40% 55%, #f2fcff 55%); box-shadow: 0 0 0 5px #e6cfb1, 0 6px 10px rgba(40, 100, 110, 0.3); }
+.bath-duck { position: absolute; left: 40%; bottom: 3%; font-size: 30px; filter: drop-shadow(0 3px 2px rgba(40, 100, 110, 0.35)); animation: duckBob 3s ease-in-out infinite; z-index: 1; }
+.bath-towels { position: absolute; left: 4%; top: 52%; display: flex; gap: 4px; }
+.bath-towels i { display: block; width: 14px; height: 54px; border-radius: 3px 3px 7px 7px; background: repeating-linear-gradient(0deg, #fff 0 8px, #f0c36d 8px 11px); box-shadow: 0 2px 4px rgba(40, 100, 110, 0.3); }
+.bath-towels i + i { background: repeating-linear-gradient(0deg, #fff 0 8px, #e2674f 8px 11px); height: 46px; }
+
+.shower { position: absolute; right: 4%; bottom: 0; width: 34%; height: 94%; }
+.shower::before { /* the glass */
+  content: '';
+  position: absolute;
+  inset: 8% 0 0;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(190, 230, 240, 0.25));
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.75), 0 0 0 1px rgba(60, 130, 145, 0.3);
+}
+.shower-pipe { position: absolute; right: 18%; top: 0; width: 6px; height: 16%; background: linear-gradient(90deg, #c9d2d6, #f4f8f9, #aab5ba); }
+.shower-head { position: absolute; right: 8%; top: 12%; width: 56%; height: 9%; border-radius: 99px 99px 40% 40%; background: linear-gradient(180deg, #f4f8f9, #aab5ba); box-shadow: 0 3px 4px rgba(40, 100, 110, 0.35); }
+.shower-floor { position: absolute; left: 6%; right: 6%; bottom: 3%; height: 7%; border-radius: 50%; background: radial-gradient(ellipse, rgba(79, 180, 214, 0.5), transparent 70%); }
+.shower-water { position: absolute; left: 14%; right: 8%; top: 21%; bottom: 8%; opacity: 0; transition: opacity 0.3s; overflow: hidden; }
+.shower-water i { position: absolute; top: -10%; left: calc(var(--i) * 7%); width: 3px; height: 16%; border-radius: 3px; background: linear-gradient(180deg, rgba(120, 200, 235, 0), #7cc9ea); animation: rain 0.55s linear infinite; animation-delay: calc(var(--i) * -0.09s); }
+.bath.on .shower-water { opacity: 1; }
+.bath.on { background: linear-gradient(180deg, #e0f5f8, #b9e3ea 70%, #8fc7d0); }
+@keyframes rain { from { transform: translateY(0); } to { transform: translateY(520%); } }
+@keyframes duckBob { 50% { transform: translateY(-4px) rotate(4deg); } }
+
+.bath-me { position: absolute; left: 12%; bottom: 14%; z-index: 3; transition: left 0.7s cubic-bezier(0.4, 1.3, 0.5, 1); }
+.bath-me.in { left: 53%; }
+.bath-body { position: relative; display: inline-block; padding: 0 10px 22px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.bath-body.grab { cursor: grab; animation: lathered 1.4s ease-in-out infinite; }
+.bath-body.grab:active { cursor: grabbing; }
+.bath-body.showering { animation: shiver 0.18s linear infinite; }
+@keyframes lathered { 50% { transform: translateY(-4px); } }
+@keyframes shiver { 50% { transform: translateX(2px); } }
+
+.foam { position: absolute; inset: 0; pointer-events: none; }
+.foam i {
+  position: absolute;
+  aspect-ratio: 1;
+  margin: -6% 0 0 -6%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 18%, #f1fbff 40%, #cfeaf5 100%);
+  box-shadow: 0 2px 3px rgba(60, 130, 160, 0.3), inset 0 -2px 3px rgba(120, 190, 220, 0.4);
+  animation: foamIn 0.35s cubic-bezier(0.34, 1.6, 0.64, 1) backwards;
+}
+.foam.rinse i { animation: foamOut 2.4s ease-in forwards; animation-delay: var(--d); }
+@keyframes foamIn { from { transform: scale(0); } }
+@keyframes foamOut { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(70%) scale(0.5); } }
+
+.soap {
+  position: absolute;
+  left: 8%;
+  bottom: 12%;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff7c8, #f5dd7a);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.8), 0 4px 0 #cdb251, 0 10px 14px -4px rgba(40, 100, 110, 0.5);
+  font-size: 30px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.soap:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+.soap.held { z-index: 7; cursor: grabbing; transform: translate(-50%, -50%) rotate(-12deg) scale(1.1); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.8), 0 12px 16px -4px rgba(40, 100, 110, 0.5); }
+
+.shine { position: absolute; inset: -6%; pointer-events: none; }
+.shine i { position: absolute; font-style: normal; color: #fff6b0; text-shadow: 0 0 8px #ffe36e; font-size: 22px; animation: shineTwinkle 1.2s ease-in-out infinite; }
+.shine i:nth-child(1) { left: 6%; top: 10%; }
+.shine i:nth-child(2) { right: 4%; top: 30%; animation-delay: 0.4s; font-size: 28px; }
+.shine i:nth-child(3) { left: 30%; top: -2%; animation-delay: 0.8s; font-size: 18px; }
+@keyframes shineTwinkle { 0%, 100% { opacity: 0; transform: scale(0.4) rotate(0); } 50% { opacity: 1; transform: scale(1.1) rotate(25deg); } }
+
+.bath-steps { display: flex; gap: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 700; }
+.bath-steps span { flex: 1; padding: 6px 10px; border-radius: 99px; text-align: center; background: rgba(74, 52, 40, 0.08); color: var(--ink-soft); }
+.bath-steps .on { background: var(--mustard); color: #4a3428; }
+.bath-steps .done { background: #bfe5c3; color: #2f6b3a; }
+.nb-clean .nb-fill { background: linear-gradient(180deg, #a6e4f2, #4fb4d6); }
+.pane-bath .pane-card .pill { margin-top: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .char[data-dirty='2']::before, .char[data-dirty='2']::after, .bath-duck, .bath-body.grab, .bath-body.showering, .shower-water i, .shine i { animation: none; }
+  .char[data-dirty='2']::after { opacity: 0.6; }
+}

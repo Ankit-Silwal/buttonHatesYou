@@ -184,6 +184,8 @@ export const sleep = () => tryRecord({ type: 'sleep', at: Date.now() });
 // `item`: a paid wake-up (WAKE_OPTIONS id), or nothing for a free one.
 export const wake = (item) => tryRecord({ type: 'wake', at: Date.now(), ...(item ? { item } : {}) });
 // Starting a game: spends energy, or returns false when he's too tired/asleep.
+// Soaped and showered: he is clean again.
+export const wash = () => tryRecord({ type: 'wash', at: Date.now() });
 export const play = (kind) => tryRecord({ type: 'play', kind, at: Date.now() });
 
 /* ---------- talking to the server ---------- */

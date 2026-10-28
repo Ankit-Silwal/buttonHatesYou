@@ -12,6 +12,7 @@ import HomeRoom from '@/hub/HomeRoom';
 import GamesPane from '@/hub/GamesPane';
 import FoodPane from '@/hub/FoodPane';
 import SleepPane from '@/hub/SleepPane';
+import BathPane from '@/hub/BathPane';
 import '@/hub/hub-panes.css';
 import { useNeeds, faceOf } from '@/profile/needs';
 
@@ -34,10 +35,12 @@ const PANES = [
   { id: 'home', name: 'Living Room', icon: '🛋️' },
   { id: 'food', name: 'Kitchen', icon: '🍳' },
   { id: 'sleep', name: 'Bedroom', icon: '🛏️' },
+  { id: 'bath', name: 'Bathroom', icon: '🛁' },
 ];
 const HOME = 1;
 
 function greeting({ user, wallet }, face) {
+  if (face.dirty === 2) return ["Do you smell that? That's me. Bathroom. Please.", 'sad'];
   if (face.mood === 'bored') return ["I'm hungry. And bored. Mostly hungry.", 'bored'];
   if (face.sleepy) return ['I did not sleep. Look at my eyes. LOOK at them.', 'tired'];
   if (wallet.coins >= 1000) return ["You're rich. Buy me something nice.", 'smug'];
@@ -49,6 +52,7 @@ function greeting({ user, wallet }, face) {
 const MOANS = {
   bored: ['Feed me and I might look less bored.', 'Nothing to do. Nothing to eat. Typical.'],
   sleepy: ['Zzz-no. I am awake. Barely.', 'My eyes feel like two raisins.'],
+  dirty: ['I smell like a gym bag. Bathroom?', 'Is that a fly? It is. It lives here now.', 'I will not sleep like this. Wash me first.'],
 };
 
 export default function Hub() {
@@ -133,6 +137,7 @@ export default function Hub() {
     pokes.current++;
     if (needs.asleep) return say('Zzz… *mumbles* …not the button…', 'sleep');
     if (pokes.current % 7 === 0) return say('OKAY. Go earn some coins and leave me alone.', 'angry');
+    if (face.dirty && pokes.current % 2 === 1) return say(pick(MOANS.dirty), 'sad');
     if (face.mood === 'bored' && pokes.current % 2 === 0) return say(pick(MOANS.bored), 'bored');
     if (face.sleepy && pokes.current % 3 === 0) return say(pick(MOANS.sleepy), 'tired');
     const p = pick(POKES);
@@ -170,6 +175,8 @@ export default function Hub() {
                 equipped={equipped}
                 mood={mood}
                 sleepy={face.sleepy}
+                dirty={face.dirty}
+                grime={face.grime}
                 onClick={poke}
                 aria-label="The button. It would rather you didn't."
               />
@@ -206,7 +213,11 @@ export default function Hub() {
         </section>
 
         <section className="pane pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} />
+          <SleepPane needs={needs} wallet={wallet} go={go} />
+        </section>
+
+        <section className="pane pane-bath" aria-label="Bathroom" inert={at !== 4}>
+          <BathPane needs={needs} wallet={wallet} active={at === 4} />
         </section>
       </div>
 
@@ -222,7 +233,7 @@ export default function Hub() {
       {!panel && (
         <nav className="dock" aria-label="Panels">
           {PANES.map((p, i) => {
-            const alert = (p.id === 'food' && needs.hunger < 25) || (p.id === 'sleep' && needs.energy < 25 && !needs.asleep);
+            const alert = (p.id === 'food' && needs.hunger < 25) || (p.id === 'sleep' && needs.energy < 25 && !needs.asleep) || (p.id === 'bath' && needs.dirt >= 40);
             return (
               <button key={p.id} className={`dock-btn ${at === i ? 'on' : ''} ${alert ? 'alert' : ''}`} aria-current={at === i ? 'page' : undefined} onClick={() => go(i)}>
                 <span className="dock-ico" aria-hidden="true">

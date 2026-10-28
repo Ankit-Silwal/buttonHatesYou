@@ -6,14 +6,14 @@ import NeedBar from './NeedBar';
 import { sleep, wake } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { canAfford } from '@/economy/rules';
-import { NEEDS, wakesAt } from '@/economy/needs';
+import { NEEDS, wakesAt, FILTHY_AT } from '@/economy/needs';
 import { WAKE_OPTIONS } from '@/economy/house';
 
 const price = (p) => (p.diamonds ? `${p.diamonds} 💎` : `${p.coins} 🪙`);
 
 // The far-right panel: the bedroom. Put him to bed, wake him up for free
 // (still groggy) or pay for a wake-up that gives some energy back.
-export default function SleepPane({ needs, wallet }) {
+export default function SleepPane({ needs, wallet, go }) {
   const face = faceOf(needs);
   const [line, setLine] = useState('');
   const mins = needs.asleep ? Math.max(0, Math.ceil((wakesAt(needs) - Date.now()) / 60000)) : 0;
@@ -24,6 +24,7 @@ export default function SleepPane({ needs, wallet }) {
       setLine(needs.energy > 90 ? 'Good morning. I still hate you.' : 'Ugh. Five more minutes would have been nice.');
     } else {
       if (needs.energy >= 99) return setLine("I'm not tired. Nice try.");
+      if ((needs.dirt ?? 0) >= FILTHY_AT) return setLine("Ew, no. I'm not getting into bed like this. Clean me first!");
       if (sleep()) setLine('Lights out. Do not press anything.');
     }
   }
@@ -57,15 +58,22 @@ export default function SleepPane({ needs, wallet }) {
         <NeedBar kind="energy" label="Energy" icon="⚡" value={needs.energy} />
         <div className="needs-row">
           <p className="pane-note">
-            {needs.asleep
+            {!needs.asleep && (needs.dirt ?? 0) >= FILTHY_AT
+              ? 'He is filthy and refuses to get into bed. Wash him in the Bathroom first.'
+              : needs.asleep
               ? `Sleeping. Energy +${Math.round((NEEDS.sleepEnergyPerHour / 60) * 10) / 10} a minute${mins ? `, up in about ${mins} min` : ''}.`
               : needs.energy < 40
                 ? 'Dark circles! He is too sleepy. Games need energy.'
-                : 'Games cost energy: Adventure 10, Story 15.'}
+                : 'Games cost a little energy (Adventure 2, Story 5). A full bar lasts about 2 hours of play.'}
           </p>
           <button className={`pill sleep-btn ${needs.asleep ? 'awake' : ''}`} onClick={toggle}>
             {needs.asleep ? '☀️ Wake up (free)' : '🌙 Go to sleep'}
           </button>
+          {!needs.asleep && (needs.dirt ?? 0) >= FILTHY_AT && (
+            <button className="pill alt" onClick={() => go?.(4)}>
+              🛁 Bathroom
+            </button>
+          )}
         </div>
       </div>
 
