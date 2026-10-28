@@ -181,7 +181,8 @@ export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 export const decorate = (spot, item) => tryRecord({ type: 'decor', spot, item });
 export const feed = (item) => tryRecord({ type: 'feed', item, at: Date.now() });
 export const sleep = () => tryRecord({ type: 'sleep', at: Date.now() });
-export const wake = () => tryRecord({ type: 'wake', at: Date.now() });
+// `item`: a paid wake-up (WAKE_OPTIONS id), or nothing for a free one.
+export const wake = (item) => tryRecord({ type: 'wake', at: Date.now(), ...(item ? { item } : {}) });
 // Starting a game: spends energy, or returns false when he's too tired/asleep.
 export const play = (kind) => tryRecord({ type: 'play', kind, at: Date.now() });
 

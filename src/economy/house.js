@@ -85,3 +85,13 @@ export const FOODS = [
   { id: 'food-floppy', name: 'Floppy Disk Waffle', price: { diamonds: 1 }, hunger: 60, energy: 60, fx: 'glow', quip: '1.44 megabytes of pure flavor.' },
 ];
 export const FOOD = Object.fromEntries(FOODS.map((f) => [f.id, f]));
+
+// Ways to get him out of bed. Waking up by himself is free but leaves him as
+// groggy as he was; these wake him on the spot and give some energy back.
+export const WAKE_OPTIONS = [
+  { id: 'wake-splash', name: 'Cold Water Splash', icon: '💦', price: { coins: 25 }, energy: 6, quip: 'AAAH. COLD. I am awake. I hate you.' },
+  { id: 'wake-alarm', name: 'Alarm Clock', icon: '⏰', price: { coins: 40 }, energy: 12, quip: 'BEEP BEEP BEEP. Fine. FINE. I am up.' },
+  { id: 'wake-coffee', name: 'Espresso Shot', icon: '☕', price: { coins: 80 }, energy: 22, quip: 'Everything is vibrating. In a good way.' },
+  { id: 'wake-band', name: 'Marching Band', icon: '🥁', price: { diamonds: 1 }, energy: 40, quip: 'WHY IS THERE A TUBA IN MY HOUSE. I feel amazing.' },
+];
+export const WAKE_OPTION = Object.fromEntries(WAKE_OPTIONS.map((w) => [w.id, w]));

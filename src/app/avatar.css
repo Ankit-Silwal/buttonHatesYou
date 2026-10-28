@@ -243,3 +243,33 @@ body.boss .char { --c: var(--btn); --cd: var(--btn-dark); }
 @media (prefers-reduced-motion: reduce) {
   .char[data-eyes='googly'] .eyes i::after { animation: none; }
 }
+
+/* ---------- needs on his face ---------- */
+/* hungry: bored. Half-shut eyes glancing off to the side, a flat mouth, one
+   brow up. */
+[data-mood='bored'] .mouth {
+  height: calc(var(--s) * 0.04);
+  width: calc(var(--s) * 0.2);
+  border: 0;
+  border-radius: 4px;
+  background: var(--face);
+  top: 65%;
+  transform: translateX(-50%) rotate(-4deg);
+}
+[data-mood='bored'] .eyes i::before { height: 40%; }
+[data-mood='bored'] .eyes i::after { left: 48%; top: 38%; }
+[data-mood='bored'] .brows { opacity: 1; }
+[data-mood='bored'] .brows i:first-child { transform: translateY(-1px) rotate(-6deg); }
+[data-mood='bored'] .brows i:last-child { transform: translateY(2px) rotate(4deg); }
+
+/* low on sleep: dark circles under the eyes, and heavier lids */
+.char[data-sleepy] .eyes i {
+  box-shadow:
+    0 calc(var(--s) * 0.028) 0 calc(var(--s) * 0.014) rgba(86, 54, 120, 0.62),
+    0 calc(var(--s) * 0.05) calc(var(--s) * 0.03) calc(var(--s) * 0.012) rgba(86, 54, 120, 0.28);
+}
+.char[data-sleepy] .eyes i::before { height: max(var(--lid, 0%), 22%); }
+
+/* asleep: eyes shut, a tiny round mouth */
+[data-mood='sleep'] .eyes i::before { height: 100%; }
+[data-mood='sleep'] .mouth { width: calc(var(--s) * 0.12); height: calc(var(--s) * 0.08); border: 0; border-radius: 50%; background: var(--face); top: 64%; }

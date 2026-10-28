@@ -4,11 +4,12 @@ import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import Avatar from '@/components/Avatar';
 import { useProfile } from '@/profile/useProfile';
-import { spendEnergy, whyNot, currentNeeds, PLAY_COST } from '@/profile/needs';
+import { spendEnergy, whyNot, currentNeeds, PLAY_COST, PLAY_MIN_HUNGER } from '@/profile/needs';
 import './gate.css';
 
 const LINES = {
   tired: ['Too tired. Feed me or let me nap.', 'I have no energy for your games. Snacks first.', "Can't. My battery is at zero. Emotionally too."],
+  hungry: ['My stomach is eating itself. Feed me first.', "I'm too hungry to care about your games.", 'Snack. Then game. That is the order.'],
   asleep: ["Shh. I'm asleep. Wake me up at home first.", 'Zzz… (he is asleep. Go wake him up in the house.)'],
 };
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -44,12 +45,14 @@ export function useEnergyGate(kind) {
 // nothing behind it to go back to, so it offers the games list instead.
 export function TooTired({ kind, why, line, mount, onClose }) {
   const { wallet } = useProfile();
-  const energy = Math.floor(currentNeeds().energy);
+  const now = currentNeeds();
+  const energy = Math.floor(now.energy);
+  const hunger = Math.floor(now.hunger);
   return (
     <div className="too-tired" role="dialog" aria-modal="true" aria-label="Too tired to play">
       <div className="tt-card">
         <div className="tt-hero">
-          <Avatar size={92} equipped={wallet.equipped} mood="tired" className="tt-av" />
+          <Avatar size={92} equipped={wallet.equipped} mood={why === 'hungry' ? 'bored' : 'tired'} sleepy={why !== 'hungry'} className="tt-av" />
           <span className="tt-z" aria-hidden="true">
             <i>z</i>
             <i>z</i>
@@ -64,11 +67,18 @@ export function TooTired({ kind, why, line, mount, onClose }) {
           </span>
           <b>{energy}</b>
         </div>
+        <div className="tt-meter" aria-label={`Hunger ${hunger} of 100`}>
+          <span className="tt-bolt">🍔</span>
+          <span className="tt-bar">
+            <i style={{ width: `${hunger}%` }} />
+          </span>
+          <b>{hunger}</b>
+        </div>
         <p className="tt-note">
-          {why === 'asleep' ? 'He is in bed. ' : ''}A game needs {PLAY_COST[kind]} energy. Food is cheap, naps are free.
+          {why === 'asleep' ? 'He is in bed. ' : ''}A game needs {PLAY_COST[kind]} energy and a tummy that is at least {PLAY_MIN_HUNGER} full. Food is cheap, naps are free.
         </p>
         <div className="tt-row">
-          <Link className="pill" href="/house">
+          <Link className="pill" href="/">
             🏠 Go home
           </Link>
           {mount ? (

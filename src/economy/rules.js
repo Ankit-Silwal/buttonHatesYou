@@ -1,6 +1,6 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
-import { HOUSE_ITEM, DEFAULT_HOUSE, SPOT, FOOD } from './house';
-import { DEFAULT_NEEDS, PLAY_COST, needsAt, normalizeNeeds } from './needs';
+import { HOUSE_ITEM, DEFAULT_HOUSE, SPOT, FOOD, WAKE_OPTION } from './house';
+import { DEFAULT_NEEDS, PLAY_COST, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
 import { CHEST, chestLoot } from './chest';
@@ -201,7 +201,8 @@ function applyLegacyReward(wallet, ev) {
    with the clock between events (see needs.js).
    { id, type: 'feed', item, at }      bought a food and ate it
    { id, type: 'sleep', at }           went to bed
-   { id, type: 'wake', at }            got up
+   { id, type: 'wake', at, item? }     got up; `item` (a WAKE_OPTIONS id) is a paid
+                                       wake-up that also gives some energy back
    { id, type: 'play', kind, at }      started a game: costs PLAY_COST[kind] energy */
 
 const own = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
@@ -285,13 +286,18 @@ function applyHouseEvent(wallet, ev, now) {
     const needs = needsFor(wallet, ev, now);
     if (!needs || needs.asleep === (ev.type === 'sleep')) return null;
     const naps = num(wallet.stats.naps) + (ev.type === 'sleep' ? 1 : 0);
+    if (ev.type === 'wake' && ev.item != null) {
+      const opt = own(WAKE_OPTION, ev.item);
+      if (!opt || !canAfford(wallet, opt)) return null;
+      return { ...pay(wallet, opt.price), needs: { ...needs, asleep: false, energy: r2(Math.min(100, needs.energy + opt.energy)) } };
+    }
     return { ...wallet, needs: { ...needs, asleep: ev.type === 'sleep' }, stats: { ...wallet.stats, naps } };
   }
 
   if (ev.type === 'play') {
     const cost = own(PLAY_COST, ev.kind);
     const needs = cost && needsFor(wallet, ev, now);
-    if (!needs || needs.asleep || needs.energy < cost) return null;
+    if (!needs || needs.asleep || needs.energy < cost || needs.hunger < PLAY_MIN_HUNGER) return null;
     return { ...wallet, needs: { ...needs, energy: r2(needs.energy - cost) } };
   }
 

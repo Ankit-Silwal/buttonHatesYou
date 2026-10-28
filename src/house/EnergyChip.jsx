@@ -1,22 +1,39 @@
 'use client';
 
-import Link from 'next/link';
 import { useNeeds } from '@/profile/needs';
 import './chip.css';
 
-// The little energy meter on the home screen. Tapping it goes to the house.
-export default function EnergyChip() {
+// The two little meters on the home screen: hunger and energy. Tapping them
+// opens the room that fixes the one that is lower (`go` is the pager's).
+export default function EnergyChip({ go }) {
   const n = useNeeds();
   if (!n.ready) return null;
   const e = Math.floor(n.energy);
-  const label = n.asleep ? 'Asleep' : `Energy ${e} of 100`;
+  const h = Math.floor(n.hunger);
+  const label = n.asleep ? `Asleep. Hunger ${h} of 100` : `Hunger ${h} of 100, energy ${e} of 100`;
+  const low = e < 25 || h < 25;
   return (
-    <Link href="/house" className={`chip energy-chip ${e < 25 ? 'low' : ''} ${n.asleep ? 'asleep' : ''}`} title={`${label}. Tap to visit the house.`} aria-label={`${label}. Visit the house`}>
-      <span aria-hidden="true">{n.asleep ? '💤' : '⚡'}</span>
-      <span className="ec-bar" aria-hidden="true">
-        <i style={{ width: `${e}%` }} />
+    <button
+      type="button"
+      className={`chip energy-chip ${low ? 'low' : ''} ${n.asleep ? 'asleep' : ''}`}
+      title={label}
+      aria-label={`${label}. ${h < e ? 'Open kitchen' : 'Open bedroom'}`}
+      onClick={() => go?.(n.asleep || e <= h ? 3 : 2)}
+    >
+      <span className={`ec-one hunger ${h < 25 ? 'low' : ''}`}>
+        <span aria-hidden="true">🍔</span>
+        <span className="ec-bar" aria-hidden="true">
+          <i style={{ width: `${h}%` }} />
+        </span>
+        <b>{h}</b>
       </span>
-      <b>{e}</b>
-    </Link>
+      <span className={`ec-one energy ${e < 25 ? 'low' : ''} ${n.asleep ? 'asleep' : ''}`}>
+        <span aria-hidden="true">{n.asleep ? '💤' : '⚡'}</span>
+        <span className="ec-bar" aria-hidden="true">
+          <i style={{ width: `${e}%` }} />
+        </span>
+        <b>{e}</b>
+      </span>
+    </button>
   );
 }

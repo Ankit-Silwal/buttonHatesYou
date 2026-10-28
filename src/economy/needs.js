@@ -14,6 +14,8 @@ export const NEEDS = {
 
 // What each kind of game costs to start.
 export const PLAY_COST = { adventure: 10, story: 15 };
+// Playing also takes a full-enough tummy: below this he is too hungry to play.
+export const PLAY_MIN_HUNGER = 20;
 
 export const DEFAULT_NEEDS = Object.freeze({ hunger: 80, energy: 80, asleep: false, at: 0 });
 
@@ -62,6 +64,9 @@ export function needsAt(n, t) {
 
 // When the next wake-up happens, for a sleeping button.
 export const wakesAt = (n) => (n.asleep ? n.at + ((100 - n.energy) / NEEDS.sleepEnergyPerHour) * H : null);
+
+// Tired eyes show from here down (dark circles under them).
+export const SLEEPY_BELOW = 40;
 
 // How the button feels, for its face and its lines.
 export function moodOf(n) {

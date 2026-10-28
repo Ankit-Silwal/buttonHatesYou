@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useProfile } from './useProfile';
 import { getProfile, play } from './store';
-import { needsAt, moodOf, PLAY_COST } from '@/economy/needs';
+import { needsAt, moodOf, PLAY_COST, PLAY_MIN_HUNGER, SLEEPY_BELOW } from '@/economy/needs';
 
 // The button's needs as they are right now. Hunger and energy drift with the
 // clock, so this re-reads them every few seconds (every second while asleep,
@@ -28,6 +28,7 @@ export function whyNot(kind) {
   const n = currentNeeds();
   if (n.asleep) return 'asleep';
   if (n.energy < PLAY_COST[kind]) return 'tired';
+  if (n.hunger < PLAY_MIN_HUNGER) return 'hungry';
   return null;
 }
 
@@ -35,4 +36,11 @@ export function whyNot(kind) {
 // (and spends nothing) when he's asleep or too tired.
 export const spendEnergy = (kind) => play(kind);
 
-export { PLAY_COST };
+// The face for his needs: hungry makes him look bored, low energy gives him
+// dark circles. `mood` is the expression, `sleepy` the circles.
+export function faceOf(n) {
+  const mood = n.asleep ? 'sleep' : n.hunger < 25 ? 'bored' : n.mood === 'smug' ? 'smug' : 'calm';
+  return { mood, sleepy: !n.asleep && n.energy < SLEEPY_BELOW };
+}
+
+export { PLAY_COST, PLAY_MIN_HUNGER };
