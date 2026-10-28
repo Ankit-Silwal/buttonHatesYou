@@ -58,10 +58,10 @@ and pulls faces that match how he feels.
 - **Needs.** Hunger and energy run 0–100 and drift down with real time, even
   while the app is closed, but time alone never drags them below 15.
 - **Sleep.** Put him to bed (everyone has a free old mattress). The lights
-  dim, Zzz float up and energy refills over about an hour; he wakes on his own
+  dim, Zzz float up and energy refills over about 2 hours; he wakes on his own
   when it's full, or when you wake him.
-- **Energy gates games.** An Adventure run costs 10 energy, a story
-  episode/chapter or Please Don't costs 15. Too tired or asleep, and he refuses
+- **Energy gates games.** An Adventure run costs 2 energy (a full bar is about 2 hours of play), a story
+  episode/chapter or Please Don't costs 5. Too tired or asleep, and he refuses
   with a link home. Food is cheap and naps are free, so nobody is stuck.
 
 Code: the catalog and foods are in `src/economy/house.js`, the needs math in
@@ -92,6 +92,30 @@ the **Bedroom**.
   20 (`PLAY_MIN_HUNGER`). Hungry (under 25) makes him look bored; under 40
   energy gives him dark circles. The decoration shop is still at `/house`
   (the Decorate button).
+
+## Getting dirty, and the Bathroom
+
+A third need, **dirt**, creeps up with time (slowly) and with every game he
+plays (`PLAY_DIRT`: Adventure 6, a story 8). Past `DIRTY_AT` (40) he looks
+grubby; past `FILTHY_AT` (75) flies circle him, and **he refuses to go to bed**
+until he is washed (the server enforces it too, in `rules.js`).
+
+The fifth room, the **Bathroom**: drag the soap over him to scrub (or press
+Enter on the soap), and once he is lathered drag him into the shower (or press
+"Turn on the shower"). The rinse records a `wash` event and resets his dirt. A
+small 🫧 bar on the home screen shows how clean he is.
+
+## Teen look and wardrobe
+
+The button's art got a more grown-up finish (relaxed eyes, thin brows, a subtler
+sheen) and the wardrobe a **Clothes** slot (tee, hoodie, track, denim, varsity,
+blazer, leather, puffer), plus new muted colours, glasses/aviators/visor,
+earbuds and headphones, a lanyard/bandana/gold chain, and caps, bucket hats,
+berets and headbands. The house has matching teen furniture (gaming desk and
+chair, guitar, record player, LED strips, photo wall, skate decks...) and
+loft/studio/graffiti walls. Items live in `src/economy/catalog.js` and
+`src/economy/house.js`; the CSS avatar is `src/app/avatar.css`, the in-game
+canvas one `src/adventure/kit.js`.
 
 ## More Adventure games
 
@@ -221,7 +245,7 @@ takes 5 to 8 runs, a mid one (450 to 600) about 10, the dearest coin items
 dedication: achievements pay 169 💎 in all (the story finales' diamonds moved
 there), while the diamond outfits cost 36 💎 and the diamond house items 42.
 The rest goes on continues in Adventure (1, 2, then 3 💎 per crash in a run)
-and the odd Floppy Disk Waffle. A run costs 10 energy in the house's needs;
+and the odd Floppy Disk Waffle. A run costs 2 energy in the house's needs;
 food that restores that costs about 15 🪙, so playing always comes out ahead.
 
 **Anti-cheat.** A run event carries `{ game, score, extra (coins grabbed), ms

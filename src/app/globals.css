@@ -273,24 +273,24 @@ body.puddle #puddle { height: 6vh; }
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: calc(var(--s) * 0.14);
+  gap: calc(var(--s) * 0.15);
 }
 .char .eyes i {
   position: relative;
   display: block;
-  width: calc(var(--s) * 0.15);
-  height: calc(var(--s) * 0.19);
-  border-radius: 50%;
+  width: calc(var(--s) * 0.14);
+  height: calc(var(--s) * 0.15);
+  border-radius: 55% 55% 50% 50% / 62% 62% 45% 45%; /* almond */
   background: #fff;
   overflow: hidden;
 }
 .char .eyes i::after { /* pupil */
   content: '';
   position: absolute;
-  width: 55%;
-  height: 50%;
-  left: 22%;
-  top: 32%;
+  width: 46%;
+  height: 48%;
+  left: 27%;
+  top: 36%;
   border-radius: 50%;
   background: var(--face);
 }
@@ -301,7 +301,7 @@ body.puddle #puddle { height: 6vh; }
   left: 0;
   right: 0;
   top: 0;
-  height: 0;
+  height: 18%; /* relaxed resting lid */
   background: var(--c);
   transition: height 0.2s;
 }
@@ -315,41 +315,46 @@ body.puddle #puddle { height: 6vh; }
   transform: translateX(-50%);
   display: flex;
   gap: calc(var(--s) * 0.12);
-  opacity: 0;
+  opacity: 0.5;
   transition: opacity 0.2s;
 }
 .char .brows i {
   display: block;
-  width: calc(var(--s) * 0.2);
-  height: calc(var(--s) * 0.05);
+  width: calc(var(--s) * 0.15);
+  height: calc(var(--s) * 0.032);
   border-radius: 4px;
   background: var(--face);
   transition: transform 0.2s;
 }
+.brows i:first-child { transform: rotate(-3deg); }
+.brows i:last-child { transform: translateY(calc(var(--s) * -0.012)) rotate(5deg); }
 
 .char .mouth {
   position: absolute;
   left: 50%;
   top: 60%;
-  width: calc(var(--s) * 0.28);
-  height: calc(var(--s) * 0.12);
-  transform: translateX(-50%);
-  border: calc(var(--s) * 0.045) solid var(--face);
+  width: calc(var(--s) * 0.2);
+  height: calc(var(--s) * 0.07);
+  transform: translateX(-50%) rotate(-5deg); /* smirk */
+  border: calc(var(--s) * 0.03) solid var(--face);
   border-top: 0;
-  border-radius: 0 0 99px 99px;
+  border-radius: 0 0 99px 99px / 0 0 120% 80%;
   transition: all 0.2s;
 }
 
 /* moods */
-[data-mood='smug'] .mouth { width: calc(var(--s) * 0.2); transform: translateX(-30%) rotate(-12deg); }
+[data-mood='smug'] .brows { opacity: 0.8; }
+[data-mood='smug'] .eyes i::before { height: 32%; }
+[data-mood='smug'] .mouth { width: calc(var(--s) * 0.22); transform: translateX(-30%) rotate(-12deg); }
 [data-mood='annoyed'] .mouth,
 [data-mood='tired'] .mouth {
-  height: calc(var(--s) * 0.045);
-  width: calc(var(--s) * 0.24);
+  height: calc(var(--s) * 0.04);
+  width: calc(var(--s) * 0.2);
   border: 0;
   border-radius: 4px;
   background: var(--face);
   top: 64%;
+  transform: translateX(-50%);
 }
 [data-mood='annoyed'] .eyes i::before,
 [data-mood='tired'] .eyes i::before { height: 45%; }
@@ -357,20 +362,27 @@ body.puddle #puddle { height: 6vh; }
 [data-mood='angry'] .mouth,
 [data-mood='sad'] .mouth {
   top: 64%;
-  border-top: calc(var(--s) * 0.045) solid var(--face);
+  border-top: calc(var(--s) * 0.035) solid var(--face);
   border-bottom: 0;
   border-radius: 99px 99px 0 0;
+  transform: translateX(-50%);
 }
 [data-mood='angry'] .brows,
 [data-mood='sad'] .brows { opacity: 1; }
+[data-mood='angry'] .eyes i::before { height: 12%; }
 [data-mood='angry'] .brows i:first-child { transform: rotate(22deg) translateY(2px); }
 [data-mood='angry'] .brows i:last-child { transform: rotate(-22deg) translateY(2px); }
 [data-mood='sad'] .brows i:first-child { transform: rotate(-16deg); }
 [data-mood='sad'] .brows i:last-child { transform: rotate(16deg); }
+[data-mood='scared'] .eyes i::before { height: 0; }
+[data-mood='scared'] .brows { opacity: 0.9; }
+[data-mood='scared'] .brows i:first-child { transform: translateY(-2px) rotate(-10deg); }
+[data-mood='scared'] .brows i:last-child { transform: translateY(-2px) rotate(10deg); }
 [data-mood='scared'] .mouth {
   width: calc(var(--s) * 0.14);
   height: calc(var(--s) * 0.17);
   top: 60%;
+  transform: translateX(-50%);
   border: 0;
   border-radius: 50%;
   background: var(--face);
@@ -433,6 +445,7 @@ body.puddle #puddle { height: 6vh; }
 /* disguise: the button pretends to be boring UI */
 .char.disguised { width: auto; height: auto; }
 .char.disguised .body,
+.char.disguised .outfit,
 .char.disguised .legs { display: none; }
 .char.disguised::after {
   content: attr(data-label);

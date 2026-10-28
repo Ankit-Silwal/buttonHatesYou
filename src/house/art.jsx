@@ -607,6 +607,441 @@ export const ART = {
     ),
   },
 
+  /* ---------------- teen room additions ---------------- */
+  'bed-loft': {
+    w: 38,
+    vb: '0 0 220 170',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('steel')} x2={1} y2={0} stops={[[0, '#5d6776'], [0.5, '#3d4552'], [1, '#262c36']]} />
+          <Lin id={u('mat')} stops={[[0, '#eef1f4'], [1, '#c9d0d8']]} />
+          <Lin id={u('quilt')} stops={[[0, '#4a8a96'], [1, '#2f6370']]} />
+          <Lin id={u('desk')} stops={[[0, '#b8946a'], [1, '#7c5c3a']]} />
+          <Rad id={u('pil')} cx={0.4} cy={0.3} r={0.75} stops={[[0, '#ffffff'], [1, '#d3d8e0']]} />
+          <Rad id={u('bag')} cx={0.38} cy={0.3} r={0.8} stops={[[0, '#9a8cd6'], [0.6, '#6b5bb0'], [1, '#43397c']]} />
+          <Lin id={u('scr')} x1={0} y1={0} x2={1} y2={1} stops={[[0, '#6fe3ff'], [0.6, '#5a6cff'], [1, '#b04fff']]} />
+          <Gloss id={u('gl')} />
+        </defs>
+        <Shadow u={u} f={f} cx={106} cy={164} rx={104} ry={6} />
+        <rect x="8" y="46" width="9" height="116" rx="2" fill={f('steel')} />
+        <rect x="190" y="46" width="9" height="116" rx="2" fill={f('steel')} />
+        <rect x="8" y="46" width="191" height="6" rx="2" fill={f('steel')} />
+        <rect x="8" y="46" width="191" height="2" fill="#fff" opacity="0.18" />
+        <rect x="8" y="94" width="191" height="8" rx="2" fill={f('steel')} />
+        <rect x="18" y="72" width="170" height="24" rx="8" fill={f('mat')} />
+        <path d="M22 66 q0 -12 14 -12 h26 q12 0 12 10 q0 10 -12 10 h-26 q-14 0 -14 -8z" fill={f('pil')} />
+        <path d="M84 76 q40 -12 100 -2 v22 h-100z" fill={f('quilt')} />
+        <path d="M84 76 q40 -12 100 -2 v5 q-50 -8 -100 4z" fill={f('gl')} />
+        <path d="M96 90 h86" stroke="#1f4a54" strokeWidth="1.5" opacity="0.5" />
+        <rect x="199" y="98" width="5" height="64" rx="2" fill="#2e3540" />
+        <rect x="212" y="98" width="5" height="64" rx="2" fill="#2e3540" />
+        <g fill="#8a95a6">
+          {[108, 122, 136, 150].map((y) => (
+            <rect key={y} x="203" y={y} width="10" height="4" rx="1.5" />
+          ))}
+        </g>
+        <rect x="26" y="126" width="116" height="6" rx="2" fill={f('desk')} />
+        <rect x="26" y="126" width="116" height="2" fill="#fff" opacity="0.25" />
+        <rect x="32" y="132" width="5" height="30" fill="#3d4552" />
+        <rect x="132" y="132" width="5" height="30" fill="#3d4552" />
+        <rect x="52" y="104" width="46" height="22" rx="3" fill="#1d2129" />
+        <rect x="55" y="107" width="40" height="16" rx="2" fill={f('scr')} />
+        <rect x="70" y="124" width="10" height="3" fill="#1d2129" />
+        <rect x="106" y="120" width="18" height="6" rx="2" fill="#e2674f" />
+        <path d="M148 162 C144 140 152 128 176 126 C192 128 194 150 190 162z" fill={f('bag')} />
+        <path d="M156 134 q12 -6 24 0" stroke="#fff" strokeOpacity="0.4" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </>
+    ),
+  },
+  'poster-vinyl': {
+    w: 12,
+    vb: '0 0 90 90',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('cov')} x1={0} y1={0} x2={1} y2={1} stops={[[0, '#2d3a6b'], [0.55, '#6a3f86'], [1, '#d6587a']]} />
+          <Rad id={u('sun')} stops={[[0, '#ffe29a'], [0.7, '#ff9a6b'], [1, '#ff9a6b', 0]]} />
+          <Rad id={u('rec')} stops={[[0, '#2a2a2f'], [1, '#08080b']]} />
+        </defs>
+        <rect x="9" y="9" width="78" height="78" rx="2" fill="#000" opacity="0.22" />
+        <rect x="6" y="6" width="78" height="78" rx="2" fill={f('cov')} />
+        <circle cx="45" cy="38" r="24" fill={f('sun')} />
+        <path d="M6 54 H84 M6 60 H84 M6 67 H84" stroke="#fff" strokeOpacity="0.28" strokeWidth="1.5" />
+        <path d="M6 48 L30 40 L48 50 L66 36 L84 46 V54 H6z" fill="#1c1838" opacity="0.8" />
+        <text x="45" y="77" textAnchor="middle" fontSize="9" fontWeight="800" fill="#ffe9ef" fontFamily="var(--font), system-ui" letterSpacing="2">NIGHT DRIVE</text>
+        <circle cx="72" cy="18" r="7" fill={f('rec')} />
+        <circle cx="72" cy="18" r="2.2" fill="#d6587a" />
+        <rect x="6" y="6" width="78" height="78" rx="2" fill="none" stroke="#fff" strokeOpacity="0.25" />
+      </>
+    ),
+  },
+  'photo-wall': {
+    w: 20,
+    vb: '0 0 160 110',
+    draw: (u, f) => {
+      const shots = [
+        [10, 24, -8, '#7fb6c9', '#d6a3c4'],
+        [46, 34, 5, '#e6b46a', '#b5806a'],
+        [84, 26, -4, '#8fb59a', '#4f7d8c'],
+        [120, 36, 7, '#a999d6', '#e08aa0'],
+      ];
+      return (
+        <>
+          <defs>
+            <filter id={u('g')} x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+          </defs>
+          <path d="M2 6 Q40 30 80 14 Q120 30 158 8" stroke="#3a3a42" strokeWidth="1.2" fill="none" />
+          {[[12, 15], [34, 22], [58, 24], [80, 14], [104, 22], [128, 24], [150, 12]].map(([x, y], i) => (
+            <g key={i} className="twinkle" style={{ animationDelay: `${i * 0.3}s` }}>
+              <circle cx={x} cy={y + 2} r="5" fill="#ffd98a" opacity="0.5" filter={f('g')} />
+              <circle cx={x} cy={y + 2} r="2.2" fill="#ffe7a8" />
+            </g>
+          ))}
+          {shots.map(([x, y, r, c1, c2], i) => (
+            <g key={i} transform={`rotate(${r} ${x + 14} ${y})`}>
+              <rect x={x + 2} y={y + 3} width="28" height="36" fill="#000" opacity="0.2" />
+              <rect x={x} y={y} width="28" height="36" fill="#f7f4ee" />
+              <rect x={x + 3} y={y + 3} width="22" height="22" fill={c1} />
+              <path d={`M${x + 3} ${y + 25} L${x + 11} ${y + 14} L${x + 17} ${y + 21} L${x + 21} ${y + 16} L${x + 25} ${y + 22} V${y + 25}z`} fill={c2} />
+              <circle cx={x + 19} cy={y + 9} r="3" fill="#fff" opacity="0.7" />
+              <rect x={x + 11} y={y - 3} width="6" height="8" rx="1" fill="#c99a5c" />
+            </g>
+          ))}
+        </>
+      );
+    },
+  },
+  'skate-decks': {
+    w: 15,
+    vb: '0 0 120 120',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('a')} x2={1} y2={0} stops={[[0, '#e2674f'], [1, '#a53a28']]} />
+          <Lin id={u('b')} x2={1} y2={0} stops={[[0, '#3f8f9c'], [1, '#27606b']]} />
+          <Lin id={u('c')} x2={1} y2={0} stops={[[0, '#2d2f3b'], [1, '#15161d']]} />
+        </defs>
+        {[[10, 'a', -6], [48, 'b', 0], [86, 'c', 6]].map(([x, k, r]) => (
+          <g key={k} transform={`rotate(${r} ${x + 12} 60)`}>
+            <rect x={x + 3} y="11" width="24" height="102" rx="12" fill="#000" opacity="0.2" />
+            <rect x={x} y="8" width="24" height="102" rx="12" fill={f(k)} />
+            <rect x={x} y="8" width="6" height="102" rx="3" fill="#fff" opacity="0.18" />
+            <g fill="#8a95a6">
+              <circle cx={x + 6} cy="24" r="1.6" />
+              <circle cx={x + 18} cy="24" r="1.6" />
+              <circle cx={x + 6} cy="94" r="1.6" />
+              <circle cx={x + 18} cy="94" r="1.6" />
+            </g>
+          </g>
+        ))}
+        <circle cx="22" cy="52" r="7" fill="#ffd36b" />
+        <path d="M14 66 L30 58 M14 74 L30 66" stroke="#fff" strokeWidth="2.5" opacity="0.8" />
+        <path d="M54 46 l12 18 l12 -18 z" fill="#ffd36b" />
+        <circle cx="66" cy="76" r="6" fill="none" stroke="#9fe0e8" strokeWidth="2.5" />
+        <path d="M94 46 h20 M94 54 h20 M94 62 h14" stroke="#ff5fa8" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="104" cy="82" r="5" fill="#5fe3ff" />
+      </>
+    ),
+  },
+  'led-strip': {
+    w: 100,
+    glow: { x: 50, y: 60, r: 70, c: '#d96bff' },
+    vb: '0 0 400 30',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('l')} x2={1} y2={0} stops={[[0, '#ff4fd8'], [0.5, '#a56bff'], [1, '#4fe3ff']]} />
+          <Lin id={u('halo')} stops={[[0, '#c06bff', 0.55], [1, '#c06bff', 0]]} />
+        </defs>
+        <rect x="0" y="6" width="400" height="24" fill={f('halo')} />
+        <rect x="0" y="0" width="400" height="7" fill="#20232b" />
+        <rect x="6" y="2" width="388" height="3.6" rx="1.8" fill={f('l')} />
+        <g fill="#fff" opacity="0.8">
+          {Array.from({ length: 33 }, (_, i) => (
+            <circle key={i} cx={10 + i * 12} cy="3.8" r="0.9" />
+          ))}
+        </g>
+        <rect x="6" y="2" width="388" height="1.2" fill="#fff" opacity="0.4" />
+      </>
+    ),
+  },
+  'rug-shag': {
+    w: 48,
+    vb: '0 0 300 80',
+    draw: (u, f) => {
+      const tufts = [];
+      for (let i = 0; i < 46; i++) {
+        const a = (i / 46) * Math.PI * 2;
+        tufts.push([150 + Math.cos(a) * 140, 40 + Math.sin(a) * 32, Math.cos(a) * 6, Math.sin(a) * 3]);
+      }
+      return (
+        <>
+          <defs>
+            <Rad id={u('r')} cx={0.45} cy={0.4} r={0.65} stops={[[0, '#f1ece6'], [0.7, '#d8d0cc'], [1, '#b9aeb4']]} />
+            <Lin id={u('sheen')} stops={[[0, '#fff', 0.35], [0.5, '#fff', 0], [1, '#000', 0.1]]} />
+          </defs>
+          <ellipse cx="150" cy="46" rx="148" ry="33" fill="#2a1608" opacity="0.2" />
+          <ellipse cx="150" cy="40" rx="142" ry="33" fill={f('r')} />
+          <g stroke="#cbbfc4" strokeWidth="2.6" strokeLinecap="round">
+            {tufts.map(([x, y, dx, dy], i) => (
+              <path key={i} d={`M${x} ${y} l${dx} ${dy}`} />
+            ))}
+          </g>
+          <g stroke="#a99fb6" strokeWidth="1.6" strokeLinecap="round" opacity="0.55" fill="none">
+            {Array.from({ length: 70 }, (_, i) => {
+              const x = 30 + ((i * 53) % 240);
+              const y = 18 + ((i * 29) % 44);
+              return <path key={i} d={`M${x} ${y} q3 -3 5 0`} />;
+            })}
+          </g>
+          <ellipse cx="150" cy="40" rx="142" ry="33" fill={f('sheen')} />
+        </>
+      );
+    },
+  },
+  'plant-snake': {
+    w: 10,
+    vb: '0 0 80 170',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('leaf')} x2={1} y2={0} stops={[[0, '#4f9a6a'], [0.6, '#2d6b47'], [1, '#1b4430']]} />
+          <Lin id={u('pot')} x2={1} y2={0} stops={[[0, '#6a7280'], [0.5, '#3f4651'], [1, '#262b33']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={40} cy={165} rx={28} ry={5} />
+        {[
+          'M40 120 C26 90 24 50 30 14 C42 44 46 90 46 120z',
+          'M44 120 C52 80 62 50 66 26 C70 56 62 96 52 122z',
+          'M38 122 C24 100 8 76 6 52 C20 70 34 96 44 122z',
+          'M46 120 C58 98 70 90 76 70 C76 96 64 112 52 124z',
+          'M40 120 C36 84 40 48 44 4 C52 40 52 86 48 120z',
+        ].map((d, i) => (
+          <g key={i}>
+            <path d={d} fill={f('leaf')} stroke="#d9d46a" strokeWidth="1.6" strokeOpacity="0.85" />
+            <path d={d} fill="none" stroke="#18382a" strokeOpacity="0.35" strokeWidth="0.8" strokeDasharray="5 6" />
+          </g>
+        ))}
+        <path d="M22 122 h40 l-5 40 q-15 4 -30 0z" fill={f('pot')} />
+        <rect x="20" y="118" width="44" height="8" rx="3" fill="#59616e" />
+        <path d="M28 130 l2 26" stroke="#fff" strokeOpacity="0.25" strokeWidth="3" strokeLinecap="round" />
+        <path d="M26 162 l-4 4 M58 162 l4 4" stroke="#b88a3a" strokeWidth="3" strokeLinecap="round" />
+      </>
+    ),
+  },
+  'mini-fridge': {
+    w: 14,
+    vb: '0 0 100 150',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('body')} x2={1} y2={0} stops={[[0, '#bfe0d6'], [0.55, '#9ccbbd'], [1, '#6f9f94']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={50} cy={144} rx={42} ry={5} />
+        <rect x="10" y="6" width="80" height="132" rx="12" fill={f('body')} />
+        <rect x="10" y="6" width="80" height="132" rx="12" fill="none" stroke="#fff" strokeOpacity="0.4" strokeWidth="1.5" />
+        <path d="M10 48 H90" stroke="#5f8a80" strokeWidth="2" />
+        <rect x="76" y="16" width="5" height="24" rx="2.5" fill="#e6e2d6" />
+        <rect x="76" y="58" width="5" height="40" rx="2.5" fill="#e6e2d6" />
+        <circle cx="24" cy="28" r="5.5" fill="#7cffb0" opacity="0.3" />
+        <circle cx="24" cy="28" r="2.6" fill="#7cffb0" />
+        <g transform="rotate(-4 43 69)">
+          <rect x="32" y="56" width="22" height="26" fill="#fff8e6" />
+          <path d="M36 62 h14 M36 68 h10 M36 74 h12" stroke="#e2674f" strokeWidth="1.4" />
+        </g>
+        <circle cx="30" cy="54" r="3.2" fill="#e2674f" />
+        <rect x="26" y="92" width="12" height="9" rx="2" fill="#5b8fd6" />
+        <path d="M54 92 l5 -3 5 3 -2 6 h-6z" fill="#ffd36b" />
+        <circle cx="44" cy="116" r="4" fill="#9775fa" />
+        <path d="M16 12 q-2 60 0 120" stroke="#fff" strokeOpacity="0.4" strokeWidth="4" strokeLinecap="round" fill="none" />
+        <path d="M18 138 l-2 6 M82 138 l2 6" stroke="#3b3f46" strokeWidth="5" strokeLinecap="round" />
+      </>
+    ),
+  },
+  'record-player': {
+    w: 20,
+    vb: '0 0 160 110',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('wood')} x2={1} y2={1} stops={[[0, '#b98458'], [1, '#6c4528']]} />
+          <Lin id={u('deck')} stops={[[0, '#4a4f5a'], [1, '#2b2f38']]} />
+          <Lin id={u('top')} stops={[[0, '#656b78'], [1, '#3a3f49']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={80} cy={104} rx={66} ry={5} />
+        <path d="M24 70 l-6 34 M136 70 l6 34" stroke="#4e3320" strokeWidth="5" strokeLinecap="round" />
+        <rect x="14" y="62" width="132" height="14" rx="4" fill={f('wood')} />
+        <rect x="14" y="62" width="132" height="3" fill="#fff" opacity="0.2" />
+        <rect x="30" y="80" width="14" height="22" fill="#e2674f" />
+        <rect x="46" y="82" width="12" height="20" fill="#4f7bd5" />
+        <rect x="60" y="78" width="14" height="24" fill="#f2c14e" />
+        <rect x="76" y="82" width="12" height="20" fill="#7cc6a4" />
+        <rect x="30" y="80" width="58" height="4" fill="#000" opacity="0.15" />
+        <path d="M18 62 l8 -30 h108 l8 30z" fill={f('deck')} />
+        <path d="M26 32 h108" stroke="#fff" strokeOpacity="0.25" strokeWidth="1.5" />
+        <path d="M18 62 h124 l-1 -4 h-122z" fill={f('top')} />
+        <g transform="translate(66 47) scale(1 0.34)">
+          <circle r="35" fill="#15161a" />
+          <circle r="36" fill="none" stroke="#fff" strokeOpacity="0.15" />
+          <g className="vinyl">
+            <circle r="30" fill="#0b0b0e" />
+            <circle r="24" fill="none" stroke="#2a2b33" strokeWidth="1" />
+            <circle r="18" fill="none" stroke="#2a2b33" strokeWidth="1" />
+            <circle r="11" fill="#d6587a" />
+            <rect x="-2" y="-11" width="4" height="9" fill="#ffe9ef" opacity="0.8" />
+            <circle r="1.5" fill="#0b0b0e" />
+            <path d="M-26 -8 q10 -16 28 -20" stroke="#fff" strokeOpacity="0.2" strokeWidth="3" fill="none" />
+          </g>
+        </g>
+        <circle cx="122" cy="38" r="5" fill="#8a95a6" />
+        <path d="M122 38 L96 52 L90 50" stroke="#d8dde6" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="86" y="48" width="8" height="5" rx="1" fill="#2b2f38" transform="rotate(-24 90 50)" />
+        <circle cx="30" cy="54" r="3.4" fill="#2b2f38" stroke="#8a95a6" />
+        <circle cx="30" cy="44" r="2" fill="#7cffb0" />
+      </>
+    ),
+  },
+  'guitar-stand': {
+    w: 17,
+    vb: '0 0 140 170',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('body')} x1={0} y1={0} x2={1} y2={1} stops={[[0, '#4fb3c4'], [0.6, '#2b6f86'], [1, '#17394b']]} />
+          <Lin id={u('neck')} x2={1} y2={0} stops={[[0, '#c9a06a'], [1, '#8a6238']]} />
+          <Lin id={u('amp')} x2={1} y2={0} stops={[[0, '#3a3f4a'], [1, '#1e2128']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={70} cy={165} rx={62} ry={5} />
+        <rect x="76" y="116" width="58" height="48" rx="4" fill={f('amp')} />
+        <rect x="76" y="116" width="58" height="48" rx="4" fill="none" stroke="#fff" strokeOpacity="0.2" />
+        <rect x="82" y="130" width="46" height="28" rx="2" fill="#8d7a5a" />
+        <path d="M82 134 h46 M82 138 h46 M82 142 h46 M82 146 h46 M82 150 h46 M82 154 h46" stroke="#5a4a32" strokeWidth="0.8" />
+        <g fill="#c9ced8">
+          {[88, 100, 112, 124].map((x) => (
+            <circle key={x} cx={x} cy="123" r="2.4" />
+          ))}
+        </g>
+        <path d="M30 156 L14 166 M30 156 L48 166 M30 156 L40 138" stroke="#2b2f38" strokeWidth="3" strokeLinecap="round" />
+        <g transform="rotate(-6 46 90)">
+          <rect x="43" y="14" width="7" height="76" fill={f('neck')} />
+          <g stroke="#e8e2d0" strokeWidth="0.8">
+            {[26, 38, 50, 62, 74].map((y) => (
+              <path key={y} d={`M43 ${y} h7`} />
+            ))}
+          </g>
+          <path d="M42 14 l-1 -12 q5 -3 10 0 l-1 12z" fill="#2b2f38" />
+          <g fill="#c9ced8">
+            <circle cx="40" cy="6" r="1.3" />
+            <circle cx="40" cy="10" r="1.3" />
+            <circle cx="53" cy="6" r="1.3" />
+            <circle cx="53" cy="10" r="1.3" />
+          </g>
+          <g fill={f('body')}>
+            <ellipse cx="46" cy="98" rx="20" ry="16" />
+            <ellipse cx="46" cy="124" rx="26" ry="26" />
+          </g>
+          <ellipse cx="38" cy="92" rx="10" ry="6" fill="#fff" opacity="0.22" transform="rotate(-20 38 92)" />
+          <path d="M34 112 q12 -6 24 0 q4 16 -4 28 q-12 6 -22 0 q-6 -12 2 -28z" fill="#f4f1ea" opacity="0.85" />
+          <rect x="36" y="106" width="20" height="4" rx="1.5" fill="#1d2129" />
+          <rect x="36" y="118" width="20" height="4" rx="1.5" fill="#1d2129" />
+          <circle cx="58" cy="136" r="2.4" fill="#c9ced8" />
+          <circle cx="52" cy="144" r="2.4" fill="#c9ced8" />
+        </g>
+      </>
+    ),
+  },
+  'chair-gaming': {
+    w: 14,
+    vb: '0 0 100 170',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('blk')} x2={1} y2={0} stops={[[0, '#3a3d48'], [0.5, '#22242c'], [1, '#14151a']]} />
+          <Lin id={u('acc')} stops={[[0, '#ff4f8b'], [1, '#b81f58']]} />
+          <Gloss id={u('gl')} />
+        </defs>
+        <Shadow u={u} f={f} cx={50} cy={165} rx={38} ry={5} />
+        <path d="M50 140 L12 158 M50 140 L88 158 M50 140 V160 M50 140 L36 162 M50 140 L64 162" stroke="#2b2f38" strokeWidth="4.5" strokeLinecap="round" />
+        <g fill="#14151a">
+          <circle cx="12" cy="160" r="4.5" />
+          <circle cx="88" cy="160" r="4.5" />
+          <circle cx="36" cy="164" r="4" />
+          <circle cx="64" cy="164" r="4" />
+        </g>
+        <rect x="44" y="114" width="12" height="30" rx="3" fill="#8a95a6" />
+        <rect x="46" y="114" width="3" height="30" fill="#fff" opacity="0.35" />
+        <path d="M20 8 q30 -8 60 0 l8 30 l-4 54 h-68 l-4 -54z" fill={f('blk')} />
+        <path d="M12 38 l8 -30 q-6 20 0 56 l4 28 h-12z M88 38 l-8 -30 q6 20 0 56 l-4 28 h12z" fill={f('acc')} />
+        <rect x="34" y="40" width="32" height="48" rx="6" fill="#2d303b" />
+        <path d="M50 42 v44" stroke="#ff4f8b" strokeWidth="3" />
+        <path d="M40 46 v38 M60 46 v38" stroke="#14151a" strokeWidth="1.5" />
+        <rect x="32" y="10" width="36" height="22" rx="9" fill="#2d303b" />
+        <rect x="32" y="10" width="36" height="22" rx="9" fill={f('gl')} opacity="0.35" />
+        <path d="M38 18 h24" stroke="#ff4f8b" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M14 98 q-2 16 6 18 h60 q8 -2 6 -18 q-36 8 -72 0z" fill={f('blk')} />
+        <path d="M16 112 q34 8 68 0" stroke="#ff4f8b" strokeWidth="2.5" fill="none" />
+        <rect x="6" y="84" width="10" height="8" rx="3" fill="#2d303b" />
+        <rect x="84" y="84" width="10" height="8" rx="3" fill="#2d303b" />
+        <path d="M10 92 v6 M90 92 v6" stroke="#8a95a6" strokeWidth="3" />
+      </>
+    ),
+  },
+  'desk-gaming': {
+    w: 30,
+    glow: { x: 40, y: 32, r: 38, c: '#7a8cff' },
+    vb: '0 0 240 150',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('top')} stops={[[0, '#4a4f5c'], [1, '#262a33']]} />
+          <Lin id={u('s1')} x1={0} y1={0} x2={1} y2={1} stops={[[0, '#5fe3ff'], [0.55, '#5a6cff'], [1, '#c04fff']]} />
+          <Lin id={u('s2')} x1={0} y1={1} x2={1} y2={0} stops={[[0, '#ff6aa8'], [0.5, '#8a5cff'], [1, '#3a7bff']]} />
+          <Lin id={u('tw')} x2={1} y2={0} stops={[[0, '#2e323d'], [1, '#14161c']]} />
+          <Lin id={u('under')} stops={[[0, '#c06bff', 0.55], [1, '#c06bff', 0]]} />
+          <Gloss id={u('gl')} />
+        </defs>
+        <Shadow u={u} f={f} cx={120} cy={146} rx={112} ry={5} />
+        <rect x="6" y="100" width="228" height="22" fill={f('under')} />
+        <rect x="14" y="100" width="6" height="46" fill="#2b2f38" />
+        <rect x="220" y="100" width="6" height="46" fill="#2b2f38" />
+        <rect x="170" y="112" width="42" height="34" rx="3" fill={f('tw')} />
+        <rect x="174" y="116" width="26" height="26" rx="2" fill="#0d0e12" />
+        <circle cx="187" cy="129" r="9" fill="none" stroke="#5fe3ff" strokeWidth="2.4" className="rgb-hue" />
+        <circle cx="187" cy="129" r="3" fill="#ff4fd8" />
+        <path d="M205 118 v22" stroke="#b04fff" strokeWidth="2" className="rgb-hue" />
+        <rect x="2" y="92" width="236" height="9" rx="3" fill={f('top')} />
+        <rect x="2" y="92" width="236" height="2" fill="#fff" opacity="0.2" />
+        <rect x="12" y="14" width="86" height="56" rx="4" fill="#14161c" />
+        <rect x="16" y="18" width="78" height="46" rx="2" fill={f('s1')} />
+        <path d="M16 56 L34 40 L48 52 L64 34 L94 56 V64 H16z" fill="#14163a" opacity="0.55" />
+        <circle cx="76" cy="30" r="7" fill="#ffe29a" opacity="0.9" />
+        <rect x="16" y="18" width="78" height="46" rx="2" fill={f('gl')} opacity="0.3" />
+        <path d="M55 70 v18" stroke="#1d2129" strokeWidth="5" />
+        <rect x="42" y="86" width="28" height="4" rx="2" fill="#1d2129" />
+        <rect x="104" y="14" width="86" height="56" rx="4" fill="#14161c" />
+        <rect x="108" y="18" width="78" height="46" rx="2" fill={f('s2')} />
+        <g fill="#0d0e12" opacity="0.6">
+          <rect x="114" y="24" width="26" height="4" rx="1" />
+          <rect x="114" y="32" width="40" height="4" rx="1" />
+          <rect x="114" y="40" width="32" height="4" rx="1" />
+        </g>
+        <rect x="108" y="18" width="78" height="46" rx="2" fill={f('gl')} opacity="0.3" />
+        <path d="M147 70 v18" stroke="#1d2129" strokeWidth="5" />
+        <rect x="134" y="86" width="28" height="4" rx="2" fill="#1d2129" />
+        <rect x="52" y="84" width="76" height="8" rx="2" fill="#15171d" />
+        <g className="rgb-hue">
+          <rect x="54" y="86" width="72" height="4" rx="1" fill="#ff4fd8" opacity="0.9" />
+          <rect x="54" y="86" width="36" height="4" rx="1" fill="#4fe3ff" opacity="0.9" />
+        </g>
+        <ellipse cx="148" cy="92" rx="7" ry="3" fill="#15171d" />
+        <rect x="204" y="78" width="14" height="14" rx="2" fill="#e2674f" />
+        <path d="M208 78 v-5 M214 78 v-7" stroke="#ffd36b" strokeWidth="1.6" />
+      </>
+    ),
+  },
+
   /* ---------------- food ---------------- */
   'food-cookie': {
     vb: '0 0 64 64',

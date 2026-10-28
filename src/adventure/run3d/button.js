@@ -84,6 +84,32 @@ export function buildButton(look) {
     for (const side of [-1, 1]) add(face, box(0.24, 0.15, 0.04, 0.03), black, side * 0.17, 0.76, -0.07);
     add(face, box(0.12, 0.03, 0.03), black, 0, 0.79, -0.07);
   }
+  if (look.eyes === 'chill') {
+    for (const side of [-1, 1]) {
+      const lid = add(face, geo('lid', () => new THREE.SphereGeometry(0.125, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2)), skin, side * 0.17, 0.745, 0);
+      lid.scale.set(1, 1.15, 0.5);
+    }
+  }
+  if (look.eyes === 'glasses') {
+    const wire = m('#3b3a45', { metalness: 0.6, roughness: 0.3 });
+    for (const side of [-1, 1]) add(face, torus(0.14, 0.014), wire, side * 0.17, 0.75, -0.07);
+    add(face, box(0.08, 0.016, 0.016), wire, 0, 0.79, -0.07);
+  }
+  if (look.eyes === 'aviators') {
+    const gold = m('#d9b24f', { metalness: 0.8, roughness: 0.25 });
+    const lens = m('#18161e', { roughness: 0.15 });
+    for (const side of [-1, 1]) {
+      const l = add(face, sphere(0.15), lens, side * 0.18, 0.74, -0.07);
+      l.scale.set(1.05, 1.1, 0.12);
+      add(face, torus(0.155, 0.012), gold, side * 0.18, 0.74, -0.075).scale.set(1.05, 1.1, 1);
+    }
+    add(face, box(0.1, 0.016, 0.016), gold, 0, 0.82, -0.075);
+  }
+  if (look.eyes === 'visor') {
+    add(face, box(0.68, 0.15, 0.06, 0.04), black, 0, 0.76, -0.07);
+    add(face, box(0.29, 0.07, 0.02), m('#46e6ff', { emissive: '#46e6ff', emissiveIntensity: 1.2 }), -0.15, 0.76, -0.105);
+    add(face, box(0.29, 0.07, 0.02), m('#ff4fd0', { emissive: '#ff4fd0', emissiveIntensity: 1.2 }), 0.15, 0.76, -0.105);
+  }
   const mouths = {
     flat: add(face, box(0.16, 0.035, 0.03), ink, 0, 0.58, -0.01),
     open: add(face, sphere(0.075), black, 0, 0.57, 0),
@@ -116,12 +142,65 @@ export function buildButton(look) {
   });
 
   // the outfit
+  const ring = (y, r, t, material, kx = 1.04, kz = 0.84) => {
+    const rg = add(body, torus(r, t), material, 0, y, 0);
+    rg.rotation.x = Math.PI / 2;
+    rg.scale.set(kx, kz, 1);
+    return rg;
+  };
+  const OUTFIT_COLORS = { tee: '#2e3140', hoodie: '#6a6e86', track: '#2d4a74', denim: '#4c6f99', varsity: '#7a3040', blazer: '#363942', leather: '#1b1a20', puffer: '#3d7a74' };
+  if (OUTFIT_COLORS[look.outfit]) {
+    const kind = look.outfit;
+    const cloth = m(OUTFIT_COLORS[kind], kind === 'leather' ? { roughness: 0.3, metalness: 0.25 } : { roughness: 0.85 });
+    const puff = kind === 'puffer';
+    add(body, box(puff ? 1.0 : 0.97, 0.33, puff ? 0.84 : 0.79, 0.15), cloth, 0, 0.355, 0);
+    const trim = m(kind === 'varsity' ? '#ece3cf' : kind === 'track' ? '#e9e4d6' : kind === 'denim' ? '#3a5a82' : kind === 'puffer' ? '#2f625d' : kind === 'hoodie' ? '#575b72' : '#454a5c', { roughness: 0.8 });
+    ring(0.52, puff ? 0.45 : 0.43, puff ? 0.06 : 0.035, trim, 1.04, 0.84);
+    if (kind === 'hoodie') {
+      const hood = add(body, sphere(0.2), trim, 0, 0.48, 0.36);
+      hood.scale.set(1.8, 0.7, 0.8);
+      add(body, box(0.4, 0.1, 0.03, 0.02), m('#575b72'), 0, 0.28, -0.4);
+    } else if (kind === 'track') {
+      for (const side of [-1, 1]) add(body, box(0.03, 0.3, 0.6), trim, side * 0.495, 0.355, 0);
+      add(body, box(0.015, 0.25, 0.015), m('#ddddee'), 0, 0.36, -0.4);
+    } else if (kind === 'varsity') {
+      ring(0.46, 0.45, 0.02, trim, 1.04, 0.84);
+      add(body, sphere(0.06), trim, -0.2, 0.34, -0.39).scale.set(1, 1, 0.3);
+    } else if (kind === 'blazer') {
+      add(body, box(0.14, 0.28, 0.02), m('#f0eee8'), 0, 0.37, -0.4);
+      for (const side of [-1, 1]) {
+        const lapel = add(body, box(0.09, 0.26, 0.02), m('#4a4d58'), side * 0.1, 0.38, -0.405);
+        lapel.rotation.z = -side * 0.25;
+      }
+    } else if (kind === 'leather') {
+      const zip = add(body, box(0.014, 0.3, 0.014), m('#b9bcc6', { metalness: 0.8, roughness: 0.25 }), 0.04, 0.36, -0.4);
+      zip.rotation.z = -0.2;
+    } else if (kind === 'denim') {
+      for (const side of [-1, 1]) add(body, box(0.14, 0.1, 0.02), m('#3a5a82'), side * 0.2, 0.3, -0.4);
+    } else if (puff) {
+      for (const y of [0.26, 0.36, 0.44]) ring(y, 0.47, 0.012, m('#27524e'), 1.06, 0.88);
+    } else if (kind === 'tee') {
+      add(body, box(0.1, 0.1, 0.015, 0.02), m('#e3b95a'), 0, 0.3, -0.4);
+    }
+  }
   let scarfTail = null;
-  if (look.scarf) {
+  if (look.scarf === 'lanyard') {
+    ring(0.54, 0.4, 0.016, m('#c24f4f'));
+    add(body, box(0.13, 0.17, 0.015, 0.01), m('#f4f1ea'), 0, 0.33, -0.41);
+  } else if (look.scarf === 'bandana') {
+    const bm = m('#b0413e', { roughness: 0.8 });
+    ring(0.48, 0.44, 0.045, bm);
+    const tri = add(body, cone(0.2, 0.26, 3), bm, 0, 0.34, -0.37);
+    tri.rotation.z = Math.PI;
+    tri.scale.set(1, 1, 0.25);
+  } else if (look.scarf === 'chain') {
+    const gold = m('#e0b954', { metalness: 0.8, roughness: 0.25 });
+    ring(0.5, 0.42, 0.012, gold);
+    add(body, sphere(0.04), gold, 0, 0.44, -0.4);
+  }
+  if (SCARVES[look.scarf]) {
     const sm = m(SCARVES[look.scarf], { roughness: 0.8 });
-    const ring = add(body, torus(0.46, 0.075), sm, 0, 0.42, 0);
-    ring.rotation.x = Math.PI / 2;
-    ring.scale.set(1.04, 0.84, 1);
+    ring(0.42, 0.46, 0.075, sm);
     scarfTail = new THREE.Group();
     scarfTail.position.set(0.18, 0.42, 0.38);
     body.add(scarfTail);
@@ -143,6 +222,37 @@ export function buildButton(look) {
         ear.rotation.z = -side * (look.ears === 'devil' ? 0.45 : 0.2);
       }
     }
+  }
+  if (look.ears === 'earbuds') {
+    for (const side of [-1, 1]) add(body, sphere(0.05), white, side * 0.455, 0.7, 0).scale.set(0.6, 1.2, 1);
+  } else if (look.ears === 'headphones') {
+    const can = m('#2d2c38', { roughness: 0.4 });
+    const band = add(body, torus(0.5, 0.032, Math.PI), m('#25242d', { roughness: 0.4 }), 0, 0.7, 0);
+    band.scale.set(0.97, 0.66, 1);
+    for (const side of [-1, 1]) {
+      add(body, cyl(0.14, 0.14, 0.1, 20), can, side * 0.5, 0.7, 0).rotation.z = Math.PI / 2;
+      add(body, cyl(0.07, 0.07, 0.11, 16), m('#d9574d'), side * 0.5, 0.7, 0).rotation.z = Math.PI / 2;
+    }
+  }
+  if (look.hat === 'headband') {
+    const r = add(head, torus(0.375, 0.038), m('#c4473f', { roughness: 0.8 }), 0, -0.04, 0);
+    r.rotation.x = Math.PI / 2;
+    r.scale.set(1, 0.75, 1);
+  } else if (look.hat === 'cap') {
+    const navy = m('#2f4a73', { roughness: 0.85 });
+    const dome = add(head, geo('cap', () => new THREE.SphereGeometry(0.36, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)), navy, 0, -0.07, 0);
+    dome.scale.set(1.2, 0.95, 0.98);
+    add(head, sphere(0.035), m('#e8e2d2'), 0, 0.27, 0);
+    const brim = add(head, box(0.56, 0.025, 0.3, 0.012), m('#1f3250', { roughness: 0.8 }), 0, -0.06, -0.46);
+    brim.rotation.x = 0.06;
+  } else if (look.hat === 'bucket') {
+    add(head, cyl(0.28, 0.35, 0.26, 24), m('#8c926c', { roughness: 0.9 }), 0, 0.06, 0);
+    add(head, cyl(0.42, 0.56, 0.05, 28), m('#767b58', { roughness: 0.9 }), 0, -0.04, 0);
+  } else if (look.hat === 'beret') {
+    const b = add(head, sphere(0.34), m('#7a3b52', { roughness: 0.9 }), 0.03, -0.0, 0);
+    b.scale.set(1.2, 0.4, 1.1);
+    b.rotation.z = -0.2;
+    add(head, cyl(0.02, 0.025, 0.07, 8), m('#5e2a3d'), 0.1, 0.15, 0);
   }
   if (look.hat === 'top') {
     add(head, cyl(0.34, 0.34, 0.03, 28), black, 0, 0.0, 0);

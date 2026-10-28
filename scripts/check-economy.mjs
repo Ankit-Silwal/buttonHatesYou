@@ -242,6 +242,18 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(applyEvent(asleep, { type: 'wake', item: 'nope', at: T0 }), null, 'unknown wake option');
   assert.equal(applyEvent({ ...asleep, coins: 0 }, { type: 'wake', item: 'wake-alarm', at: T0 }), null, 'cannot afford');
   assert.equal(applyEvent(asleep, { type: 'wake', at: T0 }).needs.energy, 30, 'free wake gives nothing');
+
+  // games kick up dirt; a filthy button refuses to sleep until he is washed
+  let gw = applyEvent(fed, { type: 'play', kind: 'adventure', at: T0 });
+  assert.equal(gw.needs.dirt, 1.5);
+  const filthy = { ...fed, needs: { ...fed.needs, energy: 40, dirt: 80 } };
+  assert.equal(applyEvent(filthy, { type: 'sleep', at: T0 }), null, 'too dirty to sleep');
+  const clean = applyEvent(filthy, { type: 'wash', at: T0 });
+  assert.equal(clean.needs.dirt, 0);
+  assert.ok(applyEvent(clean, { type: 'sleep', at: T0 }), 'clean: can sleep');
+  assert.equal(applyEvent(asleep, { type: 'wash', at: T0 }), null, 'cannot wash a sleeper');
+  // time alone makes him dirty, slowly
+  assert.equal(applyEvent({ ...fed, needs: { ...fed.needs, dirt: 0 } }, { type: 'wash', at: T0 + 3_600_000 }).needs.dirt, 0);
 }
 
 console.log('all economy checks passed');

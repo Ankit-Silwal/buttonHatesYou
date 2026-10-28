@@ -28,6 +28,9 @@ export const HOUSE_ITEMS = [
   { id: 'wall-city', kind: 'wall', name: 'Night City', price: { coins: 1200 } },
   { id: 'wall-gamer', kind: 'wall', name: 'Gamer RGB', price: { coins: 1800 } },
   { id: 'wall-space', kind: 'wall', name: 'Space Station', price: { diamonds: 8 } },
+  { id: 'wall-loft', kind: 'wall', name: 'Brick Loft', price: { coins: 1000 } },
+  { id: 'wall-studio', kind: 'wall', name: 'Dark Studio', price: { coins: 1400 } },
+  { id: 'wall-graffiti', kind: 'wall', name: 'Street Art', price: { coins: 1600 } },
 
   { id: 'floor-oak', kind: 'floor', name: 'Oak Boards' },
   { id: 'floor-carpet', kind: 'floor', name: 'Plush Carpet', price: { coins: 300 } },
@@ -35,10 +38,13 @@ export const HOUSE_ITEMS = [
   { id: 'floor-bamboo', kind: 'floor', name: 'Bamboo Mat', price: { coins: 600 } },
   { id: 'floor-marble', kind: 'floor', name: 'Marble', price: { coins: 1200 } },
   { id: 'floor-neon', kind: 'floor', name: 'Neon Grid', price: { diamonds: 6 } },
+  { id: 'floor-concrete', kind: 'floor', name: 'Polished Concrete', price: { coins: 700 } },
+  { id: 'floor-walnut', kind: 'floor', name: 'Dark Walnut', price: { coins: 900 } },
 
   { id: 'bed-basic', kind: 'furniture', name: 'Old Mattress', spots: ['bed'] },
   { id: 'bed-cozy', kind: 'furniture', name: 'Cozy Bed', spots: ['bed'], price: { coins: 1200 } },
   { id: 'bed-cloud', kind: 'furniture', name: 'Cloud Bed', spots: ['bed'], price: { diamonds: 12 } },
+  { id: 'bed-loft', kind: 'furniture', name: 'Loft Bed', spots: ['bed'], price: { diamonds: 14 } },
 
   { id: 'lamp-arc', kind: 'furniture', name: 'Arc Lamp', spots: ['corner'], price: { coins: 600 } },
   { id: 'lamp-lava', kind: 'furniture', name: 'Lava Lamp', spots: ['floor-left', 'floor-right'], price: { coins: 900 } },
@@ -60,6 +66,18 @@ export const HOUSE_ITEMS = [
   { id: 'shelf-books', kind: 'furniture', name: 'Book Shelf', spots: ['wall-left', 'wall-right'], price: { coins: 400 } },
   { id: 'art-portrait', kind: 'furniture', name: 'Self Portrait', spots: ['wall-left', 'wall-right'], price: { coins: 3000 } },
   { id: 'neon-sign', kind: 'furniture', name: 'Neon Sign', spots: ['wall-left', 'wall-right'], price: { diamonds: 10 } },
+
+  { id: 'poster-vinyl', kind: 'furniture', name: 'Album Poster', spots: ['wall-left', 'wall-right'], price: { coins: 350 } },
+  { id: 'photo-wall', kind: 'furniture', name: 'Photo Wall', spots: ['wall-left', 'wall-right'], price: { coins: 500 } },
+  { id: 'skate-decks', kind: 'furniture', name: 'Skate Decks', spots: ['wall-left', 'wall-right'], price: { coins: 700 } },
+  { id: 'led-strip', kind: 'furniture', name: 'LED Strips', spots: ['ceiling'], price: { coins: 900 } },
+  { id: 'rug-shag', kind: 'furniture', name: 'Shag Rug', spots: ['rug'], price: { coins: 900 } },
+  { id: 'plant-snake', kind: 'furniture', name: 'Snake Plant', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 450 } },
+  { id: 'mini-fridge', kind: 'furniture', name: 'Mini Fridge', spots: ['floor-left', 'floor-right'], price: { coins: 1100 } },
+  { id: 'record-player', kind: 'furniture', name: 'Record Player', spots: ['floor-left', 'floor-right'], price: { coins: 1400 } },
+  { id: 'guitar-stand', kind: 'furniture', name: 'Electric Guitar', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 1600 } },
+  { id: 'chair-gaming', kind: 'furniture', name: 'Gaming Chair', spots: ['floor-left', 'floor-right'], price: { coins: 1800 } },
+  { id: 'desk-gaming', kind: 'furniture', name: 'Gaming Desk', spots: ['floor-right', 'floor-left'], price: { coins: 2800 } },
 ];
 export const HOUSE_ITEM = Object.fromEntries(HOUSE_ITEMS.map((i) => [i.id, i]));
 

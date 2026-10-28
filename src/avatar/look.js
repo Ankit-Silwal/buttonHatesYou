@@ -33,4 +33,4 @@ export const CHAR_HTML =
   '<span class="legs"><i></i><i></i></span>' +
   '<span class="body"><span class="brows"><i></i><i></i></span>' +
   '<span class="eyes"><i></i><i></i></span><span class="mouth"></span></span>' +
-  '<span class="scarf"><i></i></span><span class="hat"></span>';
+  '<span class="outfit"><i></i></span><span class="scarf"><i></i></span><span class="hat"></span>';

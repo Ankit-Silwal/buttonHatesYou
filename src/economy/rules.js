@@ -1,6 +1,6 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
 import { HOUSE_ITEM, DEFAULT_HOUSE, SPOT, FOOD, WAKE_OPTION } from './house';
-import { DEFAULT_NEEDS, PLAY_COST, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
+import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
 import { CHEST, chestLoot } from './chest';
@@ -203,7 +203,10 @@ function applyLegacyReward(wallet, ev) {
    { id, type: 'sleep', at }           went to bed
    { id, type: 'wake', at, item? }     got up; `item` (a WAKE_OPTIONS id) is a paid
                                        wake-up that also gives some energy back
-   { id, type: 'play', kind, at }      started a game: costs PLAY_COST[kind] energy */
+   { id, type: 'play', kind, at }      started a game: costs PLAY_COST[kind] energy
+                                       and adds PLAY_DIRT[kind] dirt
+   { id, type: 'wash', at }            soaped and showered: no more dirt
+   (he won't go to bed when his dirt is FILTHY_AT or more) */
 
 const own = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
 const r2 = (v) => Math.round(v * 100) / 100;
@@ -236,7 +239,8 @@ function needsFor(wallet, ev, now) {
   let t = Number(ev.at);
   if (!Number.isFinite(t) || t <= 0) return null;
   t = Math.max(Math.min(t, now), wallet.needs.at);
-  return { ...needsAt(wallet.needs, t), at: t }; // a new player's clock starts here
+  const n = needsAt(wallet.needs, t);
+  return { ...n, dirt: n.dirt ?? 0, at: t }; // a new player's clock starts here
 }
 
 // The new wallet, null when the event is not allowed, or undefined when it
@@ -285,6 +289,7 @@ function applyHouseEvent(wallet, ev, now) {
   if (ev.type === 'sleep' || ev.type === 'wake') {
     const needs = needsFor(wallet, ev, now);
     if (!needs || needs.asleep === (ev.type === 'sleep')) return null;
+    if (ev.type === 'sleep' && needs.dirt >= FILTHY_AT) return null; // clean first
     const naps = num(wallet.stats.naps) + (ev.type === 'sleep' ? 1 : 0);
     if (ev.type === 'wake' && ev.item != null) {
       const opt = own(WAKE_OPTION, ev.item);
@@ -298,7 +303,13 @@ function applyHouseEvent(wallet, ev, now) {
     const cost = own(PLAY_COST, ev.kind);
     const needs = cost && needsFor(wallet, ev, now);
     if (!needs || needs.asleep || needs.energy < cost || needs.hunger < PLAY_MIN_HUNGER) return null;
-    return { ...wallet, needs: { ...needs, energy: r2(needs.energy - cost) } };
+    return { ...wallet, needs: { ...needs, energy: r2(needs.energy - cost), dirt: r2(Math.min(100, needs.dirt + PLAY_DIRT[ev.kind])) } };
+  }
+
+  if (ev.type === 'wash') {
+    const needs = needsFor(wallet, ev, now);
+    if (!needs || needs.asleep) return null;
+    return { ...wallet, needs: { ...needs, dirt: 0 }, stats: { ...wallet.stats, washes: num(wallet.stats.washes) + 1 } };
   }
 
   return undefined;
@@ -357,7 +368,7 @@ function countRun(stats, game, score, coins) {
   };
 }
 
-const TIMED = new Set(['run', 'feed', 'sleep', 'wake', 'play', 'chest']);
+const TIMED = new Set(['run', 'feed', 'sleep', 'wake', 'play', 'wash', 'chest']);
 
 // When a timed event happened, as far as stats go: capped at `now`, or null
 // when it has no time or (on the server, which passes a real `now`) is too

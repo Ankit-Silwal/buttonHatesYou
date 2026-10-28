@@ -3,10 +3,11 @@
 
 export const SLOTS = [
   { id: 'color', name: 'Color', icon: '🎨' },
+  { id: 'outfit', name: 'Clothes', icon: '👕' },
   { id: 'eyes', name: 'Eyes', icon: '👀' },
-  { id: 'ears', name: 'Ears', icon: '🐱' },
-  { id: 'scarf', name: 'Scarf', icon: '🧣' },
-  { id: 'hat', name: 'Hat', icon: '🎩' },
+  { id: 'ears', name: 'Ears', icon: '🎧' },
+  { id: 'scarf', name: 'Neck', icon: '🧣' }, // (the slot id stays 'scarf' for saved outfits)
+  { id: 'hat', name: 'Hat', icon: '🧢' },
 ];
 
 // `look` is what the avatar CSS keys off (a color pair, or a data-attribute
@@ -20,6 +21,22 @@ export const ITEMS = [
   { id: 'color-bubblegum', slot: 'color', name: 'Bubblegum', look: { c: '#f39ac0', cd: '#cc6f97' }, price: { coins: 600 } },
   { id: 'color-midnight', slot: 'color', name: 'Midnight', look: { c: '#4a5a85', cd: '#2c3654' }, price: { coins: 950 } },
   { id: 'color-gold', slot: 'color', name: 'Solid Gold', look: { c: '#e6b422', cd: '#a87d0c' }, price: { diamonds: 10 } },
+  { id: 'color-charcoal', slot: 'color', name: 'Charcoal', look: { c: '#565b6a', cd: '#363a46' }, price: { coins: 400 } },
+  { id: 'color-sand', slot: 'color', name: 'Sand', look: { c: '#d3b58f', cd: '#a98b66' }, price: { coins: 400 } },
+  { id: 'color-slate', slot: 'color', name: 'Slate', look: { c: '#6c86a3', cd: '#4a6280' }, price: { coins: 450 } },
+  { id: 'color-forest', slot: 'color', name: 'Forest', look: { c: '#4e7a5e', cd: '#34523f' }, price: { coins: 500 } },
+  { id: 'color-burgundy', slot: 'color', name: 'Burgundy', look: { c: '#8e3b4e', cd: '#652635' }, price: { coins: 550 } },
+  { id: 'color-obsidian', slot: 'color', name: 'Obsidian', look: { c: '#2b2b35', cd: '#14141a' }, price: { diamonds: 8 } },
+
+  { id: 'outfit-none', slot: 'outfit', name: 'Just the button', look: null },
+  { id: 'outfit-tee', slot: 'outfit', name: 'Band tee', look: 'tee', price: { coins: 400 } },
+  { id: 'outfit-hoodie', slot: 'outfit', name: 'Hoodie', look: 'hoodie', price: { coins: 700 } },
+  { id: 'outfit-track', slot: 'outfit', name: 'Track jacket', look: 'track', price: { coins: 900 } },
+  { id: 'outfit-denim', slot: 'outfit', name: 'Denim jacket', look: 'denim', price: { coins: 1000 } },
+  { id: 'outfit-varsity', slot: 'outfit', name: 'Varsity jacket', look: 'varsity', price: { coins: 1300 } },
+  { id: 'outfit-blazer', slot: 'outfit', name: 'Blazer', look: 'blazer', price: { coins: 1500 } },
+  { id: 'outfit-leather', slot: 'outfit', name: 'Leather jacket', look: 'leather', price: { coins: 1800 } },
+  { id: 'outfit-puffer', slot: 'outfit', name: 'Puffer coat', look: 'puffer', price: { diamonds: 5 } },
 
   { id: 'eyes-classic', slot: 'eyes', name: 'Classic', look: null },
   { id: 'eyes-sleepy', slot: 'eyes', name: 'Sleepy', look: 'sleepy', price: { coins: 250 } },
@@ -27,30 +44,44 @@ export const ITEMS = [
   { id: 'eyes-hearts', slot: 'eyes', name: 'Hearts', look: 'hearts', price: { coins: 550 } },
   { id: 'eyes-shades', slot: 'eyes', name: 'Shades', look: 'shades', price: { coins: 700 } },
   { id: 'eyes-stars', slot: 'eyes', name: 'Starstruck', look: 'stars', price: { diamonds: 6 } },
+  { id: 'eyes-chill', slot: 'eyes', name: 'Unbothered', look: 'chill', price: { coins: 350 } },
+  { id: 'eyes-glasses', slot: 'eyes', name: 'Round glasses', look: 'glasses', price: { coins: 600 } },
+  { id: 'eyes-aviators', slot: 'eyes', name: 'Aviators', look: 'aviators', price: { coins: 900 } },
+  { id: 'eyes-visor', slot: 'eyes', name: 'Gamer visor', look: 'visor', price: { diamonds: 6 } },
 
   { id: 'ears-none', slot: 'ears', name: 'None', look: null },
   { id: 'ears-bear', slot: 'ears', name: 'Bear', look: 'bear', price: { coins: 400 } },
   { id: 'ears-cat', slot: 'ears', name: 'Cat', look: 'cat', price: { coins: 450 } },
   { id: 'ears-bunny', slot: 'ears', name: 'Bunny', look: 'bunny', price: { coins: 600 } },
   { id: 'ears-devil', slot: 'ears', name: 'Devil horns', look: 'devil', price: { diamonds: 6 } },
+  { id: 'ears-earbuds', slot: 'ears', name: 'Earbuds', look: 'earbuds', price: { coins: 450 } },
+  { id: 'ears-headphones', slot: 'ears', name: 'Headphones', look: 'headphones', price: { coins: 750 } },
 
   { id: 'scarf-none', slot: 'scarf', name: 'None', look: null },
   { id: 'scarf-red', slot: 'scarf', name: 'Red', look: 'red', price: { coins: 300 } },
   { id: 'scarf-sage', slot: 'scarf', name: 'Sage', look: 'sage', price: { coins: 300 } },
   { id: 'scarf-striped', slot: 'scarf', name: 'Striped', look: 'striped', price: { coins: 550 } },
   { id: 'scarf-rainbow', slot: 'scarf', name: 'Rainbow', look: 'rainbow', price: { diamonds: 4 } },
+  { id: 'scarf-lanyard', slot: 'scarf', name: 'Lanyard', look: 'lanyard', price: { coins: 350 } },
+  { id: 'scarf-bandana', slot: 'scarf', name: 'Bandana', look: 'bandana', price: { coins: 450 } },
+  { id: 'scarf-chain', slot: 'scarf', name: 'Gold chain', look: 'chain', price: { coins: 1100 } },
 
   { id: 'hat-none', slot: 'hat', name: 'None', look: null },
   { id: 'hat-beanie', slot: 'hat', name: 'Beanie', look: 'beanie', price: { coins: 400 } },
   { id: 'hat-party', slot: 'hat', name: 'Party hat', look: 'party', price: { coins: 450 } },
   { id: 'hat-top', slot: 'hat', name: 'Top hat', look: 'top', price: { coins: 800 } },
   { id: 'hat-crown', slot: 'hat', name: 'Crown', look: 'crown', price: { diamonds: 10 } },
+  { id: 'hat-headband', slot: 'hat', name: 'Headband', look: 'headband', price: { coins: 350 } },
+  { id: 'hat-cap', slot: 'hat', name: 'Snapback', look: 'cap', price: { coins: 550 } },
+  { id: 'hat-bucket', slot: 'hat', name: 'Bucket hat', look: 'bucket', price: { coins: 650 } },
+  { id: 'hat-beret', slot: 'hat', name: 'Beret', look: 'beret', price: { coins: 700 } },
 ];
 
 export const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
 
 export const DEFAULT_LOOK = {
   color: 'color-tomato',
+  outfit: 'outfit-none',
   eyes: 'eyes-classic',
   ears: 'ears-none',
   scarf: 'scarf-none',
