@@ -213,6 +213,24 @@ pa = applyEvent(pa, { type: 'feed', item: 'food-usb', at: T });
 assert.deepEqual([pa.coins, pa.pantry['food-usb']], [0, 0]);
 assert.equal(applyEvent(pa, { type: 'feed', item: 'food-usb', at: T + 1 }), null); // none left and no coins
 
+// stocking the pantry: pays, adds one, doesn't eat; feeding then uses the stock
+let sk = normalize({ ...START, coins: 100, diamonds: 0 });
+const hungry = (w) => ({ ...w, needs: { ...w.needs, hunger: 10, at: T } });
+sk = applyEvent(sk, { type: 'stock', item: 'food-cookie' });
+assert.deepEqual([sk.coins, sk.pantry['food-cookie'], sk.stats.eaten], [85, 1, 0]);
+assert.equal(sk.needs.hunger, normalize({ ...START }).needs.hunger); // not eaten
+assert.equal(applyEvent(sk, { type: 'stock', item: 'food-nope' }), null); // unknown item
+assert.equal(applyEvent(sk, { type: 'stock', item: 'food-floppy' }), null); // 1 diamond, has none
+assert.equal(applyEvent(sk, { type: 'stock', item: '__proto__' }), null);
+assert.equal(applyEvent({ ...sk, coins: 5 }, { type: 'stock', item: 'food-cookie' }), null); // cannot afford
+let sf = applyEvent(hungry(sk), { type: 'feed', item: 'food-cookie', at: T + 1 });
+assert.deepEqual([sf.coins, sf.pantry['food-cookie'], sf.stats.eaten], [85, 0, 1]); // eaten from the stock: free
+const full = normalize({ ...START, coins: 1_000_000, pantry: { 'food-cookie': 98 } });
+const c99 = applyEvent(full, { type: 'stock', item: 'food-cookie' });
+assert.equal(c99.pantry['food-cookie'], 99);
+assert.equal(applyEvent(c99, { type: 'stock', item: 'food-cookie' }), null); // capped at 99
+assert.equal(c99.coins, 1_000_000 - 15);
+
 /* ---------- the diamond balance ---------- */
 const itemDiamonds = [...ITEMS, ...HOUSE_ITEMS].reduce((n, i) => n + (i.price?.diamonds ?? 0), 0);
 console.log(`achievements: ${ACHIEVEMENTS.length}, ${ACHIEVEMENT_DIAMONDS} 💎 in all; diamond items cost ${itemDiamonds} 💎`);
