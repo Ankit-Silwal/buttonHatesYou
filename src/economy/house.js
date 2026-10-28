@@ -5,12 +5,15 @@
 // like catalog.js, so prices are checked against the same table on both.
 // The pictures are drawn by src/house/art.jsx, keyed by item id.
 
-// Where furniture can go. Each piece lists the spots it fits in.
+// Where furniture can go. Each piece lists the spots it fits in, and each
+// room (below) lists the spots it has.
 export const SPOTS = [
   { id: 'ceiling', name: 'Ceiling' },
   { id: 'wall-left', name: 'Wall, left' },
   { id: 'wall-right', name: 'Wall, right' },
   { id: 'bed', name: 'Bed' },
+  { id: 'nightstand', name: 'Nightstand' },
+  { id: 'counter', name: 'Counter' },
   { id: 'floor-left', name: 'Floor, left' },
   { id: 'floor-right', name: 'Floor, right' },
   { id: 'corner', name: 'Corner' },
@@ -18,9 +21,26 @@ export const SPOTS = [
 ];
 export const SPOT = Object.fromEntries(SPOTS.map((s) => [s.id, s]));
 
+// The rooms of the house you can decorate. Each has its own wallpaper, floor
+// and furniture. `required` spots always hold a piece (it can be swapped for
+// another, never taken down): the bedroom's bed and its bedside lamp, which
+// is how he goes to sleep.
+export const ROOMS = {
+  living: { id: 'living', name: 'Living Room', icon: '🛋️', spots: ['ceiling', 'wall-left', 'wall-right', 'corner', 'floor-left', 'floor-right', 'rug'], required: [] },
+  kitchen: { id: 'kitchen', name: 'Kitchen', icon: '🍳', spots: ['ceiling', 'wall-left', 'wall-right', 'counter', 'floor-left', 'floor-right', 'rug'], required: [] },
+  bedroom: { id: 'bedroom', name: 'Bedroom', icon: '🛏️', spots: ['ceiling', 'wall-left', 'wall-right', 'bed', 'nightstand', 'corner', 'floor-left', 'floor-right', 'rug'], required: ['bed', 'nightstand'] },
+};
+export const ROOM_IDS = Object.keys(ROOMS);
+
+const ALL = ['living', 'kitchen', 'bedroom'];
+const LB = ['living', 'bedroom'];
+const BED = ['bedroom'];
+const KIT = ['kitchen'];
+
 // `kind`: 'wall' (wallpaper), 'floor', or 'furniture'. No price = free and
-// always owned.
-export const HOUSE_ITEMS = [
+// always owned. `rooms`: where it can go (walls and floors: everywhere
+// unless said otherwise).
+const RAW = [
   { id: 'wall-cozy', kind: 'wall', name: 'Cozy Cream' },
   { id: 'wall-mint', kind: 'wall', name: 'Mint Stripes', price: { coins: 300 } },
   { id: 'wall-candy', kind: 'wall', name: 'Candy Shop', price: { coins: 500 } },
@@ -31,6 +51,16 @@ export const HOUSE_ITEMS = [
   { id: 'wall-loft', kind: 'wall', name: 'Brick Loft', price: { coins: 1000 } },
   { id: 'wall-studio', kind: 'wall', name: 'Dark Studio', price: { coins: 1400 } },
   { id: 'wall-graffiti', kind: 'wall', name: 'Street Art', price: { coins: 1600 } },
+  // the kitchen's own
+  { id: 'wall-kitchen-tile', kind: 'wall', name: 'Subway Tile', rooms: KIT },
+  { id: 'wall-kitchen-sage', kind: 'wall', name: 'Sage Tile', price: { coins: 400 }, rooms: KIT },
+  { id: 'wall-kitchen-sun', kind: 'wall', name: 'Butter Yellow', price: { coins: 500 }, rooms: KIT },
+  { id: 'wall-kitchen-noir', kind: 'wall', name: 'Black Tile', price: { coins: 1100 }, rooms: KIT },
+  // the bedroom's own
+  { id: 'wall-bedroom-blue', kind: 'wall', name: 'Midnight Blue', rooms: BED },
+  { id: 'wall-bedroom-plum', kind: 'wall', name: 'Plum Velvet', price: { coins: 500 }, rooms: BED },
+  { id: 'wall-bedroom-forest', kind: 'wall', name: 'Forest Green', price: { coins: 600 }, rooms: BED },
+  { id: 'wall-bedroom-galaxy', kind: 'wall', name: 'Galaxy Ceiling', price: { diamonds: 8 }, rooms: BED },
 
   { id: 'floor-oak', kind: 'floor', name: 'Oak Boards' },
   { id: 'floor-carpet', kind: 'floor', name: 'Plush Carpet', price: { coins: 300 } },
@@ -40,54 +70,88 @@ export const HOUSE_ITEMS = [
   { id: 'floor-neon', kind: 'floor', name: 'Neon Grid', price: { diamonds: 6 } },
   { id: 'floor-concrete', kind: 'floor', name: 'Polished Concrete', price: { coins: 700 } },
   { id: 'floor-walnut', kind: 'floor', name: 'Dark Walnut', price: { coins: 900 } },
+  { id: 'floor-kitchen-checker', kind: 'floor', name: 'Kitchen Checker', rooms: KIT },
+  { id: 'floor-kitchen-terrazzo', kind: 'floor', name: 'Terrazzo', price: { coins: 800 }, rooms: KIT },
+  { id: 'floor-kitchen-gold', kind: 'floor', name: 'Gold Tiles', price: { diamonds: 6 }, rooms: KIT },
+  { id: 'floor-bedroom-rug', kind: 'floor', name: 'Plum Carpet', price: { coins: 500 }, rooms: BED },
 
-  { id: 'bed-basic', kind: 'furniture', name: 'Old Mattress', spots: ['bed'] },
-  { id: 'bed-cozy', kind: 'furniture', name: 'Cozy Bed', spots: ['bed'], price: { coins: 1200 } },
-  { id: 'bed-cloud', kind: 'furniture', name: 'Cloud Bed', spots: ['bed'], price: { diamonds: 12 } },
-  { id: 'bed-loft', kind: 'furniture', name: 'Loft Bed', spots: ['bed'], price: { diamonds: 14 } },
+  { id: 'bed-basic', kind: 'furniture', name: 'Old Mattress', spots: ['bed'], rooms: BED },
+  { id: 'bed-cozy', kind: 'furniture', name: 'Cozy Bed', spots: ['bed'], price: { coins: 1200 }, rooms: BED },
+  { id: 'bed-cloud', kind: 'furniture', name: 'Cloud Bed', spots: ['bed'], price: { diamonds: 12 }, rooms: BED },
+  { id: 'bed-loft', kind: 'furniture', name: 'Loft Bed', spots: ['bed'], price: { diamonds: 14 }, rooms: BED },
 
-  { id: 'lamp-arc', kind: 'furniture', name: 'Arc Lamp', spots: ['corner'], price: { coins: 600 } },
-  { id: 'lamp-lava', kind: 'furniture', name: 'Lava Lamp', spots: ['floor-left', 'floor-right'], price: { coins: 900 } },
-  { id: 'lamp-pendant', kind: 'furniture', name: 'Pendant Lamp', spots: ['ceiling'], price: { coins: 400 } },
-  { id: 'lights-fairy', kind: 'furniture', name: 'Fairy Lights', spots: ['ceiling'], price: { coins: 500 } },
-  { id: 'disco-ball', kind: 'furniture', name: 'Disco Ball', spots: ['ceiling'], price: { coins: 2500 } },
+  // bedside lamps: there is always one, it is how he goes to sleep
+  { id: 'lamp-bedside', kind: 'furniture', name: 'Bedside Lamp', spots: ['nightstand'], rooms: BED },
+  { id: 'nightstand-modern', kind: 'furniture', name: 'Modern Nightstand', spots: ['nightstand'], price: { coins: 450 }, rooms: BED },
 
-  { id: 'plant-monstera', kind: 'furniture', name: 'Monstera', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 400 } },
-  { id: 'plant-cactus', kind: 'furniture', name: 'Grumpy Cactus', spots: ['floor-left', 'floor-right'], price: { coins: 150 } },
-  { id: 'fish-bowl', kind: 'furniture', name: 'Fish Bowl', spots: ['floor-left', 'floor-right'], price: { coins: 1500 } },
-  { id: 'beanbag', kind: 'furniture', name: 'Beanbag', spots: ['floor-right', 'floor-left'], price: { coins: 800 } },
-  { id: 'tv-retro', kind: 'furniture', name: 'Retro TV', spots: ['floor-right', 'floor-left'], price: { coins: 2000 } },
+  { id: 'lamp-arc', kind: 'furniture', name: 'Arc Lamp', spots: ['corner'], price: { coins: 600 }, rooms: LB },
+  { id: 'lamp-lava', kind: 'furniture', name: 'Lava Lamp', spots: ['floor-left', 'floor-right'], price: { coins: 900 }, rooms: LB },
+  { id: 'lamp-pendant', kind: 'furniture', name: 'Pendant Lamp', spots: ['ceiling'], price: { coins: 400 }, rooms: ALL },
+  { id: 'lights-fairy', kind: 'furniture', name: 'Fairy Lights', spots: ['ceiling'], price: { coins: 500 }, rooms: LB },
+  { id: 'disco-ball', kind: 'furniture', name: 'Disco Ball', spots: ['ceiling'], price: { coins: 2500 }, rooms: ['living'] },
 
-  { id: 'rug-round', kind: 'furniture', name: 'Round Rug', spots: ['rug'], price: { coins: 350 } },
-  { id: 'rug-rainbow', kind: 'furniture', name: 'Rainbow Rug', spots: ['rug'], price: { diamonds: 6 } },
+  { id: 'plant-monstera', kind: 'furniture', name: 'Monstera', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 400 }, rooms: ALL },
+  { id: 'plant-cactus', kind: 'furniture', name: 'Grumpy Cactus', spots: ['floor-left', 'floor-right'], price: { coins: 150 }, rooms: ALL },
+  { id: 'fish-bowl', kind: 'furniture', name: 'Fish Bowl', spots: ['floor-left', 'floor-right'], price: { coins: 1500 }, rooms: ALL },
+  { id: 'beanbag', kind: 'furniture', name: 'Beanbag', spots: ['floor-right', 'floor-left'], price: { coins: 800 }, rooms: LB },
+  { id: 'tv-retro', kind: 'furniture', name: 'Retro TV', spots: ['floor-right', 'floor-left'], price: { coins: 2000 }, rooms: LB },
 
-  { id: 'poster-band', kind: 'furniture', name: 'Band Poster', spots: ['wall-left', 'wall-right'], price: { coins: 150 } },
-  { id: 'clock-wall', kind: 'furniture', name: 'Wall Clock', spots: ['wall-left', 'wall-right'], price: { coins: 250 } },
-  { id: 'shelf-books', kind: 'furniture', name: 'Book Shelf', spots: ['wall-left', 'wall-right'], price: { coins: 400 } },
-  { id: 'art-portrait', kind: 'furniture', name: 'Self Portrait', spots: ['wall-left', 'wall-right'], price: { coins: 3000 } },
-  { id: 'neon-sign', kind: 'furniture', name: 'Neon Sign', spots: ['wall-left', 'wall-right'], price: { diamonds: 10 } },
+  { id: 'rug-round', kind: 'furniture', name: 'Round Rug', spots: ['rug'], price: { coins: 350 }, rooms: ALL },
+  { id: 'rug-rainbow', kind: 'furniture', name: 'Rainbow Rug', spots: ['rug'], price: { diamonds: 6 }, rooms: ALL },
 
-  { id: 'poster-vinyl', kind: 'furniture', name: 'Album Poster', spots: ['wall-left', 'wall-right'], price: { coins: 350 } },
-  { id: 'photo-wall', kind: 'furniture', name: 'Photo Wall', spots: ['wall-left', 'wall-right'], price: { coins: 500 } },
-  { id: 'skate-decks', kind: 'furniture', name: 'Skate Decks', spots: ['wall-left', 'wall-right'], price: { coins: 700 } },
-  { id: 'led-strip', kind: 'furniture', name: 'LED Strips', spots: ['ceiling'], price: { coins: 900 } },
-  { id: 'rug-shag', kind: 'furniture', name: 'Shag Rug', spots: ['rug'], price: { coins: 900 } },
-  { id: 'plant-snake', kind: 'furniture', name: 'Snake Plant', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 450 } },
-  { id: 'mini-fridge', kind: 'furniture', name: 'Mini Fridge', spots: ['floor-left', 'floor-right'], price: { coins: 1100 } },
-  { id: 'record-player', kind: 'furniture', name: 'Record Player', spots: ['floor-left', 'floor-right'], price: { coins: 1400 } },
-  { id: 'guitar-stand', kind: 'furniture', name: 'Electric Guitar', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 1600 } },
-  { id: 'chair-gaming', kind: 'furniture', name: 'Gaming Chair', spots: ['floor-left', 'floor-right'], price: { coins: 1800 } },
-  { id: 'desk-gaming', kind: 'furniture', name: 'Gaming Desk', spots: ['floor-right', 'floor-left'], price: { coins: 2800 } },
+  { id: 'poster-band', kind: 'furniture', name: 'Band Poster', spots: ['wall-left', 'wall-right'], price: { coins: 150 }, rooms: LB },
+  { id: 'clock-wall', kind: 'furniture', name: 'Wall Clock', spots: ['wall-left', 'wall-right'], price: { coins: 250 }, rooms: ALL },
+  { id: 'shelf-books', kind: 'furniture', name: 'Book Shelf', spots: ['wall-left', 'wall-right'], price: { coins: 400 }, rooms: LB },
+  { id: 'art-portrait', kind: 'furniture', name: 'Self Portrait', spots: ['wall-left', 'wall-right'], price: { coins: 3000 }, rooms: ALL },
+  { id: 'neon-sign', kind: 'furniture', name: 'Neon Sign', spots: ['wall-left', 'wall-right'], price: { diamonds: 10 }, rooms: ALL },
+
+  { id: 'poster-vinyl', kind: 'furniture', name: 'Album Poster', spots: ['wall-left', 'wall-right'], price: { coins: 350 }, rooms: LB },
+  { id: 'photo-wall', kind: 'furniture', name: 'Photo Wall', spots: ['wall-left', 'wall-right'], price: { coins: 500 }, rooms: LB },
+  { id: 'skate-decks', kind: 'furniture', name: 'Skate Decks', spots: ['wall-left', 'wall-right'], price: { coins: 700 }, rooms: LB },
+  { id: 'led-strip', kind: 'furniture', name: 'LED Strips', spots: ['ceiling'], price: { coins: 900 }, rooms: ALL },
+  { id: 'rug-shag', kind: 'furniture', name: 'Shag Rug', spots: ['rug'], price: { coins: 900 }, rooms: LB },
+  { id: 'plant-snake', kind: 'furniture', name: 'Snake Plant', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 450 }, rooms: ALL },
+  { id: 'mini-fridge', kind: 'furniture', name: 'Mini Fridge', spots: ['floor-left', 'floor-right'], price: { coins: 1100 }, rooms: LB },
+  { id: 'record-player', kind: 'furniture', name: 'Record Player', spots: ['floor-left', 'floor-right'], price: { coins: 1400 }, rooms: LB },
+  { id: 'guitar-stand', kind: 'furniture', name: 'Electric Guitar', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 1600 }, rooms: LB },
+  { id: 'chair-gaming', kind: 'furniture', name: 'Gaming Chair', spots: ['floor-left', 'floor-right'], price: { coins: 1800 }, rooms: LB },
+  { id: 'desk-gaming', kind: 'furniture', name: 'Gaming Desk', spots: ['floor-right', 'floor-left'], price: { coins: 2800 }, rooms: LB },
+
+  // the kitchen
+  { id: 'toaster', kind: 'furniture', name: 'Toaster', spots: ['counter'], price: { coins: 300 }, rooms: KIT },
+  { id: 'fruit-bowl', kind: 'furniture', name: 'Fruit Bowl', spots: ['counter'], price: { coins: 250 }, rooms: KIT },
+  { id: 'coffee-machine', kind: 'furniture', name: 'Coffee Machine', spots: ['counter'], price: { coins: 700 }, rooms: KIT },
+  { id: 'wall-shelf-spices', kind: 'furniture', name: 'Spice Shelf', spots: ['wall-left', 'wall-right'], price: { coins: 450 }, rooms: KIT },
+  { id: 'pendant-kitchen', kind: 'furniture', name: 'Kitchen Pendant', spots: ['ceiling'], price: { coins: 600 }, rooms: KIT },
+  { id: 'stove-range', kind: 'furniture', name: 'Stove Range', spots: ['floor-left', 'floor-right'], price: { coins: 1500 }, rooms: KIT },
+  { id: 'kitchen-table', kind: 'furniture', name: 'Table and Stools', spots: ['floor-right', 'floor-left'], price: { coins: 1200 }, rooms: KIT },
+  { id: 'kitchen-island', kind: 'furniture', name: 'Kitchen Island', spots: ['floor-left', 'floor-right'], price: { coins: 2400 }, rooms: KIT },
+
+  // the bedroom
+  { id: 'string-lights', kind: 'furniture', name: 'String Lights', spots: ['ceiling'], price: { coins: 700 }, rooms: BED },
+  { id: 'floor-mirror', kind: 'furniture', name: 'Floor Mirror', spots: ['floor-left', 'floor-right', 'corner'], price: { coins: 600 }, rooms: BED },
+  { id: 'wardrobe-tall', kind: 'furniture', name: 'Tall Wardrobe', spots: ['floor-right', 'floor-left'], price: { coins: 1300 }, rooms: BED },
+  { id: 'desk-study', kind: 'furniture', name: 'Study Desk', spots: ['floor-right', 'floor-left'], price: { coins: 1500 }, rooms: BED },
 ];
+export const HOUSE_ITEMS = RAW.map((i) => ({ ...i, rooms: i.rooms ?? ALL }));
 export const HOUSE_ITEM = Object.fromEntries(HOUSE_ITEMS.map((i) => [i.id, i]));
 
-// A new player's house: free wallpaper, floor, and a bed so nobody is ever
-// stuck without a way to sleep.
+// What each room starts with: free wallpaper and floor, and in the bedroom a
+// bed and a bedside lamp so nobody is ever stuck without a way to sleep.
+// `DEFAULT_HOUSE` is the living room (wallet.house, as it was before there
+// were other rooms); the others are in wallet.rooms.
 export const DEFAULT_HOUSE = Object.freeze({
   wall: 'wall-cozy',
   floor: 'floor-oak',
-  place: Object.freeze({ bed: 'bed-basic' }),
+  place: Object.freeze({}),
 });
+export const DEFAULT_ROOMS = Object.freeze({
+  kitchen: Object.freeze({ wall: 'wall-kitchen-tile', floor: 'floor-kitchen-checker', place: Object.freeze({}) }),
+  bedroom: Object.freeze({ wall: 'wall-bedroom-blue', floor: 'floor-oak', place: Object.freeze({ bed: 'bed-basic', nightstand: 'lamp-bedside' }) }),
+});
+
+// A room's wallpaper, floor and furniture out of a wallet.
+export const roomOf = (wallet, room) => (room === 'living' ? wallet.house : wallet.rooms?.[room]) ?? (room === 'living' ? DEFAULT_HOUSE : DEFAULT_ROOMS[room]);
 
 // Silly things a button eats. Bought and eaten in one go. `hunger`/`energy`
 // are how much they restore; `fx` is a funny side effect the house plays.

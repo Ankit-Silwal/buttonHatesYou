@@ -218,6 +218,7 @@ const itemDiamonds = [...ITEMS, ...HOUSE_ITEMS].reduce((n, i) => n + (i.price?.d
 console.log(`achievements: ${ACHIEVEMENTS.length}, ${ACHIEVEMENT_DIAMONDS} 💎 in all; diamond items cost ${itemDiamonds} 💎`);
 assert.ok(ACHIEVEMENT_DIAMONDS > itemDiamonds, 'every diamond item is reachable');
 assert.ok(ACHIEVEMENT_DIAMONDS < itemDiamonds * 3, 'but diamonds stay scarce');
+assert.ok(itemDiamonds >= 57 && itemDiamonds <= 168, 'diamond items add up to ' + itemDiamonds);
 
 // Print the tables for the README
 const typical = { flap: [10, 20, 30], pop: [1000, 2000, 3000], catch: [25, 50, 75], simon: [5, 10, 15], hop: [2000, 4000, 6000], whack: [20, 40, 60], run: [600, 1200, 1800], stack: [12, 24, 36], slice: [30, 60, 90], redlight: [500, 1000, 1500], spam: [25, 50, 75], fizz: [5, 10, 15], pong: [20, 40, 60], tightrope: [400, 800, 1200] };
@@ -254,6 +255,102 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(applyEvent(asleep, { type: 'wash', at: T0 }), null, 'cannot wash a sleeper');
   // time alone makes him dirty, slowly
   assert.equal(applyEvent({ ...fed, needs: { ...fed.needs, dirt: 0 } }, { type: 'wash', at: T0 + 3_600_000 }).needs.dirt, 0);
+}
+
+/* ---------- the rooms: each has its own wall, floor and furniture ---------- */
+{
+  const { ROOMS, ROOM_IDS, DEFAULT_ROOMS, DEFAULT_HOUSE, HOUSE_ITEM, roomOf } = await import('../src/economy/house.js');
+  const { readFileSync } = await import('node:fs');
+  const artSrc = readFileSync(new URL('../src/house/art.jsx', import.meta.url), 'utf8');
+
+  // the catalog is consistent: every piece fits a spot of every room it names, and has a picture
+  for (const i of HOUSE_ITEMS) {
+    assert.ok(i.rooms.length && i.rooms.every((r) => ROOMS[r]), `${i.id} rooms`);
+    if (i.kind === 'furniture') {
+      assert.ok(new RegExp(`(^|\\s)'?${i.id}'?: \\{`, 'm').test(artSrc), `${i.id} has art`);
+      for (const r of i.rooms) assert.ok(i.spots.some((s) => ROOMS[r].spots.includes(s)), `${i.id} fits somewhere in ${r}`);
+    }
+  }
+  // the starting pieces are free (always owned), allowed in their room, and fit their spots
+  for (const r of ['kitchen', 'bedroom']) {
+    const d = DEFAULT_ROOMS[r];
+    for (const id of [d.wall, d.floor, ...Object.values(d.place)]) assert.ok(HOUSE_ITEM[id] && !HOUSE_ITEM[id].price && HOUSE_ITEM[id].rooms.includes(r), `${r} default ${id}`);
+    for (const [spot, id] of Object.entries(d.place)) assert.ok(HOUSE_ITEM[id].spots.includes(spot) && ROOMS[r].spots.includes(spot));
+  }
+  assert.ok(ROOMS.bedroom.required.every((s) => DEFAULT_ROOMS.bedroom.place[s]), 'the bedroom starts with its bed and lamp');
+  assert.equal(HOUSE_ITEM['lamp-bedside'].price, undefined);
+  assert.deepEqual(ROOM_IDS, ['living', 'kitchen', 'bedroom']);
+
+  // a new player has all three rooms; the living room has no bed any more
+  assert.deepEqual(START.rooms.bedroom.place, { bed: 'bed-basic', nightstand: 'lamp-bedside' });
+  assert.equal(START.rooms.kitchen.wall, 'wall-kitchen-tile');
+  assert.deepEqual(START.house, DEFAULT_HOUSE);
+
+  // a wallet saved before the other rooms: nothing breaks, and its bed moves to the bedroom
+  const saved = { coins: 50, diamonds: 0, owned: ['bed-cozy', 'plant-cactus', 'wall-mint'], equipped: START.equipped, house: { wall: 'wall-mint', floor: 'floor-oak', place: { bed: 'bed-cozy', 'floor-left': 'plant-cactus' } } };
+  const mig = normalize(saved);
+  assert.deepEqual(mig.house, { wall: 'wall-mint', floor: 'floor-oak', place: { 'floor-left': 'plant-cactus' } });
+  assert.deepEqual(mig.rooms.bedroom.place, { bed: 'bed-cozy', nightstand: 'lamp-bedside' });
+  assert.deepEqual(mig.rooms.kitchen, DEFAULT_ROOMS.kitchen);
+  assert.equal(normalize(mig), mig, 'normalizing twice changes nothing');
+  assert.ok(normalize({ ...START, rooms: undefined, house: undefined }).rooms.bedroom.place.bed);
+  assert.equal(normalize({ ...mig, rooms: { kitchen: { wall: 'wall-kitchen-sage' } } }).rooms.kitchen.floor, 'floor-kitchen-checker', 'a partial room is filled in');
+
+  const rich = normalize({ ...START, coins: 99999, diamonds: 50 });
+  const buyAll = (w, ...ids) => ids.reduce((x, id) => applyEvent(x, { type: 'buy', item: id }), w);
+  const own = buyAll(rich, 'toaster', 'nightstand-modern', 'bed-cozy', 'wall-kitchen-sage', 'wall-bedroom-plum', 'plant-cactus', 'wall-mint', 'rug-round', 'floor-kitchen-gold');
+
+  // furniture goes where its room has a spot for it
+  let k = applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'counter', item: 'toaster' });
+  assert.equal(k.rooms.kitchen.place.counter, 'toaster');
+  assert.deepEqual(k.house, own.house, 'the living room is untouched');
+  assert.equal(roomOf(k, 'kitchen').place.counter, 'toaster');
+  assert.equal(applyEvent(own, { type: 'decor', spot: 'counter', item: 'toaster' }), null, 'no counter in the living room');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'counter', item: 'toaster' }), null, 'no counter in the bedroom');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'floor-left', item: 'toaster' }), null, 'a toaster does not go on the floor');
+  assert.equal(applyEvent(rich, { type: 'decor', room: 'kitchen', spot: 'counter', item: 'toaster' }), null, 'not owned');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'floor-left', item: 'disco-ball' }), null);
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'ceiling', item: 'disco-ball' }), null);
+  assert.equal(applyEvent(own, { type: 'decor', room: 'attic', spot: 'rug', item: 'rug-round' }), null, 'no such room');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'constructor', spot: 'rug', item: 'rug-round' }), null);
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'nope', item: 'rug-round' }), null, 'no such spot');
+  // owned pieces are shared: one rug, any room that fits it
+  let rugs = applyEvent(own, { type: 'decor', spot: 'rug', item: 'rug-round' });
+  rugs = applyEvent(rugs, { type: 'decor', room: 'kitchen', spot: 'rug', item: 'rug-round' });
+  rugs = applyEvent(rugs, { type: 'decor', room: 'bedroom', spot: 'rug', item: 'rug-round' });
+  assert.deepEqual([rugs.house.place.rug, rugs.rooms.kitchen.place.rug, rugs.rooms.bedroom.place.rug], ['rug-round', 'rug-round', 'rug-round']);
+  // only one of a piece in a room
+  const two = applyEvent(applyEvent(own, { type: 'decor', spot: 'floor-left', item: 'plant-cactus' }), { type: 'decor', spot: 'floor-right', item: 'plant-cactus' });
+  assert.deepEqual([two.house.place['floor-left'], two.house.place['floor-right']], [undefined, 'plant-cactus']);
+
+  // wallpaper and floors: allowed in the rooms they name
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'wall', item: 'wall-kitchen-sage' }).rooms.kitchen.wall, 'wall-kitchen-sage');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'wall', item: 'wall-kitchen-sage' }), null, 'a kitchen wallpaper is not for the bedroom');
+  assert.equal(applyEvent(own, { type: 'decor', spot: 'wall', item: 'wall-bedroom-plum' }), null);
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'wall', item: 'wall-bedroom-plum' }).rooms.bedroom.wall, 'wall-bedroom-plum');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'wall', item: 'wall-mint' }).rooms.bedroom.wall, 'wall-mint', 'general wallpapers fit every room');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'floor', item: 'floor-kitchen-gold' }).rooms.kitchen.floor, 'floor-kitchen-gold');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'floor', item: 'wall-mint' }), null, 'a wall is not a floor');
+  assert.equal(applyEvent(rich, { type: 'decor', room: 'kitchen', spot: 'wall', item: 'wall-kitchen-sage' }), null, 'not owned');
+
+  // the bed and its bedside lamp are permanent: swapped, never taken down
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'bed', item: null }), null, 'the bed stays');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'nightstand', item: null }), null, 'the lamp stays');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'bed', item: 'bed-cozy' }).rooms.bedroom.place.bed, 'bed-cozy');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'nightstand', item: 'nightstand-modern' }).rooms.bedroom.place.nightstand, 'nightstand-modern');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'bed', item: 'bed-loft' }), null, 'not owned');
+  assert.equal(applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'bed', item: 'toaster' }), null);
+  assert.equal(applyEvent(own, { type: 'decor', room: 'living', spot: 'bed', item: 'bed-cozy' }), null, 'beds are for the bedroom');
+  // ...and an old queued event for the bed (no room) still means the bedroom
+  assert.equal(applyEvent(own, { type: 'decor', spot: 'bed', item: 'bed-cozy' }).rooms.bedroom.place.bed, 'bed-cozy');
+  // the normal pieces can come down
+  let free = applyEvent(own, { type: 'decor', room: 'bedroom', spot: 'rug', item: 'rug-round' });
+  assert.equal(applyEvent(free, { type: 'decor', room: 'bedroom', spot: 'rug', item: null }).rooms.bedroom.place.rug, undefined);
+
+  // old queued events without a room keep decorating the living room
+  const oldDecor = replay(rich, [{ type: 'buy', item: 'plant-cactus' }, { type: 'decor', spot: 'floor-left', item: 'plant-cactus' }, { type: 'buy', item: 'wall-mint' }, { type: 'decor', spot: 'wall', item: 'wall-mint' }]);
+  assert.deepEqual([oldDecor.house.place['floor-left'], oldDecor.house.wall], ['plant-cactus', 'wall-mint']);
+  assert.deepEqual(oldDecor.rooms, rich.rooms);
 }
 
 console.log('all economy checks passed');

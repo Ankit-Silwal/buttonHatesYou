@@ -2,19 +2,20 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Avatar from './Avatar';
 import Account from './Account';
 import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
 import EnergyChip from '@/house/EnergyChip';
 import HubPerks from '@/achievements/HubPerks';
-import HomeRoom from '@/hub/HomeRoom';
+import Room, { skyOf } from '@/house/Room';
+import DecorSheet from '@/house/DecorSheet';
 import GamesPane from '@/hub/GamesPane';
 import FoodPane from '@/hub/FoodPane';
 import SleepPane from '@/hub/SleepPane';
 import BathPane from '@/hub/BathPane';
 import '@/hub/hub-panes.css';
 import { useNeeds, faceOf } from '@/profile/needs';
+import { roomOf } from '@/economy/house';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -38,6 +39,7 @@ const PANES = [
   { id: 'bath', name: 'Bathroom', icon: '🛁' },
 ];
 const HOME = 1;
+const PANE_OF = { living: 1, kitchen: 2, bedroom: 3 };
 
 function greeting({ user, wallet }, face) {
   if (face.dirty === 2) return ["Do you smell that? That's me. Bathroom. Please.", 'sad'];
@@ -60,10 +62,12 @@ export default function Hub() {
   const { profile } = needs;
   const { wallet, user, ready } = profile;
   const face = faceOf(needs);
-  const [panel, setPanel] = useState(null); // null | 'wardrobe'
+  const [panel, setPanel] = useState(null); // null | 'wardrobe' | 'decor'
+  const [decor, setDecor] = useState(null); // the room being decorated
+  const [decorView, setDecorView] = useState(null); // { house, at }: what is being tried in it
+  const [sky, setSky] = useState('day');
   const [preview, setPreview] = useState(null);
   const [line, setLine] = useState({ text: '', mood: null, n: 0 });
-  const [pressed, setPressed] = useState(false);
   const [at, setAt] = useState(HOME); // the panel in view
   const pokes = useRef(0);
   const calmTimer = useRef(0);
@@ -73,6 +77,17 @@ export default function Hub() {
     setLine((l) => ({ text, mood, n: l.n + 1 }));
     clearTimeout(calmTimer.current);
     calmTimer.current = setTimeout(() => setLine((l) => ({ ...l, mood: null })), 2600);
+  }, []);
+
+  // The windows show the real time of day.
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setSky(skyOf(d.getHours() + d.getMinutes() / 60));
+    };
+    tick();
+    const t = setInterval(tick, 60_000);
+    return () => clearInterval(t);
   }, []);
 
   // Say hello once we know who this is.
@@ -132,8 +147,6 @@ export default function Hub() {
   }, [panel, go]);
 
   function poke() {
-    setPressed(true);
-    setTimeout(() => setPressed(false), 140);
     pokes.current++;
     if (needs.asleep) return say('Zzz… *mumbles* …not the button…', 'sleep');
     if (pokes.current % 7 === 0) return say('OKAY. Go earn some coins and leave me alone.', 'angry');
@@ -147,7 +160,20 @@ export default function Hub() {
   const close = useCallback(() => {
     setPanel(null);
     setPreview(null);
+    setDecor(null);
+    setDecorView(null);
   }, []);
+
+  // Decorating a room: the sheet opens, the panel stays on that room and
+  // shows whatever is being tried in it.
+  const openDecor = useCallback((room) => {
+    pager.current?.children[PANE_OF[room]]?.scrollTo?.(0, 0);
+    setDecor(room);
+    setDecorView(null);
+    setPanel('decor');
+  }, []);
+  const tryingIn = (room) => (panel === 'decor' && decor === room ? decorView : null);
+  const houseOf = (room) => tryingIn(room)?.house ?? roomOf(wallet, room);
 
   const mood = line.mood ?? face.mood;
   const equipped = preview ?? wallet.equipped;
@@ -160,33 +186,22 @@ export default function Hub() {
         </section>
 
         <section className="pane pane-home" aria-label="Living Room" inert={at !== HOME}>
-          <HomeRoom />
-          <p className="hub-line" key={line.n} aria-live="polite">
-            {line.text}
-          </p>
-
-          <div className="hub-stage">
-            <div className="hero-spot">
-              <Avatar
-                as="button"
-                type="button"
-                className={`hero has-legs ${pressed ? 'press' : ''}`}
-                size={panel ? 'clamp(96px, 22vh, 150px)' : 'var(--hs)'}
+          <div className="rm-living">
+            <div className="rm-wrap">
+              <Room
+                room="living"
+                sky={sky}
+                house={houseOf('living')}
+                preview={tryingIn('living')?.at}
                 equipped={equipped}
                 mood={mood}
                 sleepy={face.sleepy}
                 dirty={face.dirty}
                 grime={face.grime}
-                onClick={poke}
-                aria-label="The button. It would rather you didn't."
+                asleep={needs.asleep}
+                line={line}
+                onPoke={poke}
               />
-              {needs.asleep && (
-                <span className="hero-zz" aria-hidden="true">
-                  <i>z</i>
-                  <i>z</i>
-                  <i>Z</i>
-                </span>
-              )}
             </div>
           </div>
 
@@ -201,19 +216,19 @@ export default function Hub() {
               <Link className="pill big story-btn" href="/story" style={{ '--i': 2 }}>
                 <span className="ico">📖</span> Story
               </Link>
-              <Link className="pill big house-btn" href="/house" style={{ '--i': 3 }}>
+              <button className="pill big house-btn" onClick={() => openDecor('living')} style={{ '--i': 3 }}>
                 <span className="ico">🛋️</span> Decorate
-              </Link>
+              </button>
             </nav>
           )}
         </section>
 
         <section className="pane pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={wallet} active={at === 2} />
+          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} onDecorate={() => openDecor('kitchen')} />
         </section>
 
         <section className="pane pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} />
+          <SleepPane needs={needs} wallet={wallet} go={go} view={tryingIn('bedroom')} onDecorate={() => openDecor('bedroom')} />
         </section>
 
         <section className="pane pane-bath" aria-label="Bathroom" inert={at !== 4}>
@@ -247,6 +262,7 @@ export default function Hub() {
       )}
 
       {panel === 'wardrobe' && <Wardrobe wallet={wallet} onPreview={setPreview} onSay={say} onClose={close} />}
+      {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} onClose={close} />}
     </main>
   );
 }

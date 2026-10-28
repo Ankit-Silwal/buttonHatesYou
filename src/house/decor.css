@@ -1,0 +1,82 @@
+/* =====================================================================
+   The decorating sheet (src/house/DecorSheet.jsx): tabs, the grid of walls,
+   floors and furniture, and the buy bar. It builds on the shared .sheet,
+   .tabs and .buybar from hub.css.
+   ===================================================================== */
+
+.sheet.decor-sheet { max-height: 50vh; }
+.sheet.decor-sheet .sheet-head { padding: 16px 20px 6px; }
+.sheet.decor-sheet .sheet-head h2 { font-size: 20px; }
+.sheet.decor-sheet .sheet-body { padding: 8px 16px 14px; }
+.sheet.decor-sheet .buybar { align-items: flex-end; }
+.sheet.decor-sheet .buybar .row { flex: none; }
+.sheet.decor-sheet .buybar .pill { white-space: nowrap; padding: 10px 18px; font-size: 15px; }
+
+.decor-said { margin: 0 0 8px; padding: 8px 12px; border-radius: 14px; background: rgba(240, 195, 109, 0.28); color: var(--ink); font-size: 14px; font-weight: 600; }
+.decor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 10px; }
+.dtile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 6px 10px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffdf8, #f6ead8);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(74, 52, 40, 0.07), 0 2px 4px rgba(74, 52, 40, 0.07), 0 8px 16px -10px rgba(74, 52, 40, 0.35);
+  transition: transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1), box-shadow 0.18s;
+}
+.dtile:hover { transform: translateY(-3px); }
+.dtile:active { transform: scale(0.97); }
+.dtile:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.dtile[aria-pressed='true'] { box-shadow: inset 0 0 0 2.5px var(--ink), 0 8px 18px -8px rgba(74, 52, 40, 0.45); }
+.dtile.trying { box-shadow: inset 0 0 0 2.5px var(--mustard), 0 0 0 4px rgba(240, 195, 109, 0.3), 0 12px 24px -8px rgba(200, 140, 40, 0.45); }
+.dtile .check { position: absolute; top: 6px; right: 8px; z-index: 1; font-size: 12px; font-weight: 700; }
+.dtile .dthumb {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 60px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 40%, #fff, #f1e5d3);
+  overflow: hidden;
+  container-type: inline-size;
+}
+.dtile .dthumb .art { max-width: 82%; max-height: 52px; }
+.dtile .swatch { display: block; position: relative; width: 100%; height: 100%; }
+.dtile .swatch.hs-floor { background: var(--floor-bg); }
+.dtile .name { font-size: 13px; font-weight: 600; line-height: 1.15; }
+.dtile .cost { font-size: 12px; color: var(--ink-soft); }
+
+.decor-more { margin: 12px 0 0; text-align: center; font-size: 13px; }
+.decor-more a { color: var(--ink-soft); text-underline-offset: 3px; }
+.decor-more a:hover { color: var(--ink); }
+
+.decor-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.decor-info b { font-size: 16px; }
+.decor-info .note { font-size: 12.5px; line-height: 1.3; }
+.decor-short { color: #c0392b; font-weight: 600; }
+.decor-spots { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.decor-spots button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(74, 52, 40, 0.09);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.decor-spots button[aria-checked='true'] { background: var(--ink); color: var(--cream); }
+.decor-spots button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 1px; }
+
+@media (max-width: 480px) {
+  .sheet.decor-sheet .buybar { flex-direction: column; align-items: stretch; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .sheet.decor-sheet .buybar .row { justify-content: flex-end; }
+}

@@ -1,5 +1,5 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
-import { HOUSE_ITEM, DEFAULT_HOUSE, SPOT, FOOD, WAKE_OPTION } from './house';
+import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, roomOf } from './house';
 import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
@@ -49,7 +49,8 @@ export const START = Object.freeze({
   diamonds: 0,
   owned: [],
   equipped: DEFAULT_LOOK,
-  house: DEFAULT_HOUSE, // see house.js
+  house: DEFAULT_HOUSE, // the living room, see house.js
+  rooms: DEFAULT_ROOMS, // the kitchen and the bedroom
   needs: DEFAULT_NEEDS, // see needs.js
   stats: EMPTY_STATS, // see achievements.js
   achieved: Object.freeze({}),
@@ -194,9 +195,16 @@ function applyLegacyReward(wallet, ev) {
    The house and the button's needs
    =====================================================================
    { id, type: 'buy', item }           bought a house item (wallpaper, floor, furniture)
-   { id, type: 'decor', spot, item }   put an owned wallpaper/floor up (spot 'wall' /
+   { id, type: 'decor', spot, item, room? }
+                                       put an owned wallpaper/floor up (spot 'wall' /
                                        'floor') or a piece of furniture in a spot
-                                       (item null takes it down; the bed stays)
+                                       of `room` ('living' when left out, 'kitchen',
+                                       'bedroom'); item null takes it down. The
+                                       piece must be allowed in that room and the
+                                       spot must exist there. The bedroom's bed and
+                                       bedside lamp can be swapped, never taken
+                                       down. (An old event for the 'bed' spot with
+                                       no room means the bedroom.)
    Needs events carry `at`, when they happened (ms). Hunger and energy drift
    with the clock between events (see needs.js).
    { id, type: 'feed', item, at }      bought a food and ate it
@@ -219,7 +227,7 @@ const pay = (wallet, price) => ({
 // Wallets saved before the house existed have no `house` or `needs`.
 export function normalize(w) {
   if (!w || typeof w !== 'object') return START;
-  if (w.house?.place && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
+  if (w.house?.place && w.rooms?.kitchen?.place && w.rooms.bedroom?.place && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
   return {
     ...START,
     ...w,
@@ -228,9 +236,23 @@ export function normalize(w) {
     pantry: { ...w.pantry },
     owned: Array.isArray(w.owned) ? w.owned : [],
     equipped: { ...DEFAULT_LOOK, ...w.equipped },
-    house: { ...DEFAULT_HOUSE, ...w.house, place: { ...DEFAULT_HOUSE.place, ...w.house?.place } },
+    ...houseOf(w),
     needs: normalizeNeeds(w.needs),
   };
+}
+
+// The living room (wallet.house) and the other rooms out of a saved wallet.
+// Before the other rooms existed the house had a bed in it: that bed moves to
+// the bedroom, and the living room goes without one.
+function houseOf(w) {
+  const { bed, ...living } = { ...w.house?.place };
+  const room = (id) => {
+    const r = w.rooms?.[id];
+    return { ...DEFAULT_ROOMS[id], ...r, place: { ...DEFAULT_ROOMS[id].place, ...r?.place } };
+  };
+  const rooms = { kitchen: room('kitchen'), bedroom: room('bedroom') };
+  if (!w.rooms && bed && Object.hasOwn(HOUSE_ITEM, bed)) rooms.bedroom.place.bed = bed;
+  return { house: { ...DEFAULT_HOUSE, ...w.house, place: living }, rooms };
 }
 
 // The needs at the event's time. Time only moves forward: an event can't be
@@ -254,24 +276,28 @@ function applyHouseEvent(wallet, ev, now) {
   }
 
   if (ev.type === 'decor') {
-    const { house } = wallet;
+    const id = ev.room ?? (ev.spot === 'bed' ? 'bedroom' : 'living');
+    const cfg = own(ROOMS, id);
+    if (!cfg) return null;
+    const here = roomOf(wallet, id);
+    const put = (next) => ({ ...wallet, ...(id === 'living' ? { house: next } : { rooms: { ...wallet.rooms, [id]: next } }) });
     if (ev.spot === 'wall' || ev.spot === 'floor') {
       const item = own(HOUSE_ITEM, ev.item);
-      if (!item || item.kind !== ev.spot || !owns(wallet, item)) return null;
-      return { ...wallet, house: { ...house, [ev.spot]: item.id } };
+      if (!item || item.kind !== ev.spot || !item.rooms.includes(id) || !owns(wallet, item)) return null;
+      return put({ ...here, [ev.spot]: item.id });
     }
-    if (!own(SPOT, ev.spot)) return null;
-    const place = { ...house.place };
+    if (!own(SPOT, ev.spot) || !cfg.spots.includes(ev.spot)) return null;
+    const place = { ...here.place };
     if (ev.item == null) {
       delete place[ev.spot];
     } else {
       const item = own(HOUSE_ITEM, ev.item);
-      if (!item || item.kind !== 'furniture' || !item.spots.includes(ev.spot) || !owns(wallet, item)) return null;
-      for (const s of Object.keys(place)) if (place[s] === item.id) delete place[s]; // only one of each
+      if (!item || item.kind !== 'furniture' || !item.spots.includes(ev.spot) || !item.rooms.includes(id) || !owns(wallet, item)) return null;
+      for (const s of Object.keys(place)) if (place[s] === item.id) delete place[s]; // only one of each in a room
       place[ev.spot] = item.id;
     }
-    if (!place.bed) return null; // there's always a bed
-    return { ...wallet, house: { ...house, place } };
+    if (!cfg.required.every((s) => place[s])) return null; // the bed and its lamp stay
+    return put({ ...here, place });
   }
 
   if (ev.type === 'feed') {

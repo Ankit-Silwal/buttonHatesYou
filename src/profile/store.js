@@ -39,7 +39,7 @@ const SERVER_VIEW = Object.freeze({ ready: false, user: null, wallet: START, pen
 
 // Only the last change per outfit slot or house spot matters.
 const sameSlot = (a, b) =>
-  a.type === b.type && ((a.type === 'equip' && a.slot === b.slot) || (a.type === 'decor' && a.spot === b.spot));
+  a.type === b.type && ((a.type === 'equip' && a.slot === b.slot) || (a.type === 'decor' && a.spot === b.spot && (a.room ?? 'living') === (b.room ?? 'living')));
 
 const uid = () => crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2);
 const online = () => typeof navigator === 'undefined' || navigator.onLine;
@@ -178,7 +178,7 @@ export const buy = (item) => tryRecord({ type: 'buy', item });
 export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 
 // The house and the button's needs (see economy/house.js and needs.js).
-export const decorate = (spot, item) => tryRecord({ type: 'decor', spot, item });
+export const decorate = (spot, item, room = 'living') => tryRecord({ type: 'decor', spot, item, ...(room === 'living' ? {} : { room }) });
 export const feed = (item) => tryRecord({ type: 'feed', item, at: Date.now() });
 export const sleep = () => tryRecord({ type: 'sleep', at: Date.now() });
 // `item`: a paid wake-up (WAKE_OPTIONS id), or nothing for a free one.
