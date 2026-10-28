@@ -23,7 +23,7 @@ export { tierPayout };
 //                                       events queued before the economy rework
 //   { id, type: 'buy', item }           bought an item
 //   { id, type: 'equip', slot, item }   put an owned item on
-//   { id, type: 'achieve', id, level }  claimed an achievement level (pays diamonds)
+//   { id, type: 'achieve', ach, level } claimed an achievement level (pays diamonds)
 //   { id, type: 'chest', at }           opened the daily chest
 //
 // Economy fields a wallet picks up as it is used (all optional, so wallets
@@ -293,7 +293,7 @@ function applyHouseEvent(wallet, ev, now) {
 /* =====================================================================
    Achievements, stats and the daily chest (see achievements.js, chest.js)
    =====================================================================
-   { id, type: 'achieve', id, level }  claims level `level` (1 = Bronze) of an
+   { id, type: 'achieve', ach, level } claims level `level` (1 = Bronze) of an
                                        achievement: only the next unclaimed
                                        one, and only once its stat is there.
                                        Pays that level's diamonds.
@@ -346,7 +346,7 @@ function countDay(wallet, ev, now) {
 // The new wallet, null when not allowed, undefined when not one of these.
 function applyAchievementEvent(wallet, ev, now) {
   if (ev.type === 'achieve') {
-    const a = own(ACHIEVEMENT, ev.id);
+    const a = own(ACHIEVEMENT, ev.ach);
     const done = levelOf(wallet, a?.id);
     const level = a?.levels[done];
     if (!level || ev.level !== done + 1) return null; // in order, once each

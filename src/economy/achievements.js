@@ -4,7 +4,7 @@
 //
 // Every achievement has three levels, Bronze, Silver and Gold, each with a
 // threshold on one stat and a diamond reward. Levels are claimed by hand, in
-// order, with an { type: 'achieve', id, level } event (see rules.js).
+// order, with an { type: 'achieve', ach, level } event (see rules.js).
 //
 // Stats are only ever counted by applyEvent from events it has already
 // accepted (the server replays them too), or read straight off the wallet

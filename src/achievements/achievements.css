@@ -258,17 +258,17 @@
   top: 45%;
   width: calc(var(--s) * 2.4);
   height: calc(var(--s) * 2.4);
+  margin: calc(var(--s) * -1.2) 0 0 calc(var(--s) * -1.2); /* centred without a transform, so it spins in place */
   border-radius: 50%;
   background: repeating-conic-gradient(rgba(255, 220, 120, 0.5) 0 10deg, transparent 10deg 30deg);
   -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 65%);
   mask-image: radial-gradient(circle, #000 20%, transparent 65%);
-  transform: translate(-50%, -50%) scale(0);
   opacity: 0;
   pointer-events: none;
 }
 .chest-art.shaking { animation: chestShake 0.75s ease-in-out; }
 .chest-art.open .chest-lid { transform: translateY(-18%) rotate(-24deg) translateX(-12%); }
-.chest-art.open .chest-rays { opacity: 1; transform: translate(-50%, -50%) scale(1); transition: transform 0.6s cubic-bezier(0.34, 1.5, 0.64, 1), opacity 0.3s; animation: raysSpin 9s linear infinite; }
+.chest-art.open .chest-rays { opacity: 1; animation: raysIn 0.6s cubic-bezier(0.34, 1.5, 0.64, 1), raysSpin 9s linear 0.6s infinite; }
 .ach-chest .chest-art.open .chest-rays { display: none; }
 .ach-chest:not(.ready) .chest-art { filter: saturate(0.6); opacity: 0.8; }
 
@@ -286,6 +286,7 @@
   animation: fadeIn 0.2s ease-out;
 }
 .chest-card {
+  overflow: hidden; /* the light rays stay inside the card */
   --ink: #f4eee7;
   --ink-soft: #b9b3cc;
   --floor: #3a3f5e;
@@ -412,7 +413,8 @@
 @keyframes achPlus { 0% { opacity: 0; transform: translateY(6px) scale(0.6); } 20% { opacity: 1; transform: translateY(-8px) scale(1.15); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-40px) scale(1); } }
 @keyframes chestHop { 0%, 70%, 100% { transform: translateY(0) rotate(0); } 78% { transform: translateY(-8px) rotate(-4deg); } 86% { transform: translateY(0) rotate(3deg); } 92% { transform: translateY(-3px) rotate(0); } }
 @keyframes chestShake { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(-6deg) scale(1.03); } 30% { transform: rotate(6deg) scale(1.05); } 45% { transform: rotate(-7deg) scale(1.07); } 60% { transform: rotate(7deg) scale(1.09); } 80% { transform: rotate(-3deg) scale(1.1); } }
-@keyframes raysSpin { from { rotate: 0deg; } to { rotate: 360deg; } }
+@keyframes raysIn { from { opacity: 0; transform: scale(0) rotate(-40deg); } }
+@keyframes raysSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @keyframes lootFly {
   0% { opacity: 0; transform: rotate(var(--a)) translateY(0) rotate(calc(var(--a) * -1)) scale(0.3); }
   20% { opacity: 1; }

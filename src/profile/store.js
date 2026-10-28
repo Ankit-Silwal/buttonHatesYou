@@ -159,7 +159,7 @@ export const isClaimed = (wallet, claim) => !!wallet.claimed?.includes(claim);
 
 // Achievements and the daily chest (see economy/achievements.js and chest.js).
 // Claims the next level of an achievement: what it paid, or null.
-export const claimAchievement = (id, level) => earn({ type: 'achieve', id, level });
+export const claimAchievement = (id, level) => earn({ type: 'achieve', ach: id, level });
 // Opens today's chest: { coins, diamonds, food, energy, big, streak }, or null
 // when it was already opened today.
 export function openChest() {

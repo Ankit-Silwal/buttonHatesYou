@@ -289,7 +289,7 @@ export default function House() {
                     <span className="cost">
                       {isFood ? (
                         <>
-                          {priceText(it.price)}
+                          {wallet.pantry?.[it.id] ? `🎁 ${wallet.pantry[it.id]} free` : priceText(it.price)}
                           <em>
                             {it.hunger ? ` 🍔+${it.hunger}` : ''}
                             {it.energy ? ` ⚡+${it.energy}` : ''}
@@ -344,8 +344,8 @@ export default function House() {
               Cancel
             </button>
             {food ? (
-              <button className="pill" onClick={eat} disabled={needs.asleep || !canAfford(wallet, food)}>
-                Feed · {priceText(food.price)}
+              <button className="pill" onClick={eat} disabled={needs.asleep || (!wallet.pantry?.[food.id] && !canAfford(wallet, food))}>
+                Feed · {wallet.pantry?.[food.id] ? `Free (${wallet.pantry[food.id]} from chests)` : priceText(food.price)}
               </button>
             ) : !have ? (
               <button className="pill" onClick={buyItem} disabled={!canAfford(wallet, item)}>

@@ -125,22 +125,22 @@ for (const a of ACHIEVEMENTS) {
 // claiming: in order, only when the stat is there, once
 let ac = normalize(oldProfile);
 assert.equal(readyCount(ac), 11); // flap B+S, button-run B, reason B+S, cursor B+S, bookworm B+S, outfits B, rooms B
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 2 }), null); // not in order
-ac = applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 1 });
-ac = applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 2 });
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 2 }), null); // not in order
+ac = applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 1 });
+ac = applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 2 });
 assert.equal(ac.diamonds, 7 + 1 + 3);
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 3 }), null); // 3 of 6 chapters
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 3 }), null); // 3 of 6 chapters
 for (const n of [4, 5, 6]) ac = applyEvent(ac, { type: 'claim', claim: 'cursor:' + n });
-ac = applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 3 });
+ac = applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 3 });
 assert.equal(ac.diamonds, 7 + 1 + 3 + 6);
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 3 }), null); // once
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-cursor', level: 4 }), null); // no level 4
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'story-reason', level: 2 }), null); // not in order
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'score-flap', level: 2 }), null); // not in order
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'nope', level: 1 }), null);
-assert.equal(applyEvent(ac, { type: 'achieve', id: '__proto__', level: 1 }), null);
-assert.equal(applyEvent(ac, { type: 'achieve', id: 'score-flap', level: '1' }), null);
-ac = applyEvent(ac, { type: 'achieve', id: 'score-flap', level: 1 });
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 3 }), null); // once
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 4 }), null); // no level 4
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'story-reason', level: 2 }), null); // not in order
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'score-flap', level: 2 }), null); // not in order
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'nope', level: 1 }), null);
+assert.equal(applyEvent(ac, { type: 'achieve', ach: '__proto__', level: 1 }), null);
+assert.equal(applyEvent(ac, { type: 'achieve', ach: 'score-flap', level: '1' }), null);
+ac = applyEvent(ac, { type: 'achieve', ach: 'score-flap', level: 1 });
 assert.equal(ac.achieved['score-flap'], 1);
 // a run that crosses a threshold makes a level ready
 const before = normalize({ ...START, coins: 0 });
