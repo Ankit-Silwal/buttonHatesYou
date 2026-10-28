@@ -1042,6 +1042,361 @@ export const ART = {
     ),
   },
 
+  /* ---------------- bedroom: the bedside lamp is how he goes to sleep ---------------- */
+  'lamp-bedside': {
+    w: 10,
+    glow: { x: 50, y: 24, r: 44, c: '#ffc46b' },
+    vb: '0 0 100 130',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('wood')} x2={1} y2={0} stops={[[0, '#c58a55'], [1, '#8f5a33']]} />
+          <Lin id={u('shade')} x2={1} y2={0} stops={[[0, '#ffe6a8'], [0.5, '#ffd27a'], [1, '#e8a94f']]} />
+          <Rad id={u('bulb')} cx={0.5} cy={0.5} r={0.5} stops={[[0, '#fffbe6'], [0.6, '#ffe39a', 0.7], [1, '#ffc46b', 0]]} />
+        </defs>
+        <Shadow u={u} f={f} cx={50} cy={124} rx={44} ry={5} />
+        <rect x="12" y="76" width="76" height="46" rx="5" fill={f('wood')} />
+        <rect x="6" y="68" width="88" height="10" rx="5" fill="#d9a06b" />
+        <rect x="6" y="68" width="88" height="3" rx="1.5" fill="#fff" opacity="0.35" />
+        <rect x="20" y="86" width="60" height="26" rx="4" fill="#7a4a2a" opacity="0.5" />
+        <rect x="22" y="88" width="56" height="22" rx="3" fill="#b3774a" />
+        <circle cx="50" cy="99" r="3" fill="#f3d48c" />
+        <ellipse cx="50" cy="66" rx="15" ry="4" fill="#4b4540" />
+        <rect x="48" y="38" width="4" height="28" fill="#4b4540" />
+        <ellipse className="lamp-lit" cx="50" cy="36" rx="30" ry="22" fill={f('bulb')} />
+        <path d="M28 40 L38 6 H62 L72 40 Z" fill={f('shade')} />
+        <path d="M34 36 L41 10" stroke="#fff" strokeOpacity="0.5" strokeWidth="3" strokeLinecap="round" />
+        <ellipse cx="50" cy="40" rx="22" ry="4.5" fill="#fff4cf" className="lamp-lit" />
+        <ellipse cx="50" cy="40" rx="22" ry="4.5" fill="#caa05a" opacity="0.5" />
+      </>
+    ),
+  },
+  'nightstand-modern': {
+    w: 10,
+    glow: { x: 50, y: 24, r: 44, c: '#9fe3ff' },
+    vb: '0 0 100 130',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('body')} x2={1} y2={0} stops={[[0, '#ffffff'], [1, '#d6dce4']]} />
+          <Lin id={u('shade')} x2={1} y2={0} stops={[[0, '#7fe0d4'], [1, '#2fa89c']]} />
+          <Rad id={u('bulb')} cx={0.5} cy={0.5} r={0.5} stops={[[0, '#f0ffff'], [0.6, '#bff4ff', 0.7], [1, '#9fe3ff', 0]]} />
+        </defs>
+        <Shadow u={u} f={f} cx={50} cy={124} rx={42} ry={5} />
+        <rect x="14" y="70" width="72" height="50" rx="6" fill={f('body')} />
+        <rect x="20" y="78" width="60" height="18" rx="3" fill="#aab4c2" opacity="0.55" />
+        <rect x="20" y="100" width="60" height="14" rx="3" fill="#2b3342" />
+        <rect x="26" y="103" width="22" height="8" rx="1.5" fill="#ff7a8a" />
+        <rect x="50" y="104" width="24" height="7" rx="1.5" fill="#ffd36b" />
+        <rect x="14" y="66" width="72" height="8" rx="4" fill="#2b3342" />
+        <path d="M18 120 l-2 6 M82 120 l2 6" stroke="#2b3342" strokeWidth="4" strokeLinecap="round" />
+        <path d="M50 66 C 50 50 56 40 62 30" stroke="#2b3342" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+        <ellipse className="lamp-lit" cx="64" cy="26" rx="28" ry="20" fill={f('bulb')} />
+        <path d="M48 32 Q54 6 78 10 Q80 26 76 34 Z" fill={f('shade')} />
+        <path d="M54 26 Q58 14 68 13" stroke="#fff" strokeOpacity="0.5" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <ellipse className="lamp-lit" cx="62" cy="34" rx="14" ry="3" fill="#eaffff" />
+      </>
+    ),
+  },
+  'wardrobe-tall': {
+    w: 12,
+    vb: '0 0 110 240',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('wood')} x2={1} y2={0} stops={[[0, '#7c5a43'], [0.5, '#5d4130'], [1, '#43301f']]} />
+          <Lin id={u('mir')} x2={1} y2={1} stops={[[0, '#dff2ff'], [0.5, '#a9cfe6'], [1, '#7fa7c4']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={55} cy={234} rx={50} ry={5} />
+        <rect x="6" y="6" width="98" height="222" rx="6" fill={f('wood')} />
+        <rect x="2" y="2" width="106" height="10" rx="4" fill="#3a281a" />
+        <rect x="14" y="20" width="38" height="196" rx="3" fill="#000" opacity="0.18" />
+        <rect x="58" y="20" width="38" height="196" rx="3" fill="#000" opacity="0.18" />
+        <rect x="17" y="23" width="32" height="190" rx="2" fill={f('mir')} />
+        <path d="M22 30 L44 90 M22 60 L30 80" stroke="#fff" strokeOpacity="0.55" strokeWidth="4" strokeLinecap="round" />
+        <rect x="61" y="23" width="32" height="190" rx="2" fill="#6b4c37" />
+        <path d="M61 120 h32" stroke="#000" strokeOpacity="0.2" strokeWidth="1.5" />
+        <path d="M86 126 q8 4 4 18 q-6 2 -8 -4z" fill="#ff7aa8" />
+        <rect x="52" y="108" width="3" height="26" rx="1.5" fill="#f3d48c" />
+        <rect x="57" y="108" width="3" height="26" rx="1.5" fill="#f3d48c" />
+        <path d="M14 228 v8 M96 228 v8" stroke="#2c1f14" strokeWidth="6" strokeLinecap="round" />
+      </>
+    ),
+  },
+  'desk-study': {
+    w: 20,
+    vb: '0 0 200 140',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('top')} stops={[[0, '#e6c79c'], [1, '#c79f6d']]} />
+          <Lin id={u('side')} x2={1} y2={0} stops={[[0, '#b88457'], [1, '#8a5d3a']]} />
+          <Lin id={u('scr')} stops={[[0, '#8fe3ff'], [1, '#4f8be0']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={100} cy={134} rx={92} ry={6} />
+        <rect x="12" y="62" width="176" height="10" rx="4" fill={f('top')} />
+        <rect x="12" y="62" width="176" height="3" rx="1.5" fill="#fff" opacity="0.4" />
+        <rect x="18" y="72" width="8" height="58" rx="2" fill={f('side')} />
+        <rect x="126" y="72" width="56" height="58" rx="3" fill={f('side')} />
+        <rect x="132" y="78" width="44" height="22" rx="2" fill="#a06f45" />
+        <rect x="132" y="104" width="44" height="22" rx="2" fill="#a06f45" />
+        <circle cx="154" cy="89" r="2.4" fill="#f3d48c" />
+        <circle cx="154" cy="115" r="2.4" fill="#f3d48c" />
+        <path d="M34 62 l6 -34 h54 l6 34z" fill="#2b3342" />
+        <rect x="42" y="32" width="48" height="26" rx="2" fill={f('scr')} />
+        <path d="M46 38 h20 M46 44 h30 M46 50 h14" stroke="#fff" strokeOpacity="0.75" strokeWidth="2" strokeLinecap="round" />
+        <path d="M30 62 h78 l-4 -6 h-70z" fill="#1f2530" />
+        <rect x="112" y="46" width="34" height="16" rx="2" fill="#e2674f" />
+        <rect x="114" y="38" width="30" height="10" rx="2" fill="#5b8fd6" />
+        <rect x="116" y="31" width="26" height="8" rx="2" fill="#ffd36b" />
+        <path d="M160 62 v-26 l14 -14" stroke="#4b4540" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M168 22 l16 10 l-6 6z" fill="#7fd6a0" />
+        <rect x="150" y="50" width="12" height="12" rx="3" fill="#fffaf2" />
+        <path d="M162 53 q6 2 0 6" stroke="#fffaf2" strokeWidth="2" fill="none" />
+      </>
+    ),
+  },
+  'string-lights': {
+    w: 100,
+    glow: null,
+    vb: '0 0 400 60',
+    draw: () => {
+      const bulbs = [];
+      for (let k = 0; k < 2; k++) {
+        const x0 = k * 200;
+        for (let i = 0; i < 8; i++) {
+          const t = (i + 0.5) / 8;
+          bulbs.push({ x: x0 + 8 + t * 184, y: 6 + Math.sin(t * Math.PI) * 30, d: (i % 4) * 0.5 });
+        }
+      }
+      return (
+        <>
+          <path d="M8 4 Q104 52 200 4 Q296 52 392 4" stroke="#3a3530" strokeWidth="1.3" fill="none" />
+          {bulbs.map((b, i) => (
+            <g key={i} className="twinkle" style={{ animationDelay: `${b.d}s` }}>
+              <circle cx={b.x} cy={b.y + 7} r="10" fill="#ffd98f" opacity="0.28" />
+              <rect x={b.x - 1.8} y={b.y} width="3.6" height="3.4" fill="#5b5a52" />
+              <circle cx={b.x} cy={b.y + 7} r="4.6" fill="#fff0c2" />
+              <circle cx={b.x - 1.4} cy={b.y + 5.6} r="1.3" fill="#fff" opacity="0.9" />
+            </g>
+          ))}
+        </>
+      );
+    },
+  },
+  'floor-mirror': {
+    w: 8,
+    vb: '0 0 80 220',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('glass')} x2={1} y2={1} stops={[[0, '#e8f6ff'], [0.5, '#b7d6ea'], [1, '#86aac4']]} />
+          <Lin id={u('frame')} x2={1} y2={0} stops={[[0, '#f3d48c'], [0.5, '#c79a45'], [1, '#8a6425']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={40} cy={212} rx={34} ry={5} />
+        <path d="M14 212 L30 190 M66 212 L50 190" stroke="#5a4328" strokeWidth="5" strokeLinecap="round" />
+        <rect x="8" y="6" width="64" height="192" rx="30" fill={f('frame')} />
+        <rect x="14" y="12" width="52" height="180" rx="26" fill={f('glass')} />
+        <path d="M24 40 L44 120 M24 76 L34 104" stroke="#fff" strokeOpacity="0.6" strokeWidth="5" strokeLinecap="round" />
+        <path d="M56 150 q-4 20 -12 30" stroke="#fff" strokeOpacity="0.3" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </>
+    ),
+  },
+
+  /* ---------------- kitchen ---------------- */
+  'kitchen-table': {
+    w: 24,
+    vb: '0 0 240 150',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('top')} stops={[[0, '#f0d3a8'], [1, '#d3a874']]} />
+          <Lin id={u('leg')} x2={1} y2={0} stops={[[0, '#c58a55'], [1, '#8f5a33']]} />
+          <Lin id={u('seat')} stops={[[0, '#ff8f78'], [1, '#d6523d']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={120} cy={142} rx={108} ry={7} />
+        <path d="M112 76 h16 l4 56 h-24z" fill={f('leg')} />
+        <ellipse cx="120" cy="134" rx="30" ry="6" fill="#8f5a33" />
+        <ellipse cx="120" cy="72" rx="84" ry="18" fill="#a77544" />
+        <ellipse cx="120" cy="66" rx="84" ry="18" fill={f('top')} />
+        <ellipse cx="96" cy="62" rx="40" ry="6" fill="#fff" opacity="0.2" />
+        <rect x="104" y="48" width="16" height="12" rx="3" fill="#fffaf2" />
+        <path d="M120 52 q5 1 0 6" stroke="#fffaf2" strokeWidth="2" fill="none" />
+        <path d="M30 118 l-4 24 M70 118 l4 24" stroke="#4b4540" strokeWidth="4" strokeLinecap="round" />
+        <ellipse cx="50" cy="114" rx="26" ry="9" fill={f('seat')} />
+        <ellipse cx="50" cy="110" rx="26" ry="9" fill="#ff9f8a" />
+        <path d="M170 118 l-4 24 M210 118 l4 24" stroke="#4b4540" strokeWidth="4" strokeLinecap="round" />
+        <ellipse cx="190" cy="114" rx="26" ry="9" fill={f('seat')} />
+        <ellipse cx="190" cy="110" rx="26" ry="9" fill="#ff9f8a" />
+      </>
+    ),
+  },
+  'stove-range': {
+    w: 13,
+    vb: '0 0 110 130',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('steel')} x2={1} y2={0} stops={[[0, '#eef1f5'], [0.5, '#c4cad3'], [1, '#8e97a4']]} />
+          <Lin id={u('glass')} stops={[[0, '#2b3342'], [1, '#12161f']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={55} cy={124} rx={48} ry={5} />
+        <rect x="8" y="22" width="94" height="100" rx="6" fill={f('steel')} />
+        <path d="M6 22 l8 -14 h82 l8 14z" fill="#3a404a" />
+        {[32, 78].map((x) => (
+          <g key={x}>
+            <ellipse cx={x} cy="15" rx="13" ry="3.6" fill="#1b1f27" />
+            <ellipse cx={x} cy="15" rx="8" ry="2.2" fill="#ff7a3a" className="twinkle" />
+          </g>
+        ))}
+        {[22, 42, 62, 82].map((x) => (
+          <circle key={x} cx={x + 4} cy="34" r="4.4" fill="#2b3342" />
+        ))}
+        <rect x="16" y="46" width="78" height="66" rx="5" fill="#9aa3b0" />
+        <rect x="20" y="50" width="70" height="8" rx="2" fill={f('steel')} />
+        <rect x="22" y="62" width="66" height="40" rx="4" fill={f('glass')} />
+        <path d="M28 68 L44 96" stroke="#fff" strokeOpacity="0.3" strokeWidth="5" strokeLinecap="round" />
+        <path d="M14 122 v4 M96 122 v4" stroke="#4b4540" strokeWidth="5" strokeLinecap="round" />
+      </>
+    ),
+  },
+  'coffee-machine': {
+    w: 8,
+    vb: '0 0 80 100',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('body')} x2={1} y2={0} stops={[[0, '#4a4f5c'], [1, '#1f232b']]} />
+          <Lin id={u('cof')} stops={[[0, '#8a5a3a'], [1, '#4a2a18']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={40} cy={96} rx={34} ry={4} />
+        <rect x="10" y="6" width="60" height="22" rx="8" fill={f('body')} />
+        <rect x="10" y="20" width="12" height="70" rx="3" fill={f('body')} />
+        <rect x="10" y="84" width="60" height="9" rx="3" fill="#15181e" />
+        <rect x="30" y="28" width="22" height="10" rx="2" fill="#8e97a4" />
+        <path d="M36 38 v8 M46 38 v8" stroke="#aab3c0" strokeWidth="3" />
+        <rect x="30" y="58" width="24" height="26" rx="3" fill="#fff" opacity="0.85" />
+        <rect x="31" y="68" width="22" height="15" rx="2" fill={f('cof')} />
+        <path d="M54 62 q8 2 6 12 q-2 4 -6 4" stroke="#fff" strokeWidth="3" fill="none" />
+        <circle cx="58" cy="16" r="3" fill="#ff5a4f" />
+        <circle cx="48" cy="16" r="3" fill="#7cffb0" className="twinkle" />
+      </>
+    ),
+  },
+  toaster: {
+    w: 7,
+    vb: '0 0 80 56',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('chr')} x2={1} y2={0} stops={[[0, '#f4f6f9'], [0.45, '#b9c0ca'], [1, '#7e8794']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={40} cy={52} rx={34} ry={4} />
+        <path d="M24 16 q0 -10 6 -10 h4 v14z M46 16 q0 -10 6 -10 h4 v14z" fill="#e8b866" />
+        <rect x="8" y="14" width="64" height="34" rx="14" fill={f('chr')} />
+        <rect x="16" y="14" width="48" height="5" rx="2.5" fill="#262b34" />
+        <path d="M14 24 q4 -4 14 -4" stroke="#fff" strokeOpacity="0.7" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <rect x="70" y="26" width="6" height="12" rx="3" fill="#ff5a4f" />
+        <circle cx="22" cy="40" r="3" fill="#262b34" />
+      </>
+    ),
+  },
+  'fruit-bowl': {
+    w: 8,
+    vb: '0 0 100 60',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('bowl')} stops={[[0, '#7fc8d6'], [1, '#3f8fa3']]} />
+          <Rad id={u('ap')} cx={0.35} cy={0.3} r={0.8} stops={[[0, '#ff9a8a'], [1, '#c8362a']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={50} cy={56} rx={40} ry={4} />
+        <circle cx="34" cy="22" r="13" fill={f('ap')} />
+        <path d="M34 9 q2 -6 8 -6" stroke="#4b7a3a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+        <circle cx="62" cy="24" r="12" fill="#ffb347" />
+        <circle cx="58" cy="19" r="3" fill="#fff" opacity="0.4" />
+        <path d="M40 24 q20 -22 44 -6 q-18 -4 -40 14z" fill="#ffd84a" />
+        <path d="M10 28 h80 q-4 24 -20 26 h-40 q-16 -2 -20 -26z" fill={f('bowl')} />
+        <path d="M16 34 q10 14 24 16" stroke="#fff" strokeOpacity="0.45" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <rect x="8" y="26" width="84" height="5" rx="2.5" fill="#a8dce6" />
+      </>
+    ),
+  },
+  'wall-shelf-spices': {
+    w: 14,
+    vb: '0 0 160 80',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('wood')} stops={[[0, '#d9a06b'], [1, '#a8703f']]} />
+        </defs>
+        {[
+          [14, '#e2674f', 'chili'],
+          [42, '#ffd36b', 'curry'],
+          [70, '#7fd6a0', 'herb'],
+          [98, '#b58cf0', 'sumac'],
+          [126, '#ff9f5a', 'paprika'],
+        ].map(([x, c], i) => (
+          <g key={i}>
+            <rect x={x} y={20 + (i % 2) * 4} width="22" height={36 - (i % 2) * 4} rx="4" fill="#fffaf2" opacity="0.9" />
+            <rect x={x + 2} y={30 + (i % 2) * 4} width="18" height="16" rx="2" fill={c} />
+            <rect x={x - 1} y={14 + (i % 2) * 4} width="24" height="8" rx="3" fill="#4b4540" />
+            <path d={`M${x + 5} ${26 + (i % 2) * 4} v18`} stroke="#fff" strokeOpacity="0.5" strokeWidth="2.4" strokeLinecap="round" />
+          </g>
+        ))}
+        <rect x="2" y="56" width="156" height="10" rx="3" fill={f('wood')} />
+        <rect x="2" y="56" width="156" height="3" rx="1.5" fill="#fff" opacity="0.35" />
+        <path d="M14 66 v8 h8 M138 66 v8 h8" stroke="#6b4a2a" strokeWidth="4" fill="none" strokeLinecap="round" />
+      </>
+    ),
+  },
+  'pendant-kitchen': {
+    w: 10,
+    glow: { x: 50, y: 82, r: 44, c: '#ffcf8a' },
+    vb: '0 0 80 150',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Rad id={u('glass')} cx={0.4} cy={0.35} r={0.8} stops={[[0, '#fff2cf'], [0.5, '#ffc46b'], [1, '#e08a3a']]} />
+        </defs>
+        <path d="M40 0 V78" stroke="#2b2b2b" strokeWidth="1.6" />
+        <rect x="34" y="70" width="12" height="14" rx="3" fill="#2b3342" />
+        <circle cx="40" cy="112" r="28" fill="#fff0c2" opacity="0.22" />
+        <path d="M18 112 a22 22 0 0 1 44 0 a22 22 0 0 1 -44 0z" fill={f('glass')} />
+        <path d="M26 100 q4 -10 14 -12" stroke="#fff" strokeOpacity="0.75" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+        <path d="M36 82 h8 l2 8 h-12z" fill="#2b3342" />
+      </>
+    ),
+  },
+  'kitchen-island': {
+    w: 24,
+    vb: '0 0 240 130',
+    draw: (u, f) => (
+      <>
+        <defs>
+          <Lin id={u('top')} stops={[[0, '#e9cfa6'], [1, '#c79f6d']]} />
+          <Lin id={u('body')} x2={1} y2={0} stops={[[0, '#4f8f9a'], [1, '#2f6370']]} />
+        </defs>
+        <Shadow u={u} f={f} cx={120} cy={124} rx={112} ry={6} />
+        <rect x="14" y="40" width="212" height="76" rx="6" fill={f('body')} />
+        <rect x="6" y="28" width="228" height="16" rx="5" fill="#a77544" />
+        <rect x="6" y="24" width="228" height="14" rx="5" fill={f('top')} />
+        <rect x="6" y="24" width="228" height="3" rx="1.5" fill="#fff" opacity="0.4" />
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x={24 + i * 68} y="52" width="60" height="56" rx="4" fill="#000" opacity="0.14" />
+            <rect x={26 + i * 68} y="54" width="56" height="52" rx="3" fill="#5ea0ac" />
+            <rect x={46 + i * 68} y="60" width="16" height="3" rx="1.5" fill="#f3d48c" />
+          </g>
+        ))}
+        <rect x="150" y="14" width="40" height="10" rx="3" fill="#8f5a33" />
+        <path d="M60 24 q4 -16 18 -16 q14 0 16 16z" fill="#fffaf2" />
+        <path d="M70 12 q2 -8 8 -9" stroke="#4b7a3a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+        <path d="M20 116 v8 M220 116 v8" stroke="#1f3a42" strokeWidth="6" strokeLinecap="round" />
+      </>
+    ),
+  },
+
   /* ---------------- food ---------------- */
   'food-cookie': {
     vb: '0 0 64 64',

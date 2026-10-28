@@ -43,30 +43,52 @@ uploaded the first time you sign in.
 
 ## The house and the button's needs
 
-`/house` is the button's room. He lives there in his outfit, breathes, blinks
-and pulls faces that match how he feels.
+The button lives in three rooms you can decorate: the **Living Room**, the
+**Kitchen** and the **Bedroom**. He lives in them in his outfit, breathes,
+blinks and pulls faces that match how he feels.
 
-- **Decorate.** Buy wallpapers (Cozy Cream, Night City, Space Station…),
-  floors, and furniture for fixed spots: ceiling, two wall spots, the bed,
-  a corner, floor left/right and a rug. Everything is a hand-drawn SVG
-  (`src/house/art.jsx`). Tapping an item previews it in the real room, lit and
-  animated, with a "Previewing" tag; nothing is charged until you press Buy.
-- **Feed him.** Silly button food: a browser cookie, a USB stick sandwich, an
-  AA battery smoothie, hot glue hot dogs… Each restores hunger and/or energy
-  (the meters show a ghost of the result before you buy) and some have side
-  effects (hiccups, a sugar rush, a glow, a glitch).
+- **Decorate every room.** Each room has a "Decorate" button that opens a
+  bottom sheet (`src/house/DecorSheet.jsx`) with Walls / Floors / Furniture.
+  Tap an item to preview it in that room, lit and animated, with a "Previewing"
+  tag; nothing is charged until you press Buy, then Place it or Take down.
+  Every room has its **own** wallpaper, floor and furniture, drawn by the shared
+  `Room` component (`src/house/Room.jsx`, `room.css`) with hand-drawn SVG pieces
+  (`src/house/art.jsx`). You buy a piece once and can put it in every room it
+  fits (`rooms` in the catalog): the kitchen has a counter, stove, coffee
+  machine, toaster, fruit bowl, spice shelf, pendant, table with stools and an
+  island; the bedroom has a wardrobe, study desk, floor mirror, string lights
+  and nightstands; plants, rugs, lamps and posters fit several rooms.
+  Spots: ceiling, two wall spots, a corner, floor left/right and a rug, plus
+  the kitchen's counter and the bedroom's bed and nightstand.
+  `/house` is the full-screen version of the same sheet, with a tab per room.
+- **Feed him.** In the Kitchen the fridge holds silly button food: a browser
+  cookie, a USB stick sandwich, an AA battery smoothie, hot glue hot dogs… Each
+  restores hunger and/or energy and some have side effects (hiccups, a sugar
+  rush, a glow, a glitch). One tap buys and feeds.
 - **Needs.** Hunger and energy run 0–100 and drift down with real time, even
   while the app is closed, but time alone never drags them below 15.
-- **Sleep.** Put him to bed (everyone has a free old mattress). The lights
-  dim, Zzz float up and energy refills over about 2 hours; he wakes on his own
-  when it's full, or when you wake him.
+- **Sleep.** The Bedroom is a dim room with his bedside lamp on. Tap the lamp
+  (a real button, "Turn off the lamp") and the room fades to dark, the moon
+  shines through the window, he climbs into bed and Zzz float up. Energy refills
+  over about 2 hours and he wakes on his own when it is full; tap the lamp again
+  to switch it on and wake him for free. Whether the lamp is on is derived from
+  his real state, so a reload mid-sleep shows the dark room. Everyone has a free
+  old mattress and a free bedside lamp: the bed and the lamp can be swapped for
+  better ones but never taken down, so he can always sleep.
 - **Energy gates games.** An Adventure run costs 2 energy (a full bar is about 2 hours of play), a story
   episode/chapter or Please Don't costs 5. Too tired or asleep, and he refuses
   with a link home. Food is cheap and naps are free, so nobody is stuck.
 
-Code: the catalog and foods are in `src/economy/house.js`, the needs math in
-`src/economy/needs.js`, and the new wallet events (`decor`, `feed`, `sleep`,
-`wake`, `play`) in `applyHouseEvent` in `src/economy/rules.js`, so the server
+Code: the catalog, rooms (`ROOMS`: their spots and required pieces) and foods are
+in `src/economy/house.js`, the needs math in `src/economy/needs.js`, and the
+wallet events (`decor`, `feed`, `sleep`, `wake`, `play`) in `applyHouseEvent` in
+`src/economy/rules.js`. A `decor` event is `{ spot, item, room? }` where `room` is
+`living` (the default, so events queued before the other rooms still work),
+`kitchen` or `bedroom`; the rules check the piece is owned, allowed in that room
+and that the spot exists there. The living room is `wallet.house` and the
+others are `wallet.rooms.kitchen / bedroom` (`{ wall, floor, place }`); wallets
+saved without `rooms` get defaults, and an old house bed moves to the bedroom
+(`normalize()`). The server
 validates purchases and needs exactly like outfits. Needs events carry the time
 they happened; the server never accepts one later than its own clock or earlier
 than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
@@ -74,24 +96,28 @@ than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
 it starts. Profiles saved before the house existed get defaults
 (`normalize()` in rules.js).
 
-## The home screen: four rooms
+## The home screen: five panels
 
 Swipe (or use the dock at the bottom, or the left/right arrow keys) between
-**Games**, the **Living Room** (home, where he starts), the **Kitchen** and
-the **Bedroom**.
+**Games**, the **Living Room** (home, where he starts), the **Kitchen**, the
+**Bedroom** and the **Bathroom**.
 
 - **Games** has every mini-game and says what is stopping him from playing.
-- **Living Room** is his room, redrawn: a window that follows the real time of
-  day, a live wall clock, a rug, sofa, shelf and plant. It dims at night.
-- **Kitchen** is the fridge: tap a food to buy and feed it in one go.
-- **Bedroom** puts him to bed. Waking him for free leaves him as sleepy as he
-  was; the paid wake-up options (Cold Water Splash, Alarm Clock, Espresso Shot,
-  Marching Band, `WAKE_OPTIONS` in `src/economy/house.js`) wake him on the spot
-  and give energy back. The server checks the price like any other purchase.
+- **Living Room** is a view of the room you decorated, with the button in it.
+  The window follows the real time of day. Play, Wardrobe, Story and Decorate
+  sit below it.
+- **Kitchen** is a real kitchen (built-in fridge and counter with sink, window,
+  tiles) with the button standing in it. The fridge below it is the menu: tap a
+  dish to buy and feed it in one go.
+- **Bedroom** is the room with the lamp (see Sleep above). Waking him for free
+  leaves him as sleepy as he was; the paid wake-up options (Cold Water Splash,
+  Alarm Clock, Espresso Shot, Marching Band, `WAKE_OPTIONS` in
+  `src/economy/house.js`) wake him on the spot and give energy back. The server
+  checks the price like any other purchase. If he is filthy the lamp does not
+  work: he refuses and a Bathroom button appears.
 - **He needs both to play.** A game needs the energy *and* hunger of at least
   20 (`PLAY_MIN_HUNGER`). Hungry (under 25) makes him look bored; under 40
-  energy gives him dark circles. The decoration shop is still at `/house`
-  (the Decorate button).
+  energy gives him dark circles.
 
 ## Getting dirty, and the Bathroom
 
@@ -406,7 +432,7 @@ Progress is saved in localStorage, and every boss hit is a checkpoint.
 
 ## Code
 
-- `src/house/` is the button's house (`/house`): the room, its art, the shop and the energy gate
+- `src/house/` is the button's house: the `Room` renderer and its art, the decorating sheet (`DecorSheet.jsx`), the `/house` editor and the energy gate
 - `src/components/Hub.jsx` is the home room; `Wardrobe.jsx` is the shop; `Account.jsx` is Google sign-in
 - `src/economy/` has the catalog (items, prices, games and their rewards) and the wallet rules shared by browser and server
 - `src/profile/store.js` is the offline-first profile cache and sync
