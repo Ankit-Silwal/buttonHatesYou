@@ -46,18 +46,22 @@ export default function Wardrobe({ wallet, undressed = false, onPreview, onSay, 
     });
 
   const stuck = (item) => undressed && (CLOTHES.includes(item.slot) || (item.slot === 'eyes' && item.id !== 'eyes-classic' && /shades|glasses|aviators|visor|monocle|3d/.test(item.id)));
+  // Cursor is an arrow: things made for a round button sit on him oddly
+  const cursor = wallet.equipped?.char === 'char-cursor';
+  const misfit = (item) => cursor && item.slot !== 'char' && item.slot !== 'color';
   function choose(item) {
     if (stuck(item)) return onSay('My clothes are on the stand in the bathroom. Take me there.', 'annoyed');
     if (!owns(wallet, item) && storyLocked(wallet, item)) return onSay(`Meet them in the story first: finish ${item.unlock.text}.`, 'smug');
     if (!owns(wallet, item) && levelLocked(wallet, item)) return onSay(`${lockLabel(item)} first.`, 'smug');
     if (!owns(wallet, item)) {
       if (trying[item.slot] === item.id) return untry(item.slot); // tap again: take it off
+      if (misfit(item)) onSay("Well, some clothes don't fit me sometimes.", 'smug');
       return setTrying((t) => ({ ...t, [item.slot]: item.id }));
     }
     untry(item.slot);
     if (wallet.equipped[item.slot] !== item.id) {
       equip(item.slot, item.id);
-      onSay(item.slot === 'char' ? (item.id === 'char-bobby' ? 'Me again. The original.' : `Fine. Be ${item.name}. See if I care.`) : 'Hmm. Acceptable.', 'smug');
+      onSay(item.slot === 'char' ? (item.id === 'char-bobby' ? 'Me again. The original.' : `Fine. Be ${item.name}. See if I care.`) : misfit(item) ? "Well, some clothes don't fit me sometimes." : 'Hmm. Acceptable.', 'smug');
     }
   }
 

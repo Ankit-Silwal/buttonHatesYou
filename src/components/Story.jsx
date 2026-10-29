@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Avatar from './Avatar';
 import { useProfile } from '@/profile/useProfile';
 import { SERIES } from '@/story/content';
+import { DEFAULT_LOOK } from '@/economy/catalog';
 
 // The whole story, in order. Premises are free to read; each chapter's
 // retelling unlocks once you've finished that chapter in its game.
@@ -67,7 +68,8 @@ export default function Story() {
 
       <section className="story-hero">
         <span className="story-portrait">
-          <Avatar size={84} equipped={profile.wallet.equipped} mood="sad" className="has-legs" />
+          {/* the stories are prequels: plain Bobby, whatever he's wearing now */}
+          <Avatar size={84} equipped={DEFAULT_LOOK} mood="sad" className="has-legs" />
         </span>
         <div>
           <h1>The Story</h1>

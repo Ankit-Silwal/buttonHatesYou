@@ -69,7 +69,8 @@ function GameTile({ game: g, equipped, why, onBlocked, favorite, locked, onStar 
   const inner = (
     <>
       <span className="gtile-art" style={{ '--tint': g.color }}>
-        {PAINT[g.id] ? <GameArt id={g.id} equipped={equipped} /> : <GameIcon id={g.id} />}
+        {/* story games are prequels: their tiles show plain Bobby */}
+        {PAINT[g.id] ? <GameArt id={g.id} equipped={g.category === 'story' ? undefined : equipped} /> : <GameIcon id={g.id} />}
       </span>
       <span className="gtile-name">{g.name}</span>
       {locked && <LockTag className="gtile-lockpin">Beat level {STORY_UNLOCKS[g.id]}</LockTag>}

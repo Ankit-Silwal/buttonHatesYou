@@ -19,7 +19,8 @@ export const CODES = Object.freeze({
   COMMON: { chest: 'common' },
   RARE: { chest: 'rare' },
   EPIC: { chest: 'epic' },
-  LEGENDARY: { chest: 'legendary' },
+  LEGENDARY: { chest: 'legendary', group: 'legendary' },
+  LEGENDRY: { chest: 'legendary', group: 'legendary' }, // (how it's often typed: same chest, once between them)
 });
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);

@@ -116,6 +116,7 @@ export default function AdventureGame({ id }) {
             </span>
             <h1>{meta.name}</h1>
             <p>{meta.blurb}</p>
+            {look?.char === 'char-cursor' && <p className="quip">“How tf did I get square too?”</p>}
             <p className="how">{meta.howTo}</p>
             <p className="goal">
               {meta.rule}
