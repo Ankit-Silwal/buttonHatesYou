@@ -37,6 +37,12 @@ export const ITEMS = [
   { id: 'outfit-blazer', slot: 'outfit', name: 'Blazer', look: 'blazer', price: { coins: 1500 } },
   { id: 'outfit-leather', slot: 'outfit', name: 'Leather jacket', look: 'leather', price: { coins: 1800 } },
   { id: 'outfit-puffer', slot: 'outfit', name: 'Puffer coat', look: 'puffer', price: { diamonds: 5 } },
+  { id: 'outfit-raincoat', slot: 'outfit', name: 'Raincoat', look: 'raincoat', price: { coins: 650 } },
+  { id: 'outfit-sweater', slot: 'outfit', name: 'Cable sweater', look: 'sweater', price: { coins: 800 } },
+  { id: 'outfit-overalls', slot: 'outfit', name: 'Overalls', look: 'overalls', price: { coins: 950 } },
+  { id: 'outfit-flannel', slot: 'outfit', name: 'Flannel shirt', look: 'flannel', price: { coins: 1100 } },
+  { id: 'outfit-chef', slot: 'outfit', name: "Chef's jacket", look: 'chef', price: { coins: 1400 } },
+  { id: 'outfit-tux', slot: 'outfit', name: 'Tuxedo', look: 'tux', price: { coins: 2400 } },
 
   { id: 'eyes-classic', slot: 'eyes', name: 'Classic', look: null },
   { id: 'eyes-sleepy', slot: 'eyes', name: 'Sleepy', look: 'sleepy', price: { coins: 250 } },
@@ -48,6 +54,8 @@ export const ITEMS = [
   { id: 'eyes-glasses', slot: 'eyes', name: 'Round glasses', look: 'glasses', price: { coins: 600 } },
   { id: 'eyes-aviators', slot: 'eyes', name: 'Aviators', look: 'aviators', price: { coins: 900 } },
   { id: 'eyes-visor', slot: 'eyes', name: 'Gamer visor', look: 'visor', price: { diamonds: 6 } },
+  { id: 'eyes-3d', slot: 'eyes', name: '3D glasses', look: '3d', price: { coins: 500 } },
+  { id: 'eyes-monocle', slot: 'eyes', name: 'Monocle', look: 'monocle', price: { coins: 1200 } },
 
   { id: 'ears-none', slot: 'ears', name: 'None', look: null },
   { id: 'ears-bear', slot: 'ears', name: 'Bear', look: 'bear', price: { coins: 400 } },
@@ -56,6 +64,8 @@ export const ITEMS = [
   { id: 'ears-devil', slot: 'ears', name: 'Devil horns', look: 'devil', price: { diamonds: 6 } },
   { id: 'ears-earbuds', slot: 'ears', name: 'Earbuds', look: 'earbuds', price: { coins: 450 } },
   { id: 'ears-headphones', slot: 'ears', name: 'Headphones', look: 'headphones', price: { coins: 750 } },
+  { id: 'ears-antenna', slot: 'ears', name: 'Antennae', look: 'antenna', price: { coins: 550 } },
+  { id: 'ears-fox', slot: 'ears', name: 'Fox', look: 'fox', price: { coins: 650 } },
 
   { id: 'scarf-none', slot: 'scarf', name: 'None', look: null },
   { id: 'scarf-red', slot: 'scarf', name: 'Red', look: 'red', price: { coins: 300 } },
@@ -65,6 +75,8 @@ export const ITEMS = [
   { id: 'scarf-lanyard', slot: 'scarf', name: 'Lanyard', look: 'lanyard', price: { coins: 350 } },
   { id: 'scarf-bandana', slot: 'scarf', name: 'Bandana', look: 'bandana', price: { coins: 450 } },
   { id: 'scarf-chain', slot: 'scarf', name: 'Gold chain', look: 'chain', price: { coins: 1100 } },
+  { id: 'scarf-bowtie', slot: 'scarf', name: 'Bow tie', look: 'bowtie', price: { coins: 400 } },
+  { id: 'scarf-tie', slot: 'scarf', name: 'Necktie', look: 'tie', price: { coins: 500 } },
 
   { id: 'hat-none', slot: 'hat', name: 'None', look: null },
   { id: 'hat-beanie', slot: 'hat', name: 'Beanie', look: 'beanie', price: { coins: 400 } },
@@ -75,6 +87,9 @@ export const ITEMS = [
   { id: 'hat-cap', slot: 'hat', name: 'Snapback', look: 'cap', price: { coins: 550 } },
   { id: 'hat-bucket', slot: 'hat', name: 'Bucket hat', look: 'bucket', price: { coins: 650 } },
   { id: 'hat-beret', slot: 'hat', name: 'Beret', look: 'beret', price: { coins: 700 } },
+  { id: 'hat-chef', slot: 'hat', name: "Chef's hat", look: 'chef', price: { coins: 600 } },
+  { id: 'hat-cowboy', slot: 'hat', name: 'Cowboy hat', look: 'cowboy', price: { coins: 950 } },
+  { id: 'hat-wizard', slot: 'hat', name: 'Wizard hat', look: 'wizard', price: { coins: 1600 } },
 ];
 
 export const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i]));

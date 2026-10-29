@@ -1,0 +1,259 @@
+/* ---------- more of the button's wardrobe ----------
+   Same rules as avatar.css: everything is sized off --s, outfits paint
+   --fab through the shared .outfit layers (neck hole, collar rib). */
+
+/* ---------- clothes ---------- */
+/* raincoat: shiny yellow, toggle buttons */
+.char[data-outfit='raincoat'] .outfit {
+  --fab: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.12)), linear-gradient(#f2c230, #f2c230);
+  --rib: #c99a14; --ribw: calc(var(--s) * 0.04); --nrx: 15%; --nry: 11%;
+}
+.char[data-outfit='raincoat'] .outfit i::before {
+  left: 48.5%; top: 74%; width: 3%; height: 26%;
+  background: repeating-linear-gradient(180deg, #5a4010 0 18%, transparent 18% 40%);
+  border-radius: 2px;
+}
+.char[data-outfit='raincoat'] .outfit i::after {
+  left: 49.6%; top: 72%; width: 0.8%; height: 28%;
+  background: rgba(90, 64, 16, 0.4);
+}
+
+/* overalls: a denim bib and two straps over the bare button */
+.char[data-outfit='overalls'] .outfit {
+  --fab:
+    linear-gradient(90deg, transparent 0 26%, #3f6fa8 26% 32%, transparent 32% 68%, #3f6fa8 68% 74%, transparent 74%) 0 0 / 100% 22% no-repeat,
+    linear-gradient(90deg, transparent 0 30%, #4a7db8 30% 70%, transparent 70%) 0 0 / 100% 46% no-repeat,
+    linear-gradient(#4a7db8, #4a7db8) 0 100% / 100% 54% no-repeat;
+  --nrx: 0%; --nry: 0%;
+}
+.char[data-outfit='overalls'] .outfit i::before {
+  left: 30%; top: 73%; width: 40%; height: 4%;
+  background: radial-gradient(circle at 12% 50%, #e6c27a 0 40%, transparent 45%), radial-gradient(circle at 88% 50%, #e6c27a 0 40%, transparent 45%);
+}
+.char[data-outfit='overalls'] .outfit i::after {
+  left: 40%; top: 80%; width: 20%; height: 9%;
+  border: calc(var(--s) * 0.01) dashed rgba(255, 255, 255, 0.45);
+  border-top: 0;
+  box-sizing: border-box;
+  border-radius: 0 0 20% 20%;
+}
+
+/* cable-knit sweater */
+.char[data-outfit='sweater'] .outfit {
+  --fab:
+    repeating-linear-gradient(90deg, transparent 0 7%, rgba(0, 0, 0, 0.07) 7% 8%, transparent 8% 15%),
+    repeating-linear-gradient(60deg, transparent 0 3%, rgba(255, 255, 255, 0.18) 3% 4.2%, transparent 4.2% 6%),
+    linear-gradient(#e8dcc4, #e8dcc4);
+  --rib: #cdbfa3; --ribw: calc(var(--s) * 0.055); --nrx: 16%; --nry: 12%;
+}
+
+/* flannel: red plaid, a pocket */
+.char[data-outfit='flannel'] .outfit {
+  --fab:
+    repeating-linear-gradient(90deg, rgba(20, 10, 10, 0.32) 0 4%, transparent 4% 12%),
+    repeating-linear-gradient(180deg, rgba(20, 10, 10, 0.32) 0 4%, transparent 4% 12%),
+    repeating-linear-gradient(90deg, transparent 0 7.5%, rgba(255, 255, 255, 0.18) 7.5% 8.5%, transparent 8.5% 12%),
+    linear-gradient(#b8322b, #b8322b);
+  --rib: #7a1f1a; --ribw: calc(var(--s) * 0.03); --nrx: 13%; --nry: 10%;
+}
+.char[data-outfit='flannel'] .outfit i::before {
+  left: 58%; top: 75%; width: 14%; height: 9%;
+  border: calc(var(--s) * 0.008) solid rgba(30, 10, 10, 0.5);
+  border-top-width: calc(var(--s) * 0.016);
+  box-sizing: border-box;
+  border-radius: 0 0 2px 2px;
+}
+
+/* chef's jacket: double row of buttons */
+.char[data-outfit='chef'] .outfit {
+  --fab: linear-gradient(90deg, rgba(0, 0, 0, 0.06), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.08)), linear-gradient(#fbfaf6, #fbfaf6);
+  --rib: #dcd8cc; --ribw: calc(var(--s) * 0.05); --nrx: 13%; --nry: 9%;
+}
+.char[data-outfit='chef'] .outfit i::before {
+  left: 39%; top: 75%; width: 22%; height: 24%;
+  background:
+    repeating-linear-gradient(180deg, #2b2b2b 0 9%, transparent 9% 30%) 0 0 / 12% 100% no-repeat,
+    repeating-linear-gradient(180deg, #2b2b2b 0 9%, transparent 9% 30%) 100% 0 / 12% 100% no-repeat;
+}
+
+/* tuxedo: black jacket, satin lapels, white shirt and a little bow */
+.char[data-outfit='tux'] .outfit {
+  --fab:
+    linear-gradient(105deg, transparent 0 39%, #f6f4ee 39% 61%, transparent 61%) 0 0 / 100% 100%,
+    linear-gradient(75deg, transparent 0 39%, #f6f4ee 39% 61%, transparent 61%) 0 0 / 100% 100%,
+    linear-gradient(#1f1d24, #1f1d24);
+  --rib: transparent; --nrx: 9%; --nry: 6%; --ncy: 63%;
+}
+.char[data-outfit='tux'] .outfit i::before { /* bow tie */
+  left: 42%; top: 66.5%; width: 16%; height: 6%;
+  background: radial-gradient(circle, #1f1d24 0 22%, transparent 24%), linear-gradient(#1f1d24, #1f1d24);
+  clip-path: polygon(0 0, 50% 40%, 100% 0, 100% 100%, 50% 60%, 0 100%);
+}
+.char[data-outfit='tux'] .outfit i::after { /* studs */
+  left: 49%; top: 76%; width: 2%; height: 18%;
+  background: repeating-linear-gradient(180deg, #2b2b2b 0 16%, transparent 16% 40%);
+}
+
+/* ---------- hats ---------- */
+/* chef's toque */
+.char[data-hat='chef'] .hat {
+  top: -46%;
+  width: 56%;
+  height: 54%;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 22% 38%, #fff 0 26%, transparent 27%),
+    radial-gradient(circle at 50% 28%, #fff 0 30%, transparent 31%),
+    radial-gradient(circle at 78% 38%, #fff 0 26%, transparent 27%),
+    linear-gradient(#f4f2ec, #f4f2ec) 50% 100% / 76% 42% no-repeat;
+  filter: drop-shadow(0 calc(var(--s) * 0.01) calc(var(--s) * 0.015) rgba(0, 0, 0, 0.2));
+}
+.char[data-hat='chef'] .hat::after {
+  content: '';
+  position: absolute;
+  left: 10%; right: 10%; bottom: 0; height: 16%;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #e9e5da 0 10%, #f8f6f0 10% 20%);
+}
+
+/* wizard: a starry purple cone with a floppy tip */
+.char[data-hat='wizard'] .hat {
+  top: -56%;
+  width: 70%;
+  height: 80%;
+  transform: translateX(-50%) rotate(-6deg);
+  clip-path: polygon(52% 0, 100% 86%, 0 86%);
+  background:
+    radial-gradient(circle at 40% 40%, #ffe36b 0 3%, transparent 4%),
+    radial-gradient(circle at 62% 62%, #ffe36b 0 3.5%, transparent 4.5%),
+    radial-gradient(circle at 34% 72%, #fff 0 2%, transparent 3%),
+    linear-gradient(100deg, #6c4bb8, #4a2f8a);
+}
+.char[data-hat='wizard'] .hat::after {
+  content: '';
+  position: absolute;
+  left: -10%; right: -10%; bottom: 8%; height: 14%;
+  border-radius: 50%;
+  background: #4a2f8a;
+}
+
+/* cowboy hat: dented crown, curled brim */
+.char[data-hat='cowboy'] .hat {
+  top: -26%;
+  width: 52%;
+  height: 34%;
+  transform: translateX(-50%);
+  border-radius: 40% 40% 8% 8% / 60% 60% 10% 10%;
+  background:
+    linear-gradient(180deg, transparent 0 62%, #4a2c18 62% 76%, transparent 76%),
+    radial-gradient(ellipse at 50% 0, #6f4527 0 30%, transparent 31%),
+    linear-gradient(180deg, #9a6a3e, #7a4f2c);
+}
+.char[data-hat='cowboy'] .hat::after {
+  content: '';
+  position: absolute;
+  left: -48%; right: -48%; bottom: -18%; height: 34%;
+  border-radius: 50%;
+  border-top: calc(var(--s) * 0.04) solid #8a5a32;
+  background: linear-gradient(180deg, #8a5a32 0 40%, transparent 40%);
+  clip-path: ellipse(50% 60% at 50% 40%);
+}
+
+/* ---------- eyes ---------- */
+/* monocle on one eye, a little chain */
+.char[data-eyes='monocle'] .eyes i:last-child {
+  outline: calc(var(--s) * 0.016) solid #c99a2e;
+  outline-offset: calc(var(--s) * 0.02);
+  border-radius: 50%;
+}
+.char[data-eyes='monocle'] .eyes::after {
+  content: '';
+  position: absolute;
+  right: calc(var(--s) * -0.035);
+  top: 80%;
+  width: calc(var(--s) * 0.06);
+  height: calc(var(--s) * 0.22);
+  border-left: calc(var(--s) * 0.008) dotted #c99a2e;
+  border-bottom-left-radius: 100%;
+}
+
+/* 3D glasses: red and cyan lenses */
+.char[data-eyes='3d'] .eyes { gap: calc(var(--s) * 0.05); }
+.char[data-eyes='3d'] .eyes i {
+  width: calc(var(--s) * 0.2);
+  height: calc(var(--s) * 0.13);
+  border-radius: 12%;
+  border: calc(var(--s) * 0.018) solid #f4f2ec;
+  box-sizing: border-box;
+  background: rgba(230, 60, 60, 0.75);
+}
+.char[data-eyes='3d'] .eyes i:last-child { background: rgba(60, 200, 230, 0.75); }
+.char[data-eyes='3d'] .eyes i::before { display: none; }
+.char[data-eyes='3d'] .eyes i::after { opacity: 0.55; }
+.char[data-eyes='3d'] .eyes::before {
+  content: '';
+  position: absolute;
+  left: 40%; right: 40%; top: 30%;
+  height: calc(var(--s) * 0.02);
+  background: #f4f2ec;
+}
+
+/* ---------- neck ---------- */
+/* bow tie */
+.char[data-scarf='bowtie'] .scarf {
+  left: 38%; right: 38%; top: 76%; height: 11%;
+  border-radius: 0;
+  box-shadow: none;
+  background: radial-gradient(circle, #a8243c 0 18%, transparent 20%), linear-gradient(90deg, #c0392b, #8e2232 50%, #c0392b);
+  clip-path: polygon(0 0, 50% 38%, 100% 0, 100% 100%, 50% 62%, 0 100%);
+}
+/* necktie */
+.char[data-scarf='tie'] .scarf {
+  left: 44%; right: 44%; top: 74%; height: 26%;
+  border-radius: 0;
+  box-shadow: none;
+  background: repeating-linear-gradient(135deg, #2f4f7f 0 14%, #f0c36d 14% 20%);
+  clip-path: polygon(20% 0, 80% 0, 70% 14%, 100% 82%, 50% 100%, 0 82%, 30% 14%);
+}
+
+/* ---------- ears ---------- */
+/* fox: tall orange triangles with cream insides */
+.char[data-ears='fox'] .ears i {
+  top: -26%;
+  width: 32%;
+  height: 44%;
+  background: #e8823a;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.char[data-ears='fox'] .ears i:first-child { left: 4%; transform: rotate(-16deg); }
+.char[data-ears='fox'] .ears i:last-child { right: 4%; transform: rotate(16deg); }
+.char[data-ears='fox'] .ears i::after { left: 26%; right: 26%; top: 34%; bottom: 0; background: #fbe8d0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+/* antenna: two wobbly stalks with glowing tips */
+.char[data-ears='antenna'] .ears i {
+  top: -34%;
+  width: calc(var(--s) * 0.025);
+  height: 42%;
+  background: #3a3a44;
+  border-radius: 2px;
+  transform-origin: 50% 100%;
+  animation: antennaWobble 2.4s ease-in-out infinite alternate;
+}
+.char[data-ears='antenna'] .ears i:first-child { left: 30%; transform: rotate(-14deg); }
+.char[data-ears='antenna'] .ears i:last-child { right: 30%; transform: rotate(14deg); animation-delay: -1.2s; }
+.char[data-ears='antenna'] .ears i::after {
+  left: 50%; top: 0;
+  width: calc(var(--s) * 0.09);
+  height: calc(var(--s) * 0.09);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, #7cf3ff 40%, #2aa7c9);
+  box-shadow: 0 0 calc(var(--s) * 0.05) #7cf3ff;
+}
+@keyframes antennaWobble {
+  from { rotate: -6deg; }
+  to { rotate: 6deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .char[data-ears='antenna'] .ears i { animation: none; }
+}
