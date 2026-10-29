@@ -31,10 +31,10 @@ export default function Wallet({ profile, compact = false }) {
   return (
     <div className="wallet">
       <span className="chip" title="Coins">
-        🪙 <b key={wallet.coins}>{wallet.coins}</b>
+        🪙 <b key={wallet.coins}>{wallet.coins.toLocaleString('en-US')}</b>
       </span>
       <span className="chip" title="Diamonds">
-        💎 <b key={wallet.diamonds}>{wallet.diamonds}</b>
+        💎 <b key={wallet.diamonds}>{wallet.diamonds.toLocaleString('en-US')}</b>
       </span>
       {ready && (
         <span className="chip sync" title={hint}>

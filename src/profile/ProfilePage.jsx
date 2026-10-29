@@ -11,6 +11,8 @@ import LevelRoad from '@/levels/LevelRoad';
 import { useProfile } from './useProfile';
 import { useMe, setMe } from './me';
 import { readyCount } from '@/economy/achievements';
+import { isCode, usedCode } from '@/economy/codes';
+import { redeemCode } from './store';
 import './profile.css';
 
 const TABS = [
@@ -67,7 +69,12 @@ export default function ProfilePage() {
       {tab === 'me' && <MeTab profile={profile} me={me} />}
       {tab === 'levels' && <LevelRoad />}
       {tab === 'achievements' && <Achievements embedded />}
-      {tab === 'settings' && <SettingsTab me={me} />}
+      {tab === 'settings' && (
+        <>
+          <SettingsTab me={me} />
+          <CodesCard profile={profile} />
+        </>
+      )}
     </main>
   );
 }
@@ -187,3 +194,39 @@ function SettingsTab({ me }) {
     </section>
   );
 }
+
+// Codes: type one in, get what it gives (once each).
+function CodesCard({ profile }) {
+  const [code, setCode] = useState('');
+  const [said, setSaid] = useState(null); // { text, good }
+  const fmt = (n) => n.toLocaleString('en-US');
+
+  function submit(e) {
+    e.preventDefault();
+    if (!code.trim()) return;
+    if (!isCode(code)) return setSaid({ text: 'That code does nothing. Like you.', good: false });
+    if (usedCode(profile.wallet, code)) return setSaid({ text: 'Already used that one. Greedy.', good: false });
+    const got = redeemCode(code);
+    if (!got) return setSaid({ text: 'Something went wrong. Try again.', good: false });
+    setCode('');
+    setSaid({ text: `+${fmt(got.coins)} coins, +${fmt(got.diamonds)} diamonds. Fine. Take it.`, good: true });
+  }
+
+  return (
+    <section className="pf-card pf-codes">
+      <h2>Codes</h2>
+      <form className="pf-name-form" onSubmit={submit}>
+        <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Enter a code" aria-label="Code" autoCapitalize="characters" spellCheck={false} maxLength={32} />
+        <button className="pill" type="submit" disabled={!code.trim() || !profile.ready}>
+          Redeem
+        </button>
+      </form>
+      {said && (
+        <p className={`pf-code-said ${said.good ? 'good' : 'bad'}`} role="status">
+          {said.text}
+        </p>
+      )}
+    </section>
+  );
+}
+
