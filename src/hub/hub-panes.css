@@ -227,3 +227,133 @@
   .char[data-dirty='2']::after { opacity: 0.6; }
   .pager { scroll-behavior: auto; }
 }
+
+/* ---------- the Games room: a grid of tiles (as in the Android app) ---------- */
+.pane-games .arcade.games-room {
+  --ink: #4a3428;
+  --ink-soft: #8a6f5e;
+  padding: 72px 14px 104px;
+  background: linear-gradient(180deg, #f8eddc, #f7efe3 55%, #efddc6);
+  color: var(--ink);
+}
+.games-room::before, .games-room::after { display: none; }
+.games-room .arcade-head { gap: 10px; max-width: 760px; margin: 8px auto 12px; }
+.games-room .arcade-head .char { filter: none; }
+.games-room .arcade-head h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: none;
+  color: var(--ink);
+  filter: none;
+}
+.games-room .arcade-head p { margin: 2px 0 0; font-size: 14px; line-height: 1.4; }
+
+.grid-head, .grid-tip { max-width: 760px; margin: 4px auto 10px; padding: 0 4px; }
+.grid-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.grid-head .star { color: #f2b320; }
+.grid-tip { color: var(--ink-soft); font-size: 12px; }
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px 10px;
+  max-width: 760px;
+  margin: 0 auto 18px;
+  padding: 0;
+  list-style: none;
+}
+.game-grid li { animation: rise 0.25s ease-out calc(var(--i, 0) * 0.025s) backwards; }
+.gtile { position: relative; transition: opacity 0.2s; }
+.gtile.dim { opacity: 0.8; }
+.gtile-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gtile-link:focus-visible { outline: 2px solid var(--btn); outline-offset: 2px; }
+.gtile-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--tint, #5a6273);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(74, 52, 40, 0.16);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.gtile-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.gtile-art .game-icon { position: absolute; inset: 0; border-radius: inherit; }
+.gtile-link:hover .gtile-art { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(74, 52, 40, 0.28); }
+.gtile-link:active .gtile-art { transform: scale(0.975); }
+.gtile-name {
+  display: -webkit-box;
+  margin-top: 6px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 15px;
+  text-align: center;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.gtile-star {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+.gtile-star::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  transition: background 0.15s;
+}
+.gtile-star .star { position: relative; }
+.gtile-star.on { color: #f2b320; }
+.gtile-star.on::before { background: rgba(255, 255, 255, 0.95); }
+.gtile-star.on .star { animation: starPop 0.35s cubic-bezier(0.34, 1.6, 0.64, 1); }
+.gtile-star:focus-visible { outline: 2px solid var(--btn); outline-offset: -2px; }
+@keyframes starPop { from { transform: scale(0.6); } }
+
+/* a game's icon tile (src/components/GameIcon.jsx) */
+.game-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 22%;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint), #fff 14%), var(--tint) 50%, color-mix(in srgb, var(--tint), #000 12%));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+.game-icon svg { width: 56%; height: 56%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .game-grid li, .gtile-star.on .star { animation: none; }
+  .gtile-art { transition: none; }
+}

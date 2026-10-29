@@ -13,6 +13,7 @@ import { Sound } from '@/game/sound';
 import { W, H, lookOf } from './kit';
 import { CREATE } from './games';
 import { ReadyLine } from '@/achievements/Chest';
+import { GameGlyph, gameTint } from '@/components/GameIcon';
 
 const SAVE_KEY = 'buttonHatesYou.adventure.v1';
 
@@ -104,8 +105,8 @@ export default function AdventureGame({ id }) {
       {mode === 'title' && (
         <div className="adv-overlay">
           <div className="adv-card">
-            <span className="adv-emoji" aria-hidden="true">
-              {meta.emoji}
+            <span className="adv-emoji adv-icon" style={{ '--tint': gameTint(id) }} aria-hidden="true">
+              <GameGlyph id={id} size={56} />
             </span>
             <h1>{meta.name}</h1>
             <p>{meta.blurb}</p>
