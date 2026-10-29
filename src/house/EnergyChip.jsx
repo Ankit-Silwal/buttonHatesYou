@@ -1,11 +1,13 @@
 'use client';
 
 import { useNeeds } from '@/profile/needs';
+import Icon from '@/components/Icon';
 import './chip.css';
 
-// The two little meters on the home screen: hunger and energy. Tapping them
-// opens the room that fixes the one that is lower (`go` is the pager's).
-export default function EnergyChip({ go }) {
+// The little meters on the home screen: hunger, energy and how clean he is.
+// Tapping them opens the room that fixes the lowest (`go` is the pager's).
+// `compact` is the Android app's chip: three thin bars, no numbers.
+export default function EnergyChip({ go, compact = false }) {
   const n = useNeeds();
   if (!n.ready) return null;
   const e = Math.floor(n.energy);
@@ -13,13 +15,31 @@ export default function EnergyChip({ go }) {
   const clean = Math.round(100 - (n.dirt ?? 0));
   const label = n.asleep ? `Asleep. Hunger ${h} of 100, clean ${clean} of 100` : `Hunger ${h} of 100, energy ${e} of 100, clean ${clean} of 100`;
   const low = e < 25 || h < 25 || clean < 25;
+  const fix = () => go?.(clean < 25 && clean <= Math.min(e, h) ? 4 : n.asleep || e <= h ? 3 : 2);
+  if (compact) {
+    const line = (glyph, v) => (
+      <span className="nc-line">
+        <Icon glyph={glyph} size={11} tint="var(--ink-soft)" />
+        <span className="nc-bar">
+          <i style={{ width: `${v}%`, background: v < 25 ? 'var(--bad)' : v < 50 ? 'var(--warn)' : 'var(--good)' }} />
+        </span>
+      </span>
+    );
+    return (
+      <button type="button" className={`chip needs-chip ${low ? 'low' : ''}`} title={label} aria-label={`${label}. Open the room that helps`} onClick={fix}>
+        {line('🍔', h)}
+        {line(n.asleep ? '💤' : '⚡', e)}
+        {line('🫧', clean)}
+      </button>
+    );
+  }
   return (
     <button
       type="button"
       className={`chip energy-chip ${low ? 'low' : ''} ${n.asleep ? 'asleep' : ''}`}
       title={label}
       aria-label={`${label}. ${h < e ? 'Open kitchen' : 'Open bedroom'}`}
-      onClick={() => go?.(clean < 25 && clean <= Math.min(e, h) ? 4 : n.asleep || e <= h ? 3 : 2)}
+      onClick={fix}
     >
       <span className={`ec-one hunger ${h < 25 ? 'low' : ''}`}>
         <span aria-hidden="true">🍔</span>

@@ -229,7 +229,6 @@ const QUIET = new Proxy({}, { get: () => () => {} });
 const ADVENTURE = {
   flap: { sec: 1.2, top: 70, taps: [0.1, 0.45, 0.8] },
   pop: { sec: 0.5, top: 300 },
-  catch: { sec: 2.4, top: 520 },
   simon: { sec: 0.4, top: 230 },
   hop: { sec: 0.5, top: 300 },
   whack: { sec: 2.5, top: 220 },
@@ -237,11 +236,6 @@ const ADVENTURE = {
   stack: { sec: 0.5, top: 500 },
   slice: { sec: 1.0, top: 530, taps: [0] },
   'button-run': { sec: 4.6, top: 395 },
-  redlight: { sec: 1.5, top: 250 },
-  spam: { sec: 1.5, top: 200 },
-  fizz: { sec: 0.5, top: 200 },
-  pong: { sec: 2, top: 200 },
-  tightrope: { sec: 1.5, top: 250 },
 };
 
 function seeded(seed) {

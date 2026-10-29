@@ -134,6 +134,11 @@ export const REWARDS = {
   'adventure-first': { coins: 0, diamonds: 1, max: 10 },
 };
 
+// Games taken out of the arcade (as in the Android app). Their entries stay
+// so runs already in a wallet's history still replay, but they are not
+// listed or playable.
+const RETIRED = new Set(['catch', 'redlight', 'spam', 'fizz', 'pong', 'tightrope']);
+
 // The two shelves on the Games screen.
 export const CATEGORIES = [
   { id: 'story', name: 'Story', blurb: 'Long games with a plot. The button has feelings, apparently.' },
@@ -353,7 +358,10 @@ export const GAMES = [
       unit: 'meters',
       quips: { goal: "I crossed the sky. I want a sandwich.", fail: "Fell. At least the ground is steady." },
     },
-  ].map((g) => ({ ...g, category: 'adventure', href: `/games/adventure/${g.id}`, prize: payoutLine(g, true), rule: payoutLine(g) })),
+  ].map((g) => ({ ...g, category: 'adventure', href: `/games/adventure/${g.id}`, prize: payoutLine(g, true), rule: payoutLine(g), retired: RETIRED.has(g.id) || undefined })),
 ];
 
 export const GAME = Object.fromEntries(GAMES.map((g) => [g.id, g]));
+
+// The games you can actually play (the same set as the Android app).
+export const PLAYABLE = GAMES.filter((g) => !g.retired);

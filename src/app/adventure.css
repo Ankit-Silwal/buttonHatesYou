@@ -313,3 +313,11 @@
 @media (prefers-reduced-motion: reduce) {
   .cont-ring .left { animation-timing-function: steps(5, end); }
 }
+
+/* the game's line icon on its own colour (src/components/GameIcon.jsx) */
+.adv-emoji.adv-icon {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint), #fff 14%), var(--tint) 55%, color-mix(in srgb, var(--tint), #000 14%));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 14px 30px -10px color-mix(in srgb, var(--tint) 80%, #000);
+  color: #fff;
+}
+.adv-emoji.adv-icon::after { opacity: 0.4; }
