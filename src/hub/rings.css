@@ -1,0 +1,109 @@
+/* ---------- the needs, as rings with his face (NeedRings.jsx) ---------- */
+.need-rings {
+  position: absolute;
+  z-index: 39;
+  top: 70px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.need-ring {
+  --tone: #4caf6a;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), 0 3px 0 rgba(74, 52, 40, 0.14), 0 8px 14px -8px var(--shadow);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.need-ring:active { transform: scale(0.94); }
+.need-ring:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.need-ring.warn { --tone: #f0b429; }
+.need-ring.bad { --tone: #e0533d; animation: ringWorry 2.6s ease-in-out infinite; }
+.need-ring.asleep { --tone: #7c6bd6; animation: none; }
+.need-ring > svg { width: 50px; height: 50px; overflow: visible; }
+.nr-track { fill: none; stroke: rgba(74, 52, 40, 0.12); stroke-width: 4.5; }
+.nr-fill {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease, stroke 0.4s;
+}
+.nr-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px var(--tone), 0 2px 4px rgba(74, 52, 40, 0.25);
+}
+
+/* the daily chest sits at the end of the row */
+.need-rings .chest-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #fff4d6, #f5d98c);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), 0 3px 0 #c9a24a, 0 8px 14px -8px var(--shadow);
+  cursor: pointer;
+}
+.need-rings .chest-btn.hot { animation: ringChestHop 2.4s ease-in-out infinite; }
+.need-rings .chest-btn .perk-badge { position: absolute; top: -5px; right: -5px; }
+.need-rings .chest-mini { display: grid; place-items: center; width: 40px; height: 40px; }
+.need-rings .chest-mini .chest-art { --s: 38px; }
+.need-rings .chest-mini .chest-rays { display: none; }
+
+@keyframes ringWorry {
+  0%, 84%, 100% { transform: none; }
+  88% { transform: rotate(-7deg); }
+  92% { transform: rotate(7deg); }
+  96% { transform: rotate(-3deg); }
+}
+@keyframes ringChestHop {
+  0%, 80%, 100% { transform: none; }
+  86% { transform: translateY(-5px) rotate(-4deg); }
+  92% { transform: translateY(0) rotate(3deg); }
+}
+
+@media (max-width: 380px) {
+  .need-rings { gap: 6px; left: 12px; }
+  .need-ring, .need-rings .chest-btn { width: 48px; height: 48px; }
+  .need-ring > svg { width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .need-ring.bad, .need-rings .chest-btn.hot { animation: none; }
+}
+
+/* ---------- the profile button (top right of the hub) ---------- */
+.profile-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), 0 3px 0 rgba(74, 52, 40, 0.14), 0 8px 14px -8px var(--shadow);
+  text-decoration: none;
+  overflow: visible;
+}
+.profile-btn .char { pointer-events: none; }
+.profile-btn .perk-badge { position: absolute; top: -4px; right: -4px; }
+.profile-btn:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
