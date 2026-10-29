@@ -386,10 +386,7 @@ export default function Hub({ initial = 'home' }) {
                 <button className="pill alt" onClick={() => setPanel('wardrobe')} style={{ '--i': 1 }}>
                   <Icon glyph="👕" size={18} tint="currentColor" /> Wardrobe
                 </button>
-                <Link className="pill story-btn" href="/story" style={{ '--i': 2 }}>
-                  <Icon glyph="📚" size={18} tint="currentColor" /> Story
-                </Link>
-                <button className="pill house-btn" onClick={() => openDecor('living')} style={{ '--i': 3 }}>
+                <button className="pill house-btn" onClick={() => openDecor('living')} style={{ '--i': 2 }}>
                   <Icon glyph="🛋️" size={18} tint="currentColor" /> Decorate
                 </button>
               </nav>

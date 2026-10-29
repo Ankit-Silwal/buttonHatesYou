@@ -191,6 +191,15 @@ function SettingsTab({ me }) {
   ];
   return (
     <section className="pf-card pf-settings">
+      <div className="pf-row">
+        <div className="pf-row-name">
+          <Icon glyph="📚" size={20} />
+          <b>The story so far</b>
+        </div>
+        <Link className="pf-copy" href="/story">
+          Read
+        </Link>
+      </div>
       {rows.map((r) => (
         <div className="pf-row" key={r.key}>
           <div className="pf-row-name">

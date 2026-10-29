@@ -6,12 +6,15 @@ import Avatar from './Avatar';
 import { useProfile } from '@/profile/useProfile';
 import { SERIES } from '@/story/content';
 import { DEFAULT_LOOK } from '@/economy/catalog';
+import { storyOpen, STORY_UNLOCKS } from '@/economy/levels';
 
-// The whole story, in order. Premises are free to read; each chapter's
-// retelling unlocks once you've finished that chapter in its game.
+// The whole story, in order, with no spoilers: a story's premise shows once
+// its level is reached (the game unlocks), and each chapter's retelling once
+// that chapter is finished, in this browser's save or the wallet's claims.
 
-// "Read it all" is remembered per browser, so a spoiler reader stays one.
-const REVEAL_KEY = 'buttonHatesYou.story.revealAll';
+// The game behind each part, and its story-reward ids (catalog.js STORY_REWARDS).
+const GAME_OF = { cursor: 'how-i-met-your-cursor', reason: 'the-reason', 'please-dont': 'please-dont' };
+const claimOf = (id, n) => (id === 'please-dont' ? 'please-dont' : `${id}:${n}`);
 
 function read(key) {
   try {
@@ -22,11 +25,13 @@ function read(key) {
 }
 
 // Which chapters of each game are finished, as { [seriesId]: Set<n> }.
-function loadProgress() {
+function loadProgress(claimed = []) {
   const out = {};
   for (const s of SERIES) {
     const save = read(s.save);
-    out[s.id] = new Set(s.id === 'please-dont' ? (save.done ? [1] : []) : Object.keys(save.done ?? {}).map(Number));
+    const set = new Set(s.id === 'please-dont' ? (save.done ? [1] : []) : Object.keys(save.done ?? {}).map(Number));
+    s.chapters.forEach((_, i) => claimed.includes(claimOf(s.id, i + 1)) && set.add(i + 1));
+    out[s.id] = set;
   }
   return out;
 }
@@ -34,23 +39,11 @@ function loadProgress() {
 export default function Story() {
   const profile = useProfile();
   const [done, setDone] = useState(null);
-  const [all, setAll] = useState(false);
+  const claimed = profile.wallet.claimed;
 
   useEffect(() => {
-    setDone(loadProgress());
-    try {
-      setAll(localStorage.getItem(REVEAL_KEY) === '1');
-    } catch {}
-  }, []);
-
-  function reveal(on) {
-    if (on && !window.confirm('Unlock every chapter? This spoils both games, including the ending of The Reason.')) return;
-    setAll(on);
-    try {
-      if (on) localStorage.setItem(REVEAL_KEY, '1');
-      else localStorage.removeItem(REVEAL_KEY);
-    } catch {}
-  }
+    if (profile.ready) setDone(loadProgress(Array.isArray(claimed) ? claimed : []));
+  }, [profile.ready, claimed]);
 
   const total = SERIES.reduce((n, s) => n + s.chapters.length, 0);
   const unlocked = done ? SERIES.reduce((n, s) => n + done[s.id].size, 0) : 0;
@@ -73,51 +66,43 @@ export default function Story() {
         </span>
         <div>
           <h1>The Story</h1>
-          <p>
-            Why the button hates you, from the beginning. Each part tells you what it’s about. The rest you unlock by playing it:
-            finish a chapter and its story appears here.
-          </p>
-          <p className="story-count">
-            {all ? 'Everything unlocked. Spoilers ahead.' : done ? `${Math.min(unlocked, total)} of ${total} chapters unlocked` : '…'}
-          </p>
+          <p className="story-count">{done ? `${Math.min(unlocked, total)} of ${total} chapters unlocked` : '…'}</p>
           <span className="story-progress" aria-hidden="true">
-            <i style={{ width: `${all ? 100 : (Math.min(unlocked, total) / total) * 100}%` }} />
+            <i style={{ width: `${(Math.min(unlocked, total) / total) * 100}%` }} />
           </span>
-          <button className={`pill ${all ? 'ghost' : 'reveal'}`} onClick={() => reveal(!all)}>
-            {all ? '🔒 Lock it again' : '📖 Read it all (spoilers)'}
-          </button>
         </div>
       </section>
 
       <ol className="story-parts">
         {SERIES.map((s, i) => (
-          <Part key={s.id} s={s} i={i} done={done?.[s.id]} all={all} />
+          <Part key={s.id} s={s} i={i} done={done?.[s.id]} open={profile.ready && storyOpen(profile.wallet, GAME_OF[s.id])} />
         ))}
       </ol>
     </main>
   );
 }
 
-function Part({ s, i, done, all }) {
+// `open`: the story's game is unlocked (by level), so its premise can show.
+function Part({ s, i, done, open: unlockedStory }) {
   const finished = done?.size ?? 0;
   return (
     <li className="story-part" style={{ '--tone': s.color, '--i': i }}>
       <div className="part-head">
         <p className="kicker">{s.order}</p>
         <h2>{s.title}</h2>
-        <p className="premise">{s.premise}</p>
+        <p className="premise">{unlockedStory ? s.premise : `Beat level ${STORY_UNLOCKS[GAME_OF[s.id]]} to find out what this one is about.`}</p>
         <div className="part-meta">
           <Link href={s.href} className="pill">
             {finished ? 'Keep playing' : 'Play'} →
           </Link>
-          <span>{all ? 'all unlocked' : `${finished} / ${s.chapters.length} unlocked`}</span>
+          <span>{`${finished} / ${s.chapters.length} unlocked`}</span>
         </div>
       </div>
 
       <ol className="part-chapters">
         {s.chapters.map((c, i) => {
           const n = i + 1;
-          const open = all || !!done?.has(n);
+          const open = !!done?.has(n);
           // the next chapter's title is a fair teaser; anything further stays hidden
           const showTitle = open || !!done?.has(n - 1) || n === 1;
           return (
