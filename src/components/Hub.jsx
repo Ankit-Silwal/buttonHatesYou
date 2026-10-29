@@ -21,6 +21,7 @@ import PotionSheet from '@/hub/PotionSheet';
 import '@/hub/hub-panes.css';
 import '@/hub/flat.css';
 import { useNeeds, faceOf } from '@/profile/needs';
+import { useMimic } from '@/hub/mimic';
 import { roomOf } from '@/economy/house';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -88,6 +89,9 @@ function greeting({ user, wallet }, face) {
   if (user) return [`Oh no. ${user.name?.split(' ')[0] || 'You'}'s back.`, 'annoyed'];
   return ["Oh. A visitor. Please don't press anything.", 'calm'];
 }
+
+// After he has copied you.
+const MIMIC_LINES = ['Ha. That is what you sound like.', 'I sound better. Admit it.', 'Say something smart next time.', 'Again? Fine. I have nothing better to do.'];
 
 // When he's neglected he says so instead of the usual poke lines.
 const MOANS = {
@@ -227,6 +231,37 @@ export default function Hub({ initial = 'home' }) {
 
   const roomSay = useCallback((pane, text) => setQuip({ pane, text, n: Date.now() }), []);
 
+  // He copies what you say (the mic button in the living room).
+  const [talking, setTalking] = useState(false);
+  const mimic = useMimic({
+    onHear: () => say('…', 'calm'),
+    onTalk: () => {
+      setTalking(true);
+      setLine((l) => ({ ...l, text: '', mood: 'smug' }));
+    },
+    onDone: () => {
+      setTalking(false);
+      say(pick(MIMIC_LINES), 'smug');
+    },
+  });
+  const mimicWas = useRef('off');
+  useEffect(() => {
+    if (mimic.state === 'denied') say("I can't hear you. You didn't let me use the mic.", 'annoyed');
+    if (mimic.state === 'unsupported') say('This browser has no ears. Neither do I.', 'annoyed');
+    if (mimic.state === 'listening' && mimicWas.current === 'asking') say('Go on. Say something.', 'smug');
+    mimicWas.current = mimic.state;
+  }, [mimic.state, say]);
+  // Only in the living room, and not while a sheet is open or the tab is hidden.
+  const mimicOff = mimic.off;
+  useEffect(() => {
+    if (at !== HOME || panel || needs.asleep) mimicOff();
+  }, [at, panel, needs.asleep, mimicOff]);
+  useEffect(() => {
+    const hide = () => document.hidden && mimicOff();
+    document.addEventListener('visibilitychange', hide);
+    return () => document.removeEventListener('visibilitychange', hide);
+  }, [mimicOff]);
+
   const mood = line.mood ?? face.mood;
   const equipped = preview ?? wallet.equipped;
 
@@ -251,6 +286,20 @@ export default function Hub({ initial = 'home' }) {
             asleep={needs.asleep}
             line={line}
             onPoke={poke}
+            talking={talking}
+            extras={
+              <button
+                type="button"
+                className={`mic-btn ${mimic.state}`}
+                onClick={mimic.toggle}
+                disabled={needs.asleep}
+                aria-pressed={mimic.on}
+                aria-label={mimic.on ? 'Stop him copying you' : 'Let him copy what you say (uses the microphone)'}
+              >
+                <Icon glyph="🎤" size={24} tint="currentColor" />
+                {mimic.state === 'denied' && <i className="mic-x" aria-hidden="true" />}
+              </button>
+            }
             tray={
               <nav className="rs-pills" aria-label="Living room">
                 <button className="pill play" onClick={() => go(0)} style={{ '--i': 0 }}>
