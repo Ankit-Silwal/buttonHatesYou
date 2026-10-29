@@ -234,7 +234,7 @@ export default function Hub({ initial = 'home' }) {
     <main className="hub" data-panel={panel ?? undefined} data-at={PANES[at]?.id}>
       <div className={`pager ${panel ? 'locked' : ''}`} ref={pager} onScroll={onScroll}>
         <section className="pane pane-games" aria-label="Games" inert={at !== 0}>
-          <GamesPane needs={needs} equipped={wallet.equipped} go={go} />
+          <GamesPane needs={needs} equipped={wallet.equipped} go={go} active={at === 0} />
         </section>
 
         <section className="pane pane-room pane-home" aria-label="Living Room" inert={at !== HOME}>
@@ -275,7 +275,7 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
+          <SleepPane needs={needs} wallet={wallet} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>

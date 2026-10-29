@@ -7,13 +7,14 @@ import { sleep, wake } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { NEEDS, wakesAt, FILTHY_AT } from '@/economy/needs';
 import { roomOf } from '@/economy/house';
+import Hint from './Hint';
 
 // The bedroom: a dim teen room with the bedside lamp on. Turn the lamp off
 // and he gets into bed and sleeps; turn it on again and he wakes (still
 // groggy, for free). Whether the lamp is on comes straight from his needs,
 // so a reload mid-sleep shows the dark room. Paid energy boosts (they also
 // wake him) and potions are in sheets.
-export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecorate, onWake, onPotions }) {
+export default function SleepPane({ needs, wallet, go, active, sky, view, quip, onDecorate, onWake, onPotions }) {
   const face = faceOf(needs);
   const [line, setLine] = useState({ text: '', n: 0 });
   const filthy = !needs.asleep && (needs.dirt ?? 0) >= FILTHY_AT;
@@ -44,13 +45,9 @@ export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecora
     label: needs.asleep ? 'Turn on the lamp (wake him up)' : 'Turn off the lamp',
     onToggle: toggleLamp,
   };
-  const note = filthy
-    ? 'Too dirty to sleep. Wash him first.'
-    : needs.asleep
-      ? `Sleeping. Energy +${Math.round((NEEDS.sleepEnergyPerHour / 60) * 10) / 10} a minute${mins ? `, wakes in about ${mins} min` : ''}.`
-      : needs.energy < 40
-        ? 'Dark circles! Too sleepy to play.'
-        : '';
+  const note = needs.asleep ? `Sleeping. Energy +${Math.round((NEEDS.sleepEnergyPerHour / 60) * 10) / 10} a minute${mins ? `, wakes in about ${mins} min` : ''}.` : '';
+  // Stuck? Tired: tap the lamp (or, too dirty for bed, the bathroom). Rested: tap it to wake him.
+  const lampHint = needs.asleep ? needs.energy >= 95 : needs.energy < 40;
 
   return (
     <RoomScene
@@ -70,7 +67,7 @@ export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecora
       hud={<NeedHud kind="energy" icon={needs.asleep ? '💤' : '⚡'} label="Energy" value={needs.energy} note={note} />}
       tray={
         <>
-          <p className="rs-hint">{needs.asleep ? 'The lamp is off. Tap it to turn it on and wake him.' : '💡 Tap the lamp to switch it off. He will go to sleep.'}</p>
+          <Hint active={active} show={lampHint} from={filthy ? '.pill.to-bath' : '.rs-lamp'} />
           <div className="rs-pills">
             <button className="pill" onClick={onWake} style={{ '--i': 0 }}>
               <span className="ico">⏰</span> {needs.asleep ? 'Wake-up options' : 'Energy boosts'}
@@ -82,7 +79,7 @@ export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecora
               <span className="ico">🛋️</span> Decorate
             </button>
             {filthy && (
-              <button className="pill" onClick={() => go?.(4)} style={{ '--i': 3 }}>
+              <button className="pill to-bath" onClick={() => go?.(4)} style={{ '--i': 3 }}>
                 <span className="ico">🛁</span> Bathroom
               </button>
             )}

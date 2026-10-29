@@ -6,6 +6,7 @@ import RoomScene, { ShowerFront } from './RoomScene';
 import { wash } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { DIRTY_AT } from '@/economy/needs';
+import Hint from './Hint';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const SHOWER_MS = 2800;
@@ -159,15 +160,6 @@ export default function BathPane({ needs, wallet, active, sky }) {
   const level = grimy ? (grime * 100 >= DIRTY_AT * (1 - scrub) && face.dirty ? face.dirty : 0) : 0;
   const clean = phase === 'clean';
 
-  const note = needs.asleep
-    ? 'He is asleep. Wake him up first.'
-    : phase === 'lather'
-      ? 'Drag him into the shower (or press the shower button).'
-      : (needs.dirt ?? 0) >= 75
-        ? 'Filthy! He will refuse to sleep until he is washed.'
-        : face.dirty
-          ? 'Grubby from all the games. Drag the soap over him.'
-          : 'Drag the soap over him to scrub, then put him in the shower.';
   const lathered = phase === 'lather' || showering ? 1 : clean ? 0 : scrub;
 
   const hero = (
@@ -209,10 +201,6 @@ export default function BathPane({ needs, wallet, active, sky }) {
       state={`${showering ? 'in showering' : ''} ${clean ? 'clean' : ''}`.trim() || undefined}
       hud={
         <>
-          <div className="hud-steps" aria-label="Steps">
-            <span className={phase === 'idle' ? 'on' : 'done'}>1 · Scrub</span>
-            <span className={phase === 'lather' ? 'on' : showering || clean ? 'done' : ''}>2 · Shower</span>
-          </div>
           <div className="hud-chip nb nb-clean">
             <span aria-hidden="true">🫧</span>
             <div className="nb-track" role="meter" aria-label="Lather" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(lathered * 100)}>
@@ -242,7 +230,13 @@ export default function BathPane({ needs, wallet, active, sky }) {
       }
       tray={
         <>
-          <p className="rs-hint">{note}</p>
+          {/* stuck? scrub him with the soap, then drag him into the shower */}
+          <Hint
+            active={active && !needs.asleep && !soap && !carry}
+            show={(dirty && phase === 'idle') || phase === 'lather'}
+            from={phase === 'lather' ? '.bath-body' : '.soap'}
+            to={phase === 'lather' ? '.t-shower' : '.bath-body'}
+          />
           <div className="rs-pills">
             <button className="pill alt" onClick={soapKey} style={{ '--i': 0 }}>
               <span className="ico">🧼</span> Scrub

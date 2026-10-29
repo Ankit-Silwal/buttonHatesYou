@@ -7,6 +7,7 @@ import { NeedHud } from './NeedBar';
 import { feed } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { FOODS, FREE_FOOD, isBroke, roomOf } from '@/economy/house';
+import Hint from './Hint';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const HUNGRY = ['I could eat a keyboard.', 'My tummy is making dial-up noises.', 'Feed me. Please. Do not tell anyone I said please.'];
@@ -76,13 +77,9 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     }, 1300);
   }
 
-  const note = needs.asleep
-    ? 'Asleep. Wake him in the Bedroom.'
-    : needs.hunger < 20
-      ? 'Too hungry to play! Feed him.'
-      : needs.hunger < 25
-        ? 'He looks bored. A snack would help.'
-        : 'A game needs a tummy at least 20 full.';
+  // Stuck while he's hungry? Point at what feeds him: the fridge, the
+  // "I'm poor" button, or the shop.
+  const feedMe = stock.length || (broke && begged) ? '.stock-item' : broke ? '.pill.beg' : '.pill.buy';
 
   return (
     <RoomScene
@@ -100,7 +97,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
       eating={eating}
       line={line}
       onPoke={() => say(needs.asleep ? 'Zzz…' : stock.length ? 'Tap something from the fridge, not me.' : 'The fridge is empty. Buy me something.')}
-      hud={<NeedHud kind="hunger" icon="🍔" label="Hunger" value={needs.hunger} note={note} />}
+      hud={<NeedHud kind="hunger" icon="🍔" label="Hunger" value={needs.hunger} />}
       tray={
         <>
           {stock.length ? (
@@ -138,11 +135,10 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
                 </button>
               </li>
             </ul>
-          ) : (
-            <p className="stock-empty">Fridge is empty: buy some food</p>
-          )}
+          ) : null}
+          <Hint active={active && !eating} show={!needs.asleep && needs.hunger < 60} from={feedMe} />
           <div className="rs-pills">
-            <button className="pill" onClick={onBuy} style={{ '--i': 0 }}>
+            <button className="pill buy" onClick={onBuy} style={{ '--i': 0 }}>
               <span className="ico">🛒</span> Buy food
             </button>
             <button className="pill alt" onClick={onPotions} style={{ '--i': 1 }}>

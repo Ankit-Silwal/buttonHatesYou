@@ -1,0 +1,60 @@
+/* ---------- the "do this" hand (Hint.jsx) ---------- */
+/* The fingertip sits at (--x0, --y0) and, for a drag, slides to (--x1, --y1). */
+.hint-hand {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 90;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(74, 52, 40, 0.3));
+  transform: translate(var(--x0), var(--y0));
+  opacity: 0;
+}
+.hint-hand svg { display: block; margin: -2px 0 0 -14px; } /* fingertip on the point */
+.hint-hand.tap { animation: hintTap 1.6s ease-in-out var(--rounds) both; }
+.hint-hand.drag { animation: hintDrag 2.6s ease-in-out var(--rounds) both; }
+
+.hint-ring {
+  position: absolute;
+  left: -16px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--btn);
+  opacity: 0;
+}
+.hint-hand.tap .hint-ring { animation: hintRing 1.6s ease-out var(--rounds); }
+.hint-hand.drag .hint-ring { animation: hintRing 2.6s ease-out var(--rounds); }
+
+@keyframes hintTap {
+  0% { opacity: 0; transform: translate(calc(var(--x0) + 18px), calc(var(--y0) + 26px)); }
+  25% { opacity: 1; transform: translate(var(--x0), var(--y0)) scale(1); }
+  38% { transform: translate(var(--x0), var(--y0)) scale(0.85); }
+  52% { transform: translate(var(--x0), var(--y0)) scale(1); }
+  80% { opacity: 1; transform: translate(var(--x0), var(--y0)); }
+  100% { opacity: 0; transform: translate(var(--x0), var(--y0)); }
+}
+@keyframes hintDrag {
+  0% { opacity: 0; transform: translate(var(--x0), var(--y0)) scale(1.1); }
+  14% { opacity: 1; transform: translate(var(--x0), var(--y0)) scale(1); }
+  22% { transform: translate(var(--x0), var(--y0)) scale(0.85); }
+  72% { opacity: 1; transform: translate(var(--x1), var(--y1)) scale(0.85); }
+  82% { transform: translate(var(--x1), var(--y1)) scale(1); }
+  100% { opacity: 0; transform: translate(var(--x1), var(--y1)); }
+}
+@keyframes hintRing {
+  0%, 30% { opacity: 0; transform: scale(0.4); }
+  38% { opacity: 0.9; transform: scale(0.6); }
+  60% { opacity: 0; transform: scale(1.6); }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint-hand.tap, .hint-hand.drag { animation: hintStill 2.4s ease-in-out var(--rounds) both; }
+  .hint-ring { display: none; }
+}
+@keyframes hintStill {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
+}
