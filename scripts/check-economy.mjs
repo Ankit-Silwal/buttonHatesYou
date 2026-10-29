@@ -787,9 +787,20 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(got.diamonds, START.diamonds + 9_999_999);
   assert.equal(levelsCleared(got), 200, 'and clears every level');
   assert.equal(levelLocked(got, { level: 200 }), false, 'so nothing is level-locked any more');
+  const { ITEMS: ALL_ITEMS } = await import('../src/economy/catalog.js');
+  const { owns } = await import('../src/economy/rules.js');
+  assert.ok(ALL_ITEMS.filter((i) => i.slot === 'char').every((c) => owns(got, c)), 'and every character has joined');
+  assert.ok(got.claimed.includes('reason:9') && got.claimed.includes('cursor:6') && got.claimed.includes('please-dont'), 'every story part is finished');
   assert.equal(applyEvent(got, { type: 'code', code: 'DSAISUSELESS' }), null, 'once per wallet');
+  // used before it finished the stories: typing it again gives just those, once
+  const before = { ...got, claimed: [] };
+  const again = applyEvent(before, { type: 'code', code: 'DSAISUSELESS' });
+  assert.ok(again.claimed.includes('cursor:1') && again.coins === before.coins, 'stories only, no more coins');
+  assert.equal(applyEvent(again, { type: 'code', code: 'DSAISUSELESS' }), null);
   const old = applyEvent(w, { type: 'code', code: 'ISUCKATCODING' });
-  assert.equal(applyEvent(old, { type: 'code', code: 'DSAISUSELESS' }), null, 'the old and new code pay once between them');
+  const viaNew = applyEvent(old, { type: 'code', code: 'DSAISUSELESS' });
+  assert.equal(viaNew.coins, old.coins, 'the old and new code pay once between them');
+  assert.ok(viaNew.claimed.includes('reason:9'), 'though the new one still finishes the stories');
   assert.equal(applyEvent(w, { type: 'code', code: 'NOPE' }), null, 'unknown code');
   assert.equal(applyEvent(w, { type: 'code', code: 42 }), null, 'junk code');
 }

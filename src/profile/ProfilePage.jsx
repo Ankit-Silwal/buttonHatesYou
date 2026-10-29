@@ -17,7 +17,7 @@ import { useMe, setMe } from './me';
 import { useWorn } from './undress';
 import { voiceOf } from '@/avatar/voices';
 import { readyCount } from '@/economy/achievements';
-import { isCode, usedCode } from '@/economy/codes';
+import { isCode, usedCode, codeHasMore } from '@/economy/codes';
 import { redeemCode } from './store';
 import { ChestOpener } from '@/achievements/Chest';
 import LayoutSettings from '@/hub/LayoutSettings';
@@ -219,10 +219,12 @@ function CodesCard({ profile }) {
     e.preventDefault();
     if (!code.trim()) return;
     if (!isCode(code)) return setSaid({ text: 'That code does nothing. Like you.', good: false });
-    if (usedCode(profile.wallet, code)) return setSaid({ text: 'Already used that one. Greedy.', good: false });
+    const more = codeHasMore(profile.wallet, code);
+    if (usedCode(profile.wallet, code) && !more) return setSaid({ text: 'Already used that one. Greedy.', good: false });
     const got = redeemCode(code);
     if (!got) return setSaid({ text: 'Something went wrong. Try again.', good: false });
     setCode('');
+    if (more) return setSaid({ text: 'Every story: finished. Every friend: here. You did nothing. Congratulations.', good: true });
     if (got.chest) {
       setChest(got.chest);
       return setSaid({ text: 'A free chest. Open it before he takes it back.', good: true });
