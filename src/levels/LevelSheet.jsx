@@ -69,7 +69,7 @@ function Mission({ m, equipped, onGo }) {
     const g = GAME[m.game];
     icon = <Thumb kind="game" id={m.game} size={44} />;
     title = g.payout.coins ? `Grab ${fmt(m.need)} coins` : `Score ${fmt(m.need)} ${g.unit}`;
-    sub = `in one ${g.name} run`;
+    sub = /run$/i.test(g.name) ? `in one ${g.name}` : `in one ${g.name} run`;
     go = { href: g.href };
   } else if (m.kind === 'buy') {
     const it = anyItem(m.item);
