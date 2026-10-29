@@ -395,4 +395,65 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.deepEqual(oldDecor.rooms, rich.rooms);
 }
 
+/* ---------- the coin chest: 5 taps, rarities, a little under its price ---------- */
+{
+  const { boughtChest, BUY_CHEST, RARITIES, LEGENDARY_FURNITURE } = await import('../src/economy/chest.js');
+  const { FOOD, HOUSE_ITEM } = await import('../src/economy/house.js');
+  const { nextBoughtChest } = await import('../src/economy/rules.js');
+  const price = BUY_CHEST.price.coins;
+  // what a diamond is worth in coins, for the expected value: the diamond
+  // house items cost 6 to 14 💎 next to coin ones of 900 to 2500 🪙
+  const DIAMOND = 150;
+  const worth = ({ coins, diamonds, food, item }) =>
+    coins + diamonds * DIAMOND + (food ? (FOOD[food].price.coins ?? FOOD[food].price.diamonds * DIAMOND) : 0) + (item ? HOUSE_ITEM[item].price.coins : 0);
+
+  assert.ok(LEGENDARY_FURNITURE.length >= 3, 'legendary chests have furniture to give');
+  for (const i of LEGENDARY_FURNITURE) assert.ok(i.kind === 'furniture' && i.price.coins >= 2000 && i.level == null && !i.retired, i.id);
+  assert.deepEqual(boughtChest('abc', 3), boughtChest('abc', 3), 'the same seed and count: the same chest');
+
+  const N = 200_000;
+  const seen = Object.fromEntries(RARITIES.map((r) => [r, 0]));
+  let total = 0, diamonds = 0;
+  for (let k = 0; k < N; k++) {
+    const c = boughtChest('seed-' + (k % 997), Math.floor(k / 997));
+    assert.equal(c.path.length, BUY_CHEST.taps);
+    assert.equal(c.path.at(-1), c.rarity);
+    // each tap goes up one rarity at most, never down
+    c.path.forEach((r, i) => { const d = RARITIES.indexOf(r) - (i ? RARITIES.indexOf(c.path[i - 1]) : 0); assert.ok(d === 0 || d === 1); });
+    if (c.rarity === 'legendary') assert.ok(LEGENDARY_FURNITURE.some((i) => i.id === c.loot.item), 'a legendary chest holds furniture');
+    seen[c.rarity]++;
+    total += worth(c.loot);
+    diamonds += c.loot.diamonds;
+  }
+  const pct = Object.fromEntries(RARITIES.map((r) => [r, (100 * seen[r]) / N]));
+  const ev = total / N;
+  console.log(`coin chest: ${price} 🪙; ${RARITIES.map((r) => `${r} ${pct[r].toFixed(2)}%`).join(', ')}; EV ${ev.toFixed(0)} 🪙 (${((100 * ev) / price).toFixed(1)}%), ${(diamonds / N).toFixed(3)} 💎 a chest`);
+  assert.ok(Math.abs(pct.common - 70) < 1.5 && Math.abs(pct.rare - 22) < 1.5 && Math.abs(pct.epic - 7) < 0.8 && Math.abs(pct.legendary - 1) < 0.3, JSON.stringify(pct));
+  assert.ok(ev < price && ev > price * 0.85, `EV ${ev} is a little under the price`);
+  assert.ok(diamonds / N < 0.3, 'coins do not turn into many diamonds');
+
+  // a legendary chest when every piece is owned: the jackpot instead
+  let legend = null;
+  for (let n = 0; !legend; n++) if (boughtChest('abc', n).rarity === 'legendary') legend = n;
+  const all = boughtChest('abc', legend, LEGENDARY_FURNITURE.map((i) => i.id));
+  assert.deepEqual([all.loot.item, all.loot.coins, all.loot.diamonds], [null, BUY_CHEST.jackpot.coins, BUY_CHEST.jackpot.diamonds]);
+
+  // through applyEvent: pays the price, adds the loot, counts the chest
+  let bw = normalize({ ...START, coins: 2000, seed: 'abc' });
+  const want = nextBoughtChest(bw);
+  bw = applyEvent(bw, { type: 'buychest', at: T, coins: 99999, rarity: 'legendary' }); // nothing in the event counts
+  assert.equal(bw.coins, 2000 - price + want.loot.coins);
+  assert.equal(bw.diamonds, want.loot.diamonds);
+  assert.equal(bw.stats.boughtChests, 1);
+  if (want.loot.food) assert.equal(bw.pantry[want.loot.food], 1);
+  assert.notDeepEqual(nextBoughtChest(bw), want, 'the next chest is a new one');
+  assert.equal(applyEvent({ ...bw, coins: price - 1 }, { type: 'buychest', at: T }), null, 'cannot afford');
+  // the legendary one adds its furniture to what the wallet owns
+  const lw = applyEvent(normalize({ ...START, coins: 600, seed: 'abc', stats: { ...START.stats, boughtChests: legend } }), { type: 'buychest', at: T });
+  assert.ok(lw.owned.includes(boughtChest('abc', legend).loot.item));
+  // replayed in a queue: the same as one by one
+  const q = replay(normalize({ ...START, coins: 5000, seed: 'xyz' }), Array.from({ length: 12 }, () => ({ type: 'buychest', at: T })));
+  assert.ok(q.stats.boughtChests >= 10);
+}
+
 console.log('all economy checks passed');

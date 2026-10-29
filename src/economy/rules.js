@@ -4,6 +4,7 @@ import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsA
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
 import { CHEST, chestLoot } from './chest';
+import { BUY_CHEST, boughtChest } from './chest';
 
 export { tierPayout };
 
@@ -31,6 +32,9 @@ export { tierPayout };
 //   { id, type: 'equip', slot, item }   put an owned item on
 //   { id, type: 'achieve', ach, level } claimed an achievement level (pays diamonds)
 //   { id, type: 'chest', at }           opened the daily chest
+//   { id, type: 'buychest', at }        bought (and opened) a coin chest; its
+//                                       loot comes from the seed (see
+//                                       applyBuyChestEvent at the bottom)
 //
 // Economy fields a wallet picks up as it is used (all optional, so wallets
 // saved before them still work):
@@ -81,6 +85,7 @@ function applyAnyEvent(wallet, ev, now) {
   if (house !== undefined) return house;
   const cont = applyContinueEvent(wallet, ev);
   if (cont !== undefined) return cont;
+  if (ev.type === 'buychest') return applyBuyChestEvent(wallet);
 
   /* ---------- earning (economy) ---------- */
   if (ev.type === 'run') return applyRun(wallet, ev, now);
@@ -502,3 +507,33 @@ export function chestFor(wallet, t = Date.now()) {
   const alive = day - num(s.chestDay) <= 1 ? num(s.streak) : 0;
   return { ready, streak, alive, day, next: (day + 1) * DAY_MS };
 }
+
+/* =====================================================================
+   The coin chest (see boughtChest in chest.js)
+   =====================================================================
+   { id, type: 'buychest', at }        pays BUY_CHEST.price and opens the next
+                                       coin chest. Its taps, rarity and loot
+                                       come from the wallet's seed and
+                                       stats.boughtChests (how many it has
+                                       bought), never from the event; a
+                                       legendary one's furniture is one the
+                                       wallet doesn't own yet. */
+
+// The new wallet, or null when it can't afford one.
+function applyBuyChestEvent(wallet) {
+  if (!canAfford(wallet, BUY_CHEST)) return null;
+  const s = wallet.stats;
+  const n = num(s.boughtChests);
+  const { loot } = boughtChest(wallet.seed, n, wallet.owned);
+  const next = { ...add(pay(wallet, BUY_CHEST.price), loot), stats: { ...s, boughtChests: n + 1 } };
+  if (loot.food) next.pantry = { ...wallet.pantry, [loot.food]: num(wallet.pantry[loot.food]) + 1 };
+  if (loot.item) next.owned = [...wallet.owned, loot.item];
+  return next;
+}
+
+// The next coin chest the wallet would open: { path, rarity, loot } (for the
+// open animation, which plays it tap by tap).
+export const nextBoughtChest = (wallet) => {
+  const w = normalize(wallet);
+  return boughtChest(w.seed, num(w.stats.boughtChests), w.owned);
+};

@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useProfile } from '@/profile/useProfile';
-import { openChest } from '@/profile/store';
+import { openChest, buyChest } from '@/profile/store';
 import { chestFor } from '@/economy/rules';
-import { CHEST, isBigDay } from '@/economy/chest';
-import { FOOD } from '@/economy/house';
+import { CHEST, isBigDay, BUY_CHEST, RARITIES } from '@/economy/chest';
+import { FOOD, HOUSE_ITEM } from '@/economy/house';
+import { Art } from '@/house/art';
 import './achievements.css';
 
 // The clock, ticking once a minute (0 until mounted, so the server render and
@@ -47,10 +48,11 @@ export function Streak({ streak, today }) {
   );
 }
 
-// The chest itself, drawn in CSS. `state`: closed | shaking | open.
-export function ChestArt({ state = 'closed', big = false }) {
+// The chest itself, drawn in CSS. `state`: closed | shaking | tapped | open.
+// `rarity`: a coin chest's colors (common, rare, epic, legendary).
+export function ChestArt({ state = 'closed', big = false, rarity = null }) {
   return (
-    <span className={`chest-art ${state} ${big ? 'big' : ''}`} aria-hidden="true">
+    <span className={`chest-art ${state} ${big ? 'big' : ''} ${rarity ? `rarity rarity-${rarity}` : ''}`} aria-hidden="true">
       <span className="chest-rays" />
       <span className="chest-lid" />
       <span className="chest-body">
@@ -75,6 +77,7 @@ export function ChestDialog({ onClose }) {
   const chest = useChest();
   const [state, setState] = useState('closed'); // closed | shaking | open
   const [loot, setLoot] = useState(null);
+  const [shop, setShop] = useState(false); // showing the coin chest instead
   const now = useNow();
 
   useEffect(() => {
@@ -96,6 +99,14 @@ export function ChestDialog({ onClose }) {
 
   const big = loot ? loot.big : chest && isBigDay(chest.streak);
   const items = loot ? lootList(loot) : [];
+
+  if (shop) {
+    return (
+      <div className="chest-dialog" role="dialog" aria-modal="true" aria-label="Coin chest" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <CoinChest onBack={() => setShop(false)} onClose={onClose} />
+      </div>
+    );
+  }
 
   return (
     <div className="chest-dialog" role="dialog" aria-modal="true" aria-label="Daily chest" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -148,7 +159,143 @@ export function ChestDialog({ onClose }) {
             </button>
           </>
         )}
+
+        {state !== 'shaking' && (
+          <button className="chest-shop-link" onClick={() => setShop(true)}>
+            <ChestArt rarity="legendary" />
+            <span>
+              <b>Can't wait? Buy one.</b>
+              <small>🪙 {BUY_CHEST.price.coins}</small>
+            </span>
+          </button>
+        )}
       </div>
+    </div>
+  );
+}
+
+/* ---------- the coin chest ---------- */
+// What each rarity says when you get it, and when a tap bumps it up.
+const RARITY = {
+  common: { name: 'Common', odds: '70%', got: 'Common. Like you.', up: null },
+  rare: { name: 'Rare', odds: '22%', got: 'Rare. He is mildly annoyed.', up: 'Rare!' },
+  epic: { name: 'Epic', odds: '7%', got: 'Epic. He is sulking now.', up: 'EPIC?!' },
+  legendary: { name: 'Legendary', odds: '1%', got: 'LEGENDARY. He will never forgive this.', up: 'LEGENDARY!!' },
+};
+
+function coinLootList(loot) {
+  const out = [{ k: 'coins', icon: '🪙', text: `${loot.coins} coins` }];
+  if (loot.item) out.unshift({ k: 'item', art: loot.item, text: `${HOUSE_ITEM[loot.item]?.name ?? 'Furniture'} (yours, go decorate)` });
+  if (loot.food) out.push({ k: 'food', icon: '🍪', text: `${FOOD[loot.food]?.name ?? 'A snack'} (free, in the house)` });
+  if (loot.diamonds) out.push({ k: 'diamonds', icon: '💎', text: `${loot.diamonds} diamond${loot.diamonds > 1 ? 's' : ''}!` });
+  return out;
+}
+
+// The chest you buy with coins. Buying decides everything (see boughtChest in
+// economy/chest.js); then it takes BUY_CHEST.taps taps to open, and each tap
+// may bump it up a rarity, exactly as the path says. `got` is that outcome.
+function CoinChest({ onBack, onClose }) {
+  const { wallet } = useProfile();
+  const [got, setGot] = useState(null); // { path, rarity, loot }
+  const [taps, setTaps] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState(false);
+  const price = BUY_CHEST.price.coins;
+  const afford = wallet.coins >= price;
+
+  function purchase() {
+    const res = buyChest();
+    if (!res) return setError(true);
+    setError(false);
+    setGot(res);
+    setTaps(0);
+    setOpen(false);
+  }
+
+  function tap() {
+    if (!got || open || taps >= BUY_CHEST.taps) return;
+    const n = taps + 1;
+    setTaps(n);
+    if (n === BUY_CHEST.taps) setTimeout(() => setOpen(true), 450);
+  }
+
+  const rarity = !got ? 'common' : taps ? got.path[taps - 1] : 'common';
+  const bumped = got && taps > 0 && rarity !== (taps > 1 ? got.path[taps - 2] : 'common');
+  const items = open ? coinLootList(got.loot) : [];
+
+  return (
+    <div className={`chest-card coin-chest r-${rarity} ${open ? 'open' : 'closed'}`}>
+      <p className="kicker">{got ? RARITY[rarity].name : 'Coin chest'}</p>
+      <button className="chest-hit" onClick={tap} disabled={!got || open || taps >= BUY_CHEST.taps} aria-label={got ? `Tap the chest (${taps} of ${BUY_CHEST.taps})` : 'A coin chest'}>
+        {/* a new key each tap restarts the shake */}
+        <ChestArt key={taps} state={open ? 'open' : taps ? 'tapped' : 'closed'} rarity={rarity} />
+        {bumped && !open && (
+          <span key={`b${taps}`} className="rarity-burst" aria-hidden="true">
+            {Array.from({ length: 10 }, (_, i) => (
+              <i key={i} style={{ '--a': `${i * 36}deg` }} />
+            ))}
+          </span>
+        )}
+        {open && (
+          <span className="chest-fly" aria-hidden="true">
+            {[...items, ...items].map((it, i) => (
+              <i key={i} style={{ '--n': i, '--a': `${-150 + (i * 300) / Math.max(1, items.length * 2 - 1)}deg` }}>
+                {it.icon ?? '🛋️'}
+              </i>
+            ))}
+          </span>
+        )}
+      </button>
+
+      {open ? (
+        <>
+          <h2>{RARITY[got.rarity].got}</h2>
+          <ul className="chest-loot">
+            {items.map((it, i) => (
+              <li key={it.k} className={it.k} style={{ '--i': i }}>
+                {it.art ? <Art id={it.art} className="loot-art" /> : <span>{it.icon}</span>} {it.text}
+              </li>
+            ))}
+          </ul>
+          <div className="coin-chest-actions">
+            <button className="pill ghost" onClick={onClose}>
+              Nice
+            </button>
+            <button className="pill" onClick={purchase} disabled={!afford}>
+              Again · 🪙 {price}
+            </button>
+          </div>
+        </>
+      ) : got ? (
+        <>
+          <h2 aria-live="polite">{taps === 0 ? 'Tap it.' : taps < BUY_CHEST.taps ? (bumped ? RARITY[rarity].up : 'Harder.') : 'Here it comes…'}</h2>
+          <span className="tap-dots" aria-label={`${taps} of ${BUY_CHEST.taps} taps`}>
+            {Array.from({ length: BUY_CHEST.taps }, (_, i) => (
+              <i key={i} className={i < taps ? `on r-${got.path[i]}` : ''} />
+            ))}
+          </span>
+        </>
+      ) : (
+        <>
+          <h2>Pay to be disappointed</h2>
+          <p className="chest-odds" aria-label="Odds">
+            {RARITIES.map((r) => (
+              <span key={r} className={`r-${r}`}>
+                {RARITY[r].name} <b>{RARITY[r].odds}</b>
+              </span>
+            ))}
+          </p>
+          <div className="coin-chest-actions">
+            <button className="pill ghost" onClick={onBack}>
+              Back
+            </button>
+            <button className="pill" onClick={purchase} disabled={!afford}>
+              Buy · 🪙 {price}
+            </button>
+          </div>
+          {(!afford || error) && <p className="chest-note">You have {wallet.coins} 🪙. He's thrilled you're broke.</p>}
+        </>
+      )}
     </div>
   );
 }
