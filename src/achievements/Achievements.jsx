@@ -8,7 +8,7 @@ import Wallet from '@/components/Wallet';
 import Icon from '@/components/Icon';
 import { useProfile } from '@/profile/useProfile';
 import { claimAchievement } from '@/profile/store';
-import { ACHIEVEMENTS, ACHIEVEMENT_DIAMONDS, CATEGORIES, MEDALS, achievementStates } from '@/economy/achievements';
+import { ACHIEVEMENTS, ACHIEVEMENT_DIAMONDS, CATEGORIES, medalsOf, achievementStates } from '@/economy/achievements';
 import { isBigDay } from '@/economy/chest';
 import { ChestArt, ChestDialog, Streak, useChest } from './Chest';
 import Badge, { MedalArt } from './Badge';
@@ -223,8 +223,10 @@ function Haul({ haul, onClose }) {
   );
 }
 
+const prizeOf = (l) => [l.diamonds && `${l.diamonds} diamond${l.diamonds === 1 ? '' : 's'}`, l.coins && `${l.coins} coin${l.coins === 1 ? '' : 's'}`].filter(Boolean).join(' and ');
+
 function Medal({ medal, state, level, pop }) {
-  const what = state === 'got' ? 'claimed' : state === 'ready' ? 'ready to claim' : `${fmt(level.at)} for ${level.diamonds} diamonds`;
+  const what = state === 'got' ? 'claimed' : state === 'ready' ? 'ready to claim' : `${fmt(level.at)} for ${prizeOf(level)}`;
   return (
     <span className={`medal ${medal.id} ${state} ${pop ? 'pop' : ''}`} title={`${medal.name}: ${what}`}>
       <MedalArt medal={medal.id} state={state} />
@@ -237,7 +239,8 @@ function Card({ x, ready, burst, onClaim }) {
   const done = !next;
   const shown = next ?? a.levels[a.levels.length - 1];
   const pct = progress(x);
-  const medal = MEDALS[Math.min(level, MEDALS.length - 1)];
+  const medals = medalsOf(a);
+  const medal = medals[Math.min(level, medals.length - 1)];
 
   return (
     <article className={`ach-card cat-${a.cat} ${claimable ? 'ready' : ''} ${done ? 'done' : ''} ${burst ? 'claimed' : ''}`} key={burst?.n}>
@@ -247,12 +250,12 @@ function Card({ x, ready, burst, onClaim }) {
         </span>
         <div className="ach-title">
           <b>{a.name}</b>
-          <span className="ach-goal">{done ? 'All three medals. Show-off.' : a.goal(next.at)}</span>
+          <span className="ach-goal">{done ? (medals.length > 1 ? 'Every medal. Show-off.' : 'Done. Nobody believed you would.') : a.goal(next.at)}</span>
         </div>
       </div>
 
       <div className="ach-medals" aria-label={`${level} of ${a.levels.length} medals`}>
-        {MEDALS.map((m, i) => (
+        {medals.map((m, i) => (
           <Medal key={m.id} medal={m} level={a.levels[i]} state={i < level ? 'got' : i < level + claimable ? 'ready' : 'locked'} pop={burst && burst.level === i} />
         ))}
       </div>
@@ -271,7 +274,16 @@ function Card({ x, ready, burst, onClaim }) {
           <span className="ach-reward done">Complete</span>
         ) : (
           <span className="ach-reward">
-            <span className={`dot ${medal.id}`} /> {medal.name} · +{next.diamonds} <Gem size={14} />
+            <span className={`dot ${medal.id}`} /> {medal.name} ·{' '}
+            {next.coins ? (
+              <>
+                +{next.coins} <Icon glyph="🪙" size={14} />
+              </>
+            ) : (
+              <>
+                +{next.diamonds} <Gem size={14} />
+              </>
+            )}
           </span>
         )}
         {claimable > 0 && (

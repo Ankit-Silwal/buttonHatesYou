@@ -17,7 +17,7 @@ const { tierPayout, adventurePayout, applyEvent, replay, normalize, chestFor, ST
 const { GAMES, ITEMS, RUN_LIMITS } = await import('../src/economy/catalog.js');
 const { HOUSE_ITEMS } = await import('../src/economy/house.js');
 const { legacyReplay } = await import('../src/economy/legacy.js');
-const { ACHIEVEMENTS, ACHIEVEMENT_DIAMONDS, statsOf, readyCount, newlyReady, MEDALS } = await import('../src/economy/achievements.js');
+const { ACHIEVEMENTS, ACHIEVEMENT_DIAMONDS, ACHIEVEMENT_DIAMONDS_EARLY, statsOf, readyCount, newlyReady, MEDALS, medalsOf } = await import('../src/economy/achievements.js');
 const { chestLoot, CHEST } = await import('../src/economy/chest.js');
 const { scoreFor } = await import('../src/economy/tiers.js');
 
@@ -134,18 +134,23 @@ const os = statsOf(on);
 assert.deepEqual([os.best.flap, os.best['button-run'], os.reason, os.cursor, os.outfits, os.furniture, os.rooms], [30, 80, 5, 3, 1, 1, 1]);
 
 /* ---------- achievements ---------- */
-assert.ok(ACHIEVEMENTS.length >= 15 && ACHIEVEMENTS.length <= 25);
+assert.ok(ACHIEVEMENTS.length >= 35 && ACHIEVEMENTS.length <= 50, 'about twice as many as before');
 assert.equal(new Set(ACHIEVEMENTS.map((a) => a.id)).size, ACHIEVEMENTS.length);
+assert.equal(MEDALS.length, 5);
 for (const a of ACHIEVEMENTS) {
-  assert.equal(a.levels.length, MEDALS.length, `${a.id} has 3 levels`);
+  assert.equal(medalsOf(a).length, a.levels.length, `${a.id}: a medal per level`);
+  assert.ok([1, 3, 5].includes(a.levels.length), `${a.id} has 1, 3 or 5 levels`);
+  if (a.levels.length === 5 && !a.keep) assert.ok(a.levels[4].at >= a.levels[2].at * 3, `${a.id}: Diamond is far beyond Gold`); // (capped ladders, keep, grow gently)
   a.levels.forEach((l, i) => {
-    assert.ok(l.diamonds > 0 && typeof a.goal(l.at) === 'string' && a.goal(l.at), `${a.id} level ${i + 1}`);
+    assert.ok((l.diamonds > 0 || l.coins > 0) && typeof a.goal(l.at) === 'string' && a.goal(l.at), `${a.id} level ${i + 1}`);
     if (i) assert.ok(l.at > a.levels[i - 1].at && l.diamonds >= a.levels[i - 1].diamonds, `${a.id} rises`);
   });
 }
+// the two legendary ones pay a single coin
+for (const id of ['forever', 'everything', 'cheater']) assert.deepEqual(ACHIEVEMENTS.find((a) => a.id === id).levels.map((l) => [l.diamonds, l.coins]), [[0, 1]]);
 // claiming: in order, only when the stat is there, once
 let ac = normalize(oldProfile);
-assert.equal(readyCount(ac), 11); // flap B+S, button-run B, reason B+S, cursor B+S, bookworm B+S, outfits B, rooms B
+assert.equal(readyCount(ac), 12); // flap B+S, button-run B, reason B+S, cursor B+S, bookworm B+S, outfits B, rooms B, Please Didn't
 assert.equal(applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 2 }), null); // not in order
 ac = applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 1 });
 ac = applyEvent(ac, { type: 'achieve', ach: 'story-cursor', level: 2 });
@@ -234,9 +239,11 @@ assert.equal(c99.coins, 1_000_000 - 15);
 /* ---------- the diamond balance ---------- */
 // (the moving diamond furniture is a year-long goal of its own: see the levels simulation)
 const itemDiamonds = [...ITEMS, ...HOUSE_ITEMS].filter((i) => !i.moving).reduce((n, i) => n + (i.price?.diamonds ?? 0), 0);
-console.log(`achievements: ${ACHIEVEMENTS.length}, ${ACHIEVEMENT_DIAMONDS} 💎 in all; diamond items cost ${itemDiamonds} 💎`);
-assert.ok(ACHIEVEMENT_DIAMONDS > itemDiamonds, 'every diamond item is reachable');
-assert.ok(ACHIEVEMENT_DIAMONDS < itemDiamonds * 3, 'but diamonds stay scarce');
+const movingDiamonds = HOUSE_ITEMS.filter((i) => i.moving).reduce((n, i) => n + (i.price?.diamonds ?? 0), 0);
+console.log(`achievements: ${ACHIEVEMENTS.length}, ${ACHIEVEMENT_DIAMONDS} 💎 in all (${ACHIEVEMENT_DIAMONDS_EARLY} from Bronze to Gold); diamond items cost ${itemDiamonds} 💎, the moving ones ${movingDiamonds}`);
+assert.ok(ACHIEVEMENT_DIAMONDS_EARLY > itemDiamonds, 'every diamond item is reachable');
+assert.ok(ACHIEVEMENT_DIAMONDS_EARLY < itemDiamonds * 3, 'but diamonds stay scarce');
+assert.ok(ACHIEVEMENT_DIAMONDS < itemDiamonds + movingDiamonds, 'even every medal there is buys less than everything');
 assert.ok(itemDiamonds >= 57 && itemDiamonds <= 168, 'diamond items add up to ' + itemDiamonds);
 
 // Print the tables for the README
@@ -715,12 +722,23 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.ok(typical.at[200] >= 120, 'level 200 takes many months');
   assert.ok(heavy.at[200] >= 40, 'even at the daily cap it takes weeks');
   // diamonds a year: achievements (all of them, generously), levels, daily chests
-  const yearGems = ACHIEVEMENT_DIAMONDS + typical.gems + chestGems;
+  const yearGems = ACHIEVEMENT_DIAMONDS_EARLY + typical.gems + chestGems; // Platinum and Diamond take longer than a year
   const moving = HOUSE_ITEMS.filter((i) => i.moving && i.price.diamonds);
-  console.log(`levels: diamonds in a year ≈ ${yearGems} (achievements ${ACHIEVEMENT_DIAMONDS}, levels ${typical.gems}, chests ${chestGems}); other diamond items cost ${itemDiamonds}; moving pieces ${moving.map((i) => `${i.id} ${i.price.diamonds}`).join(', ')}`);
+  console.log(`levels: diamonds in a year ≈ ${yearGems} (achievements' first three levels ${ACHIEVEMENT_DIAMONDS_EARLY}, levels ${typical.gems}, chests ${chestGems}); other diamond items cost ${itemDiamonds}; moving pieces ${moving.map((i) => `${i.id} ${i.price.diamonds}`).join(', ')}`);
   assert.equal(moving.length, 3);
   for (const i of moving) assert.ok(i.price.diamonds >= (yearGems - itemDiamonds) * 0.6 && i.price.diamonds <= yearGems, `${i.id} takes about a year`);
   assert.equal(HOUSE_ITEMS.filter((i) => i.moving && i.price.coins && i.level).length, 3);
+}
+
+/* ---------- what the new achievements count ---------- */
+{
+  const T2 = Date.now();
+  let w = { ...normalize(START), coins: 5000, owned: ['hat-cap'], needs: { ...START.needs, hunger: 50, energy: 50, at: T2 } };
+  w = applyEvent(w, { type: 'equip', slot: 'hat', item: 'hat-cap' });
+  w = applyEvent(w, { type: 'sleep', at: T2 });
+  w = applyEvent(w, { type: 'wake', at: T2 + 1 });
+  const s = statsOf(w);
+  assert.deepEqual([s.equips, s.wakes, s.naps], [1, 1, 1], 'equips, free wakes and naps are counted');
 }
 
 /* ---------- codes (economy/codes.js) ---------- */

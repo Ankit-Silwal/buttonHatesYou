@@ -379,6 +379,15 @@ Diamonds already earned the old way are kept.
 
 ## Achievements and the daily chest
 
+40 achievements. Most have five medals: Bronze, Silver and Gold, then
+Platinum and Diamond far beyond (x4 and x15 of Gold); the stories keep
+three. New ones count baths, stocked food, energy boosts, free wake-ups,
+outfit changes, furniture moves, potions, coin chests, Continues, levels,
+hard quests, things owned, medals and wallpaper changes (`countUses` in
+rules.js). Three Legendary ones have a single medal and pay one coin: play
+on 1,000 days, use a code, and finish every other achievement. Daily comes
+first on the page.
+
 **Achievements** (`/achievements`, the 🏆 on the home screen, whose badge
 counts the levels ready to claim) are the only steady source of diamonds.
 Each has three medals, Bronze, Silver and Gold, claimed by hand and in order
