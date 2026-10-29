@@ -303,7 +303,7 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
 {
   const { ROOMS, ROOM_IDS, DEFAULT_ROOMS, DEFAULT_HOUSE, HOUSE_ITEM, roomOf } = await import('../src/economy/house.js');
   const { readFileSync } = await import('node:fs');
-  const artSrc = readFileSync(new URL('../src/house/art.jsx', import.meta.url), 'utf8');
+  const artSrc = ['art.jsx', 'art-more.jsx'].map((f) => readFileSync(new URL(`../src/house/${f}`, import.meta.url), 'utf8')).join('\n');
 
   // the catalog is consistent: every piece fits a spot of every room it names, and has a picture
   for (const i of HOUSE_ITEMS) {

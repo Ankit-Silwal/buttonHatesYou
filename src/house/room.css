@@ -167,6 +167,35 @@
   filter: saturate(0.85) drop-shadow(0 0 0.3cqw rgba(0, 0, 0, 0.35));
 }
 
+[data-wall='wall-sunset'] {
+  --skirt: #fff1e2;
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0 0.3cqw, transparent 0.3cqw 5cqw),
+    linear-gradient(180deg, #ffb38a 0%, #ffcf8f 45%, #ffe6b8 100%);
+}
+[data-wall='wall-jungle'] {
+  --skirt: #e9f1e2;
+  background:
+    radial-gradient(ellipse 1.6cqw 3.2cqw at 30% 40%, rgba(47, 110, 58, 0.55) 0 98%, transparent) 0 0 / 9cqw 9cqw,
+    radial-gradient(ellipse 1.4cqw 2.8cqw at 70% 75%, rgba(79, 158, 87, 0.5) 0 98%, transparent) 0 0 / 9cqw 9cqw,
+    radial-gradient(ellipse 1.2cqw 2.4cqw at 15% 85%, rgba(122, 190, 110, 0.5) 0 98%, transparent) 4.5cqw 2cqw / 9cqw 9cqw,
+    linear-gradient(180deg, #d9ead0, #c2ddb4);
+}
+[data-wall='wall-panel'] {
+  --skirt: #6d4a30;
+  background:
+    linear-gradient(180deg, transparent 0 55%, rgba(0, 0, 0, 0.12) 55% 55.6%, transparent 55.6%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 0.25cqw, transparent 0.25cqw 7cqw),
+    repeating-linear-gradient(90deg, #a87a52 0 7cqw, #9c6f49 7cqw 14cqw);
+}
+[data-wall='wall-cursor'] {
+  --skirt: #221e3e;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M12 8 L12 26 L16.5 21.5 L19.5 28.5 L22.5 27 L19.5 20 L25.5 20 Z' fill='%237cf3ff' fill-opacity='.55'/%3E%3C/svg%3E") 0 0 / 7cqw 7cqw,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='2' fill='%23ff6ad5' fill-opacity='.6'/%3E%3C/svg%3E") 3.5cqw 3.5cqw / 7cqw 7cqw,
+    linear-gradient(180deg, #332d5c, #1f1b3a);
+}
+
 /* ---------- windows and views ---------- */
 .hs-room .window {
   position: absolute;
@@ -324,6 +353,16 @@
     repeating-linear-gradient(90deg, rgba(10, 4, 0, 0.55) 0 0.25cqw, transparent 0.25cqw 8cqw),
     repeating-linear-gradient(180deg, transparent 0 26cqw, rgba(10, 4, 0, 0.4) 26cqw 26.3cqw),
     repeating-linear-gradient(90deg, #5a3a28 0 8cqw, #4c2f20 8cqw 16cqw, #63402c 16cqw 24cqw, #543524 24cqw 32cqw);
+}
+
+[data-floor='floor-pixel'] {
+  --floor-bg:
+    conic-gradient(#7cc6a4 0 25%, #5b9bd5 0 50%, #7cc6a4 0 75%, #f2c14e 0) 0 0 / 6cqw 6cqw;
+}
+[data-floor='floor-herringbone'] {
+  --floor-bg:
+    repeating-linear-gradient(45deg, rgba(60, 30, 10, 0.35) 0 0.2cqw, transparent 0.2cqw 4cqw),
+    repeating-linear-gradient(-45deg, #c99a6a 0 4cqw, #b78757 4cqw 8cqw);
 }
 
 /* =====================================================================
