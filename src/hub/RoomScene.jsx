@@ -25,8 +25,9 @@ export { skyOf };
 //   lamp      { on, label, onToggle }: the bedside lamp is a real button
 //   hero      replaces the button (the bathroom drags him around)
 //   hud       a small meter on the scene;  extras: more scene children
+//   talking   his mouth flaps (he's repeating what you said)
 //   state     a word for CSS, e.g. 'showering' in the bathroom
-export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, lamp, hero, hud, extras, tray, state, sceneRef, showerRef }) {
+export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking }) {
   const [pressed, setPressed] = useState(false);
   const cfg = ROOMS[kind];
   const defaults = kind === 'living' ? DEFAULT_HOUSE : DEFAULT_ROOMS[kind];
@@ -117,6 +118,7 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
               sleepy={sleepy}
               dirty={dirty}
               grime={grime}
+              data-talking={talking || undefined}
               onClick={poke}
               aria-label="The button. It would rather you didn't."
             />
