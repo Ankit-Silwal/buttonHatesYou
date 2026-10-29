@@ -730,6 +730,23 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(HOUSE_ITEMS.filter((i) => i.moving && i.price.coins && i.level).length, 3);
 }
 
+/* ---------- chest codes ---------- */
+{
+  const { codeChest } = await import('../src/economy/codes.js');
+  const w = { ...normalize(START), seed: 'abc' };
+  for (const r of ['common', 'rare', 'epic', 'legendary']) {
+    const c = codeChest(w, r.toUpperCase());
+    assert.equal(c.rarity, r, `${r} code gives a ${r} chest`);
+    assert.equal(c.path.at(-1), r);
+    const got = applyEvent(w, { type: 'code', code: r });
+    assert.equal(got.coins, w.coins + c.loot.coins, `${r} pays its loot`);
+    assert.equal(applyEvent(got, { type: 'code', code: r }), null, 'once');
+  }
+  const leg = codeChest(w, 'LEGENDARY');
+  assert.ok(leg.loot.item, 'a legendary chest holds furniture');
+  assert.ok(applyEvent(w, { type: 'code', code: 'LEGENDARY' }).owned.includes(leg.loot.item));
+}
+
 /* ---------- buying the play mission with diamonds (skipplay) ---------- */
 {
   const { levelState, skipCost } = await import('../src/economy/levels.js');

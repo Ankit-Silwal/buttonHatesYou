@@ -18,6 +18,7 @@ import { useWorn } from './undress';
 import { readyCount } from '@/economy/achievements';
 import { isCode, usedCode } from '@/economy/codes';
 import { redeemCode } from './store';
+import { ChestOpener } from '@/achievements/Chest';
 import '@/hub/flat.css';
 import './profile.css';
 
@@ -207,6 +208,7 @@ function SettingsTab({ me }) {
 function CodesCard({ profile }) {
   const [code, setCode] = useState('');
   const [said, setSaid] = useState(null); // { text, good }
+  const [chest, setChest] = useState(null); // a chest code's chest, being opened
   const fmt = (n) => n.toLocaleString('en-US');
 
   function submit(e) {
@@ -217,6 +219,10 @@ function CodesCard({ profile }) {
     const got = redeemCode(code);
     if (!got) return setSaid({ text: 'Something went wrong. Try again.', good: false });
     setCode('');
+    if (got.chest) {
+      setChest(got.chest);
+      return setSaid({ text: 'A free chest. Open it before he takes it back.', good: true });
+    }
     setSaid({ text: `+${fmt(got.coins)} coins, +${fmt(got.diamonds)} diamonds. Fine. Take it.`, good: true });
   }
 
@@ -233,6 +239,11 @@ function CodesCard({ profile }) {
         <p className={`pf-code-said ${said.good ? 'good' : 'bad'}`} role="status">
           {said.text}
         </p>
+      )}
+      {chest && (
+        <div className="chest-dialog" role="dialog" aria-modal="true" aria-label="Free chest" onClick={(e) => e.target === e.currentTarget && setChest(null)}>
+          <ChestOpener got={chest} onClose={() => setChest(null)} />
+        </div>
       )}
     </section>
   );
