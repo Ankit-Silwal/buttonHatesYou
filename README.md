@@ -556,7 +556,8 @@ about 7 weeks.
 Profile → Settings → Codes. `CODES` in `src/economy/codes.js`; each works
 once per wallet, as an event `{ type: 'code', code }` the server replays like
 any other (case and spaces don't matter). `DSAISUSELESS` gives 9,999,999
-coins and diamonds and clears every level. (It replaced `ISUCKATCODING`,
+coins and diamonds, clears every level and finishes every story part (so
+every character joins you). (It replaced `ISUCKATCODING`,
 which is retired: refused when typed, still replayed for wallets that used
 it, and the two pay once between them.) The table ships to the browser,
 so anyone reading the source can find the codes. `COMMON`, `RARE`, `EPIC` and
