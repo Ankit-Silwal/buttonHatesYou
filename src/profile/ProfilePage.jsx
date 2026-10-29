@@ -56,7 +56,7 @@ export default function ProfilePage({ initial = 'me' }) {
     <main className="profile-page">
       <header className="pf-top">
         <Link href="/" className="pf-home" aria-label="Back home">
-          <Icon glyph="🛋️" size={24} tint="currentColor" />
+          <Icon glyph="🏠" size={26} tint="currentColor" />
         </Link>
         <Wallet profile={profile} compact />
       </header>

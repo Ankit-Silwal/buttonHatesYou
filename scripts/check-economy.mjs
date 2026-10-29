@@ -754,4 +754,20 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   console.log('quests:', QUESTS.length, 'worth', QUESTS.reduce((n, q) => n + q.reward.diamonds, 0), '💎');
 }
 
+/* ---------- potions to keep (stockpotion) ---------- */
+{
+  const T = Date.now();
+  const w = { ...normalize(START), coins: 1000, needs: { ...START.needs, hunger: 20, energy: 10, dirt: 0, at: T } };
+  const kept = applyEvent(w, { type: 'stockpotion', item: 'potion-energy' });
+  assert.equal(kept.coins, 750, 'paid when bought');
+  assert.equal(kept.potions['potion-energy'], 1, 'kept, not drunk');
+  assert.equal(kept.needs.energy, 10);
+  const drunk = applyEvent(kept, { type: 'potion', item: 'potion-energy', at: T });
+  assert.equal(drunk.coins, 750, 'drinking a kept one is free');
+  assert.equal(drunk.potions['potion-energy'], 0);
+  assert.equal(drunk.needs.energy, 100);
+  assert.equal(applyEvent({ ...w, coins: 100 }, { type: 'stockpotion', item: 'potion-energy' }), null, 'cannot afford');
+  assert.equal(applyEvent(w, { type: 'stockpotion', item: 'potion-clean' }), null, 'retired potions are not sold');
+}
+
 console.log('all economy checks passed');

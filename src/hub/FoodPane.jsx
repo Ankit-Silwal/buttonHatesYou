@@ -8,6 +8,7 @@ import { feed } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { FOODS, FREE_FOOD, isBroke, roomOf } from '@/economy/house';
 import Hint from './Hint';
+import PotionShelf from './PotionShelf';
 import { Sound } from '@/game/sound';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -240,11 +241,12 @@ export default function FoodPane({ needs, wallet, active, sky, view, edit, quip,
               </span>,
               document.body
             )}
+          <PotionShelf wallet={wallet} needs={needs} onDrink={(p, ok) => say(ok ? p.quip : p.fill ? "I'm already full of that." : 'Already there. Sadly.')} />
           <div className="rs-pills">
             <button className="pill buy" onClick={onBuy} style={{ '--i': 0 }}>
               <span className="ico">🛒</span> Buy food
             </button>
-            <button className="pill alt" onClick={onPotions} style={{ '--i': 1 }}>
+            <button className="pill alt" onClick={() => onPotions()} style={{ '--i': 1 }}>
               <span className="ico">🧪</span> Potions
             </button>
             <button className="pill house-btn" onClick={onDecorate} style={{ '--i': 2 }}>

@@ -247,7 +247,11 @@ function applyLegacyReward(wallet, ev) {
    { id, type: 'wake', at, item? }     got up; `item` (a WAKE_OPTIONS id) is a paid
                                        energy boost: it wakes him if he's asleep,
                                        and works while he's awake too
-   { id, type: 'potion', item, at }    bought and drank a POTIONS potion: fills
+   { id, type: 'stockpotion', item }   bought a potion to keep (not drunk): pays its
+                                       price, potions[item] + 1 (at most STOCK_MAX)
+   { id, type: 'potion', item, at }    drank a POTIONS potion, from the stash when
+                                       there is one (free), otherwise bought on the
+                                       spot (older events always paid): fills
                                        its needs to 100 (dirt to 0), or drains
                                        them (hunger/energy to DRAINED, dirt to
                                        DRAINED_DIRT); wakes him
@@ -427,15 +431,23 @@ function applyHouseEvent(wallet, ev, now) {
     return { ...pay(wallet, opt.price), needs: { ...needs, asleep: false, energy: r2(Math.min(100, needs.energy + opt.energy)) } };
   }
 
+  if (ev.type === 'stockpotion') {
+    const potion = own(POTION, ev.item);
+    const have = num(wallet.potions?.[ev.item]);
+    if (!potion || potion.retired || !canAfford(wallet, potion) || have >= STOCK_MAX) return null;
+    return { ...pay(wallet, potion.price), potions: { ...wallet.potions, [potion.id]: have + 1 } };
+  }
+
   if (ev.type === 'potion') {
     const potion = own(POTION, ev.item);
     const needs = potion && needsFor(wallet, ev, now);
-    if (!needs || !canAfford(wallet, potion)) return null;
+    const kept = potion ? num(wallet.potions?.[potion.id]) : 0;
+    if (!needs || (!kept && !canAfford(wallet, potion))) return null;
     const fill = potion.fill ?? [];
     const drain = potion.drain ?? [];
     const level = (k, v, full, empty) => (fill.includes(k) ? full : drain.includes(k) ? empty : v);
     return {
-      ...pay(wallet, potion.price),
+      ...(kept ? { ...wallet, potions: { ...wallet.potions, [potion.id]: kept - 1 } } : pay(wallet, potion.price)),
       needs: {
         ...needs,
         asleep: false,
