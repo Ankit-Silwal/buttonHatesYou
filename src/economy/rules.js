@@ -83,7 +83,7 @@ export function applyEvent(wallet, ev, now = Infinity) {
   if (!ev || typeof ev !== 'object') return null;
   wallet = withLevels(normalize(wallet));
   const next = applyAnyEvent(wallet, ev, now);
-  return next && countDay(countLevelStats(next, ev), ev, now); // see "Achievements" below
+  return next && countDay(countUses(countLevelStats(next, ev), ev), ev, now); // see "Achievements" below
 }
 
 function applyAnyEvent(wallet, ev, now) {
@@ -548,6 +548,14 @@ function eventTime(ev, now) {
   return t;
 }
 
+// Things achievements count, one per accepted event of these kinds.
+const USES = { equip: 'equips', place: 'placed', potion: 'potions', continue: 'continues' };
+function countUses(wallet, ev) {
+  const k =
+    ev.type === 'wake' ? (ev.item != null ? 'boosts' : 'wakes') : ev.type === 'decor' && (ev.spot === 'wall' || ev.spot === 'floor') ? 'redecorated' : USES[ev.type];
+  return k ? { ...wallet, stats: { ...wallet.stats, [k]: num(wallet.stats?.[k]) + 1 } } : wallet;
+}
+
 // Days played: an accepted timed event on a later UTC day than the last one counted.
 function countDay(wallet, ev, now) {
   if (!TIMED.has(ev.type)) return wallet;
@@ -569,6 +577,7 @@ function applyAchievementEvent(wallet, ev, now) {
     if (a.stat(statsOf(wallet)) < level.at) return null;
     return {
       ...wallet,
+      coins: wallet.coins + (level.coins ?? 0),
       diamonds: wallet.diamonds + level.diamonds,
       achieved: { ...wallet.achieved, [a.id]: done + 1 },
     };

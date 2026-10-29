@@ -11,6 +11,10 @@
   --silver-2: #98a2b3;
   --gold-1: #ffe58a;
   --gold-2: #d39a12;
+  --platinum-1: #ffffff;
+  --platinum-2: #8ea0ba;
+  --diamond-1: #e6fcff;
+  --diamond-2: #39a9d0;
 }
 
 /* ---------- overview strip ---------- */
@@ -169,6 +173,10 @@
 .ach-reward .dot.bronze { --m1: var(--bronze-1); --m2: var(--bronze-2); }
 .ach-reward .dot.silver { --m1: var(--silver-1); --m2: var(--silver-2); }
 .ach-reward .dot.gold { --m1: var(--gold-1); --m2: var(--gold-2); }
+.ach-reward .dot.platinum { --m1: var(--platinum-1); --m2: var(--platinum-2); }
+.ach-reward .dot.diamond { --m1: var(--diamond-1); --m2: var(--diamond-2); }
+.ach-page .shelf.cat-daily { --dot: #3f86e0; --glow: rgba(63, 134, 224, 0.2); }
+.ach-page .shelf.cat-legend { --dot: #d49a12; --glow: rgba(212, 154, 18, 0.25); }
 .pill.claim {
   --edge: #b07a12;
   padding: 9px 22px;

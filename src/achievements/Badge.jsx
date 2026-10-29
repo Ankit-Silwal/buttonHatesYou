@@ -21,8 +21,14 @@ const MORE = {
   knife: [['b', 'M21 3 C17 4 11.5 7.8 8.6 12.4 l3 3 C16.2 12.5 20 7 21 3 z'], ['b', 'M8.3 12.7 l3 3 l-5.4 5.4 a2.1 2.1 0 0 1 -3 -3 z']],
   coins: [['f', 'M5 6.5 v9 c0 1.7 3.1 3 7 3 s7 -1.3 7 -3 v-9 z'], ['b', 'M5 6.5 a7 3 0 1 0 14 0 a7 3 0 1 0 -14 0 z'], ['l', 'M5 6.5 v9 c0 1.7 3.1 3 7 3 s7 -1.3 7 -3 v-9 M5 11 c0 1.7 3.1 3 7 3 s7 -1.3 7 -3']],
   donut: [['b', 'M3 12 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 z M9 12 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0 z'], ['l', 'M7 8 l1 0.6 M15.5 6.5 l-0.4 1 M17 14.5 l-1 -0.4 M10 17 l0.6 -0.9']],
+  bag: [['b', 'M5 8 h14 l-1.2 12 a1.5 1.5 0 0 1 -1.5 1.4 H7.7 a1.5 1.5 0 0 1 -1.5 -1.4 z'], ['l', 'M9 10 V6.5 a3 3 0 0 1 6 0 V10']],
+  chair: [['b', 'M7 3 h10 v9 H7 z'], ['b', 'M5 12 h14 v3 H5 z'], ['l', 'M7 15 v6 M17 15 v6']],
+  flask: [['l', 'M9.5 3 h5 M10.5 3 v5.5 L5 18.5 a2 2 0 0 0 1.8 2.9 h10.4 a2 2 0 0 0 1.8 -2.9 L13.5 8.5 V3'], ['f', 'M7.6 14 h8.8 l2.6 4.5 a2 2 0 0 1 -1.8 2.9 H6.8 a2 2 0 0 1 -1.8 -2.9 z'], ['s', 'M9.5 17.5 a1 1 0 1 0 2 0 a1 1 0 1 0 -2 0 z']],
+  dice: [['b', 'M4 4 h16 v16 H4 z'], ['s', 'M7 7 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 z M14.4 7 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 z M10.7 12 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 z M7 17 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 z M14.4 17 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 z']],
+  medal: [['l', 'M7 2.5 l3 7 M17 2.5 l-3 7'], ['b', 'M6.5 15.5 a5.5 5.5 0 1 0 11 0 a5.5 5.5 0 1 0 -11 0 z'], ['l', 'M12 13 v5 M10.5 14 l1.5 -1']],
+  gem: [['b', 'M7 4 h10 l4 5 -9 11 -9 -11 z'], ['l', 'M3 9 h18 M9.5 4 l2.5 5 2.5 -5 M12 9 v11']],
 };
-const MORE_BY_EMOJI = { '🪽': 'wing', '🎵': 'note', '☁️': 'cloud', '☁': 'cloud', '🔨': 'hammer', '🏃': 'dash', '🗼': 'tower', '🔪': 'knife', '🪙': 'coins', '🍩': 'donut' };
+const MORE_BY_EMOJI = { '🪽': 'wing', '🎵': 'note', '☁️': 'cloud', '☁': 'cloud', '🔨': 'hammer', '🏃': 'dash', '🗼': 'tower', '🔪': 'knife', '🪙': 'coins', '🍩': 'donut', '🛍️': 'bag', '🪑': 'chair', '🧪': 'flask', '🎲': 'dice', '🥇': 'medal', '💎': 'gem' };
 
 const layersOf = (emoji) => (MORE_BY_EMOJI[emoji] ? MORE[MORE_BY_EMOJI[emoji]] : GLYPHS[BY_EMOJI[emoji]]?.[1]) ?? MORE.coins;
 
@@ -32,6 +38,7 @@ const CAT = {
   story: ['#c2adff', '#6a48dc', '#3f2696'],
   home: ['#6fe0cd', '#1f938c', '#0f5c58'],
   daily: ['#86cfff', '#2f6fd8', '#1a4296'],
+  legend: ['#ffe9a0', '#d49a12', '#7a5200'],
 };
 
 // Rim metals by medals claimed: none, bronze, silver, gold (light, mid, dark).
@@ -40,8 +47,10 @@ export const METAL = {
   bronze: ['#f8cfa4', '#c27a3e', '#7c4316'],
   silver: ['#ffffff', '#c3cad6', '#727b8c'],
   gold: ['#fff3b0', '#f2c230', '#a8730a'],
+  platinum: ['#ffffff', '#b8c8dc', '#5d6f8a'],
+  diamond: ['#ecfdff', '#7fdcf5', '#1f7fa6'],
 };
-const RIM = ['steel', 'bronze', 'silver', 'gold'];
+const RIM = ['steel', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
 // A pointy-top hexagon with rounded corners, as a path.
 function hex(cx, cy, r, round) {
@@ -89,7 +98,7 @@ export default function Badge({ a, level = 0, size = 52, className = '' }) {
   const u = (name) => `${uid}-${name}`;
   const f = (name) => `url(#${u(name)})`;
   const [c1, c2, c3] = CAT[a.cat] ?? CAT.adventure;
-  const [m1, m2, m3] = METAL[RIM[Math.min(level, 3)]];
+  const [m1, m2, m3] = METAL[a.medals ? (level ? a.medals[0] : 'steel') : RIM[Math.min(level, RIM.length - 1)]];
   const layers = layersOf(a.icon);
 
   return (
