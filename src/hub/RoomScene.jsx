@@ -31,9 +31,10 @@ export { skyOf };
 //   talking   his mouth flaps (he's repeating what you said)
 //   onPat     stroking him (dragging across him) instead of tapping
 //   pose      'tummy' (holding his hungry tummy) | 'fallen' (knocked over)
+//   fall      how he fell, with pose 'fallen' (see FALLS in Hub.jsx)
 //   hearts    a number that changes each time hearts should float up
 //   state     a word for CSS, e.g. 'showering' in the bathroom
-export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, onPat, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking, pose, hearts, edit }) {
+export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, onPat, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking, pose, fall, hearts, edit }) {
   const [pressed, setPressed] = useState(false);
   const cfg = ROOMS[kind];
   const defaults = kind === 'living' ? DEFAULT_HOUSE : DEFAULT_ROOMS[kind];
@@ -140,6 +141,7 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
               grime={grime}
               data-talking={talking || undefined}
               data-pose={pose || undefined}
+              data-fall={pose === 'fallen' ? fall : undefined}
               onPointerDown={down}
               onPointerMove={(e) => e.buttons && move(e)}
               onPointerLeave={() => !stroke.current?.pats && (stroke.current = null)}
@@ -148,6 +150,13 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
             />
           )}
           {tucked && <i className="rs-blanket" />}
+          {pose === 'fallen' && (
+            <span className="hero-dizzy" key={fall} aria-hidden="true">
+              <i>★</i>
+              <i>✦</i>
+              <i>★</i>
+            </span>
+          )}
           {hearts > 0 && (
             <span className="hero-hearts" key={hearts} aria-hidden="true">
               <i>♥</i>

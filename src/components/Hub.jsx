@@ -48,6 +48,20 @@ const PATS = ['Ohh… well, this is nice.', 'Okay. Okay. Keep going. Do not tell
 const SLAPS_TO_FALL = 6; // this many taps in SLAP_WINDOW_MS knocks him over
 const SLAP_WINDOW_MS = 3000;
 const FALL_MS = 2600;
+// The ways a flurry of slaps knocks him over (each a CSS animation, see
+// .hero[data-fall] in hub/scene.css), with what he says about it.
+const FALLS = [
+  ['topple', (who) => `OW. I fell over. Happy now, ${who}?`],
+  ['topple-left', () => 'Timber. That was me. I was the tree.'],
+  ['backflip', () => 'I did a backflip. Against my will.'],
+  ['faceplant', () => 'Floor. Face. Friends now.'],
+  ['spin', () => 'The room is spinning. Or I am. Both.'],
+  ['bounce', () => 'I BOUNCED. Buttons should not bounce.'],
+  ['pancake', () => 'I am a pancake now. A sad, flat pancake.'],
+  ['roll', () => 'Rolling away from you. Forever. Okay, coming back.'],
+  ['upside', (who) => `Upside down. Thanks, ${who}. Really.`],
+  ['slip', () => 'Who left a banana peel in the LIVING ROOM?'],
+];
 
 // The four panels, left to right. The button starts in the living room.
 const PANES = [
@@ -218,9 +232,11 @@ export default function Hub({ initial = 'home' }) {
   // Tapping him is a slap: he's hurt and says so, and a flurry of slaps
   // knocks him over. Stroking him makes him happy.
   const slaps = useRef([]);
-  const [fallen, setFallen] = useState(false);
+  const [fallen, setFallen] = useState(null); // which of FALLS, while he's down
   const [hearts, setHearts] = useState(0);
   const fallTimer = useRef(0);
+  const lastFall = useRef(null);
+  const fallDeck = useRef([]);
   useEffect(() => () => clearTimeout(fallTimer.current), []);
   const who = me?.name || 'you';
 
@@ -232,11 +248,15 @@ export default function Hub({ initial = 'home' }) {
     slaps.current = [...slaps.current.filter((t) => now - t < SLAP_WINDOW_MS), now];
     if (slaps.current.length >= SLAPS_TO_FALL) {
       slaps.current = [];
-      setFallen(true);
-      say(`OW. I fell over. Happy now, ${who}?`, 'sad');
+      // a shuffled deck: every fall once before any comes round again
+      if (!fallDeck.current.length) fallDeck.current = [...FALLS].sort(() => Math.random() - 0.5).filter((f, i) => i || f[0] !== lastFall.current);
+      const [id, line] = fallDeck.current.pop();
+      lastFall.current = id;
+      setFallen(id);
+      say(line(who), 'sad');
       clearTimeout(fallTimer.current);
       fallTimer.current = setTimeout(() => {
-        setFallen(false);
+        setFallen(null);
         say('I am getting up. Slowly. With dignity.', 'annoyed');
       }, FALL_MS);
       return;
@@ -352,6 +372,7 @@ export default function Hub({ initial = 'home' }) {
             onPat={pat}
             hearts={hearts}
             pose={fallen ? 'fallen' : needs.hunger < 25 && !needs.asleep ? 'tummy' : undefined}
+            fall={fallen ?? undefined}
             talking={talking}
             extras={
               me?.mic !== false && <button
