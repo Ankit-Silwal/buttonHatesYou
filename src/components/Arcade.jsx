@@ -8,18 +8,19 @@ import { useFavorites } from '@/profile/favorites';
 import { PAINT, ART_W, ART_H } from './gameArt';
 import GameIcon from './GameIcon';
 
-// Menu order, as in the Android app: Please Don't (the original game), the
-// Adventure games, then the two long stories.
-const ORDER = ['please-dont', 'flap', 'whack', 'stack', 'pop', 'simon', 'hop', 'run', 'slice', 'button-run', 'how-i-met-your-cursor', 'the-reason'];
+// Menu order: the Adventure games, then the story games (Please Don't, the
+// original game, and the two long stories) together under Story mode.
+const ORDER = ['flap', 'whack', 'stack', 'pop', 'simon', 'hop', 'run', 'slice', 'button-run', 'please-dont', 'how-i-met-your-cursor', 'the-reason'];
 const MENU = [...ORDER.map((id) => GAME[id]).filter((g) => g && !g.retired), ...PLAYABLE.filter((g) => !ORDER.includes(g.id))];
 
 // Every game as a tile in one grid: the Games panel of the home screen (and
 // of /games). Starred games are pinned to the top, in the order they were
-// starred; the rest keep the menu order.
+// starred; the rest keep the menu order, with the story games last.
 export function GameGrid({ equipped, dim = false }) {
   const [favorites, toggle] = useFavorites();
   const starred = favorites.map((id) => MENU.find((g) => g.id === id)).filter(Boolean);
-  const rest = MENU.filter((g) => !favorites.includes(g.id));
+  const rest = MENU.filter((g) => !favorites.includes(g.id) && g.category !== 'story');
+  const stories = MENU.filter((g) => !favorites.includes(g.id) && g.category === 'story');
   const tile = (g, i, on) => (
     <li key={g.id} style={{ '--i': Math.min(i, 10) }}>
       <GameTile game={g} equipped={equipped} dim={dim} favorite={on} onStar={() => toggle(g.id)} />
@@ -34,12 +35,16 @@ export function GameGrid({ equipped, dim = false }) {
             <Star on /> Favorites
           </h2>
           <ul className="game-grid">{starred.map((g, i) => tile(g, i, true))}</ul>
-          <h2 className="grid-head">All games</h2>
+          {rest.length > 0 && <h2 className="grid-head">All games</h2>}
         </>
-      ) : (
-        <p className="grid-tip">Tap the star on a game to pin it to the top.</p>
+      ) : null}
+      {rest.length > 0 && <ul className="game-grid">{rest.map((g, i) => tile(g, i, false))}</ul>}
+      {stories.length > 0 && (
+        <>
+          <h2 className="grid-head">📖 Story mode</h2>
+          <ul className="game-grid">{stories.map((g, i) => tile(g, rest.length + i, false))}</ul>
+        </>
       )}
-      <ul className="game-grid">{rest.map((g, i) => tile(g, i, false))}</ul>
     </>
   );
 }
