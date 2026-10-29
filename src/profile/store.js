@@ -183,11 +183,14 @@ export const feed = (item) => tryRecord({ type: 'feed', item, at: Date.now() });
 // Buys a food for the pantry (it is not eaten); feed() then eats from the stock.
 export const stockFood = (item) => tryRecord({ type: 'stock', item });
 export const sleep = () => tryRecord({ type: 'sleep', at: Date.now() });
-// `item`: a paid wake-up (WAKE_OPTIONS id), or nothing for a free one.
+// `item`: a paid energy boost (WAKE_OPTIONS id; works awake or asleep), or
+// nothing for a free wake-up.
 export const wake = (item) => tryRecord({ type: 'wake', at: Date.now(), ...(item ? { item } : {}) });
 // Starting a game: spends energy, or returns false when he's too tired/asleep.
 // Soaped and showered: he is clean again.
 export const wash = () => tryRecord({ type: 'wash', at: Date.now() });
+// Buys and drinks a potion (POTIONS id): fills its needs right up.
+export const drink = (item) => tryRecord({ type: 'potion', item, at: Date.now() });
 export const play = (kind) => tryRecord({ type: 'play', kind, at: Date.now() });
 
 /* ---------- talking to the server ---------- */
