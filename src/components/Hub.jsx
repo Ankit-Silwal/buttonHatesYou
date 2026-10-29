@@ -120,6 +120,7 @@ export default function Hub({ initial = 'home' }) {
   const face = faceOf(needs);
   const [panel, setPanel] = useState(null); // null | 'wardrobe' | 'decor' | 'buy' | 'wake' | 'potions'
   const [decor, setDecor] = useState(null); // the room being decorated
+  const [potionFor, setPotionFor] = useState(null); // the potion the shop points out
   const [decorView, setDecorView] = useState(null); // { house, at }: what is being tried in it
   const [sky, setSky] = useState('day');
   const [preview, setPreview] = useState(null);
@@ -385,11 +386,11 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={shown} active={at === 2} sky={sky} view={tryingIn('kitchen')} edit={editIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
+          <FoodPane needs={needs} wallet={shown} active={at === 2} sky={sky} view={tryingIn('kitchen')} edit={editIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={(id) => (setPotionFor(id ?? null), setPanel('potions'))} />
         </section>
 
         <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={shown} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} edit={editIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
+          <SleepPane needs={needs} wallet={shown} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} edit={editIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={(id) => (setPotionFor(id ?? null), setPanel('potions'))} />
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
@@ -434,7 +435,7 @@ export default function Hub({ initial = 'home' }) {
       {panel === 'wardrobe' && <Wardrobe wallet={wallet} undressed={off} onPreview={setPreview} onSay={say} onClose={close} onBath={() => (close(), go(4))} />}
       {panel === 'buy' && <BuySheet wallet={wallet} onClose={close} />}
       {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
-      {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
+      {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} target={potionFor} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
       {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} moved={moved} onClose={close} />}
 
       <Loading done={ready && needs.ready} />

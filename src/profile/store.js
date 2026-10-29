@@ -213,6 +213,8 @@ export const wake = (item) => tryRecord({ type: 'wake', at: Date.now(), ...(item
 export const wash = () => tryRecord({ type: 'wash', at: Date.now() });
 // Buys and drinks a potion (POTIONS id): fills its needs right up.
 export const drink = (item) => tryRecord({ type: 'potion', item, at: Date.now() });
+// Buys a potion to keep (it is not drunk); drink() then uses the stash first.
+export const stockPotion = (item) => tryRecord({ type: 'stockpotion', item });
 export const play = (kind) => tryRecord({ type: 'play', kind, at: Date.now() });
 
 /* ---------- talking to the server ---------- */

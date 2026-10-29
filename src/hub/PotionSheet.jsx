@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Sheet from '@/components/Sheet';
-import { drink } from '@/profile/store';
+import { drink, stockPotion } from '@/profile/store';
 import { canAfford } from '@/economy/rules';
 import { POTIONS, DRAINED, DRAINED_DIRT } from '@/economy/house';
 
@@ -11,44 +11,71 @@ const LABEL = { hunger: '🍔 Full', energy: '⚡ Full', clean: '🫧 Spotless' 
 const DRAIN_LABEL = { hunger: '🍔 Starving', energy: '💤 Exhausted', clean: '💩 Filthy' };
 
 // Is there anything for this potion to fill (or drain)?
-const useful = (p, n) =>
+export const useful = (p, n) =>
   (p.fill ?? []).some((k) => (k === 'clean' ? (n.dirt ?? 0) > 0.5 : n[k] < 99.5)) ||
   (p.drain ?? []).some((k) => (k === 'clean' ? (n.dirt ?? 0) < DRAINED_DIRT : n[k] > DRAINED));
 
-// Potions: bought and drunk on the spot, each fills a need right up (the
-// Fill Everything Elixir fills them all). Drinking one wakes him if he was asleep.
-export default function PotionSheet({ wallet, needs, onSay, onClose }) {
+export const SOLD = POTIONS.filter((p) => !p.retired);
+
+// The potion shop. Buying one keeps it (like food in the fridge): it waits
+// on the shelf in the Kitchen and the Bedroom, or is drunk from here. Each
+// fills a need right up (the Fill Everything Elixir fills them all), or for
+// the nasty ones drains it; drinking one wakes him if he's asleep.
+// `target`: a potion to point out (asleep in bed: the one that wakes him).
+export default function PotionSheet({ wallet, needs, target, onSay, onClose }) {
   const [said, setSaid] = useState('');
   const timer = useRef(0);
+  const picked = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    picked.current?.scrollIntoView({ block: 'center' }); // (it returns a Promise in newer browsers: not a cleanup)
+  }, []);
 
-  function quaff(p) {
-    const text = drink(p.id) ? p.quip : "You can't afford that one. Go play something.";
-    if (text === p.quip) onSay?.(p.quip);
+  const show = (text) => {
     setSaid(text);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setSaid(''), 3600);
+  };
+  function buy(p) {
+    if (!stockPotion(p.id)) return show("You can't afford that one. Go play something.");
+    show(`${p.name} is on the shelf now.`);
+  }
+  function quaff(p) {
+    if (!drink(p.id)) return show('Something went wrong. Try again.');
+    onSay?.(p.quip);
+    show(p.quip);
   }
 
   return (
     <Sheet title="Potions" onClose={onClose} className="shop-sheet potion-sheet">
       <div className="sheet-body">
         <p className="sheet-said" role="status">
-          {said || 'Drink up. Some of these are good for him.'}
+          {said || 'Buy now, drink whenever. Some of these are good for him.'}
         </p>
         <ul className="menu potions">
-          {POTIONS.filter((p) => !p.retired).map((p) => {
+          {SOLD.map((p) => {
             const worth = useful(p, needs);
+            const have = wallet.potions?.[p.id] ?? 0;
             return (
-              <li key={p.id}>
-                <button className="dish" onClick={() => quaff(p)} disabled={!canAfford(wallet, p) || !worth} aria-label={`Drink ${p.name} for ${price(p.price)}`}>
+              <li key={p.id} ref={p.id === target ? picked : null} className={p.id === target ? 'target' : undefined}>
+                <div className="dish potion-dish">
                   <span className="dish-art">
                     <Bottle color={p.color} />
+                    {have > 0 && <span className="stock-count">{have}</span>}
                   </span>
                   <b>{p.name}</b>
                   <span className="dish-fx">{p.fill ? p.fill.map((k) => LABEL[k]).join(' ') : p.drain.map((k) => DRAIN_LABEL[k]).join(' ')}</span>
-                  <span className="dish-cost">{worth ? price(p.price) : p.fill ? 'Already full' : 'Already there'}</span>
-                </button>
+                  <span className="potion-acts">
+                    <button className="pill" onClick={() => buy(p)} disabled={!canAfford(wallet, p)} aria-label={`Buy ${p.name} for ${price(p.price)}`}>
+                      {price(p.price)}
+                    </button>
+                    {have > 0 && (
+                      <button className="pill alt" onClick={() => quaff(p)} disabled={!worth} aria-label={`Drink a ${p.name}`}>
+                        {worth ? 'Drink' : p.fill ? 'Full' : 'Already'}
+                      </button>
+                    )}
+                  </span>
+                </div>
               </li>
             );
           })}
@@ -59,9 +86,9 @@ export default function PotionSheet({ wallet, needs, onSay, onClose }) {
 }
 
 // A round flask with a cork, filled with the potion's colour.
-function Bottle({ color }) {
+export function Bottle({ color, size = 56 }) {
   return (
-    <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" focusable="false">
       <rect x="26" y="6" width="12" height="8" rx="2" fill="#b07a4a" />
       <path d="M27 14h10v9a18 18 0 1 1-10 0z" fill="#fff" fillOpacity="0.55" stroke="#4a3428" strokeOpacity="0.35" strokeWidth="2" />
       <path d="M16.5 38a15.5 15.5 0 0 0 31 0z" fill={color} />

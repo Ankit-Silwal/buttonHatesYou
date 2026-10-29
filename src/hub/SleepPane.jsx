@@ -7,6 +7,8 @@ import { faceOf } from '@/profile/needs';
 import { NEEDS, wakesAt, FILTHY_AT } from '@/economy/needs';
 import { roomOf } from '@/economy/house';
 import Hint from './Hint';
+import PotionShelf from './PotionShelf';
+import { drink } from '@/profile/store';
 
 // The bedroom: a dim teen room with the bedside lamp on. Turn the lamp off
 // and he gets into bed and sleeps; turn it on again and he wakes (still
@@ -20,6 +22,18 @@ export default function SleepPane({ needs, wallet, go, active, sky, view, edit, 
   const mins = needs.asleep ? Math.max(0, Math.ceil((wakesAt(needs) - Date.now()) / 60000)) : 0;
 
   const say = (text) => setLine((l) => ({ text, n: l.n + 1 }));
+  // the potions that get him up and going, if he has one
+  const waker = ['potion-energy', 'potion-all'].find((id) => (wallet.potions?.[id] ?? 0) > 0);
+  const exhausted = !needs.asleep && needs.energy < 15;
+  const [hideWake, setHideWake] = useState(false);
+  useEffect(() => {
+    if (active) setHideWake(false); // the offer comes back each visit
+  }, [active, needs.asleep]);
+  function quickWake() {
+    if (waker) {
+      if (drink(waker)) say('WHOA. I am awake. I can hear colours.');
+    } else onPotions?.('potion-energy');
+  }
   useEffect(() => {
     if (quip?.pane === 'sleep') say(quip.text);
   }, [quip]);
@@ -65,14 +79,37 @@ export default function SleepPane({ needs, wallet, go, active, sky, view, edit, 
       lamp={lamp}
       onPoke={() => say(needs.energy < 40 ? 'Tap the lamp. I need a nap.' : 'Do not poke me. Tap the lamp if you must.')}
       hud={note ? <p className="hud-note">{note}</p> : null}
+      extras={
+        (needs.asleep && !hideWake) || exhausted ? (
+          <div className="room-offer" role="status">
+            <p>{needs.asleep ? 'Need him up right now?' : "I'm exhausted. Put me to bed, or give me a potion."}</p>
+            <div className="row">
+              {exhausted && (
+                <button className="pill" onClick={toggleLamp} disabled={filthy}>
+                  Put to bed
+                </button>
+              )}
+              <button className="pill alt" onClick={needs.asleep ? quickWake : () => (waker ? quickWake() : onPotions?.('potion-energy'))}>
+                {waker ? `Drink ${waker === 'potion-all' ? 'the Elixir' : 'a Bottled Nap'}` : 'Buy a potion'}
+              </button>
+              {needs.asleep && (
+                <button className="room-offer-x" onClick={() => setHideWake(true)} aria-label="Let him sleep">
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        ) : null
+      }
       tray={
         <>
           <Hint active={active} show={lampHint} from={filthy ? '.pill.to-bath' : '.rs-lamp'} />
+          <PotionShelf wallet={wallet} needs={needs} onDrink={(p, ok) => say(ok ? p.quip : p.fill ? "I'm already full of that." : 'Already there. Sadly.')} />
           <div className="rs-pills">
             <button className="pill" onClick={onWake} style={{ '--i': 0 }}>
               <span className="ico">⏰</span> {needs.asleep ? 'Wake-up options' : 'Energy boosts'}
             </button>
-            <button className="pill alt" onClick={onPotions} style={{ '--i': 1 }}>
+            <button className="pill alt" onClick={() => onPotions()} style={{ '--i': 1 }}>
               <span className="ico">🧪</span> Potions
             </button>
             <button className="pill house-btn" onClick={onDecorate} style={{ '--i': 2 }}>
