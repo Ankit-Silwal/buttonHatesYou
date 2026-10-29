@@ -1,4 +1,4 @@
-import { START, applyEvent, replay, normalize, chestFor } from '@/economy/rules';
+import { START, applyEvent, replay, normalize, chestFor, nextBoughtChest } from '@/economy/rules';
 import { legacyReplay } from '@/economy/legacy';
 import { newlyReady } from '@/economy/achievements';
 import { chestLoot } from '@/economy/chest';
@@ -172,6 +172,12 @@ export function openChest() {
   const { ready, streak } = chestFor(before, at);
   if (!ready || !earn({ type: 'chest', at })) return null;
   return { ...chestLoot(before.seed, Math.floor(at / 86_400_000), streak), streak };
+}
+// Buys a coin chest and opens it: { path (rarity after each tap), rarity,
+// loot: { coins, diamonds, food, item } }, or null when it can't be afforded.
+export function buyChest() {
+  const got = nextBoughtChest(getProfile().wallet);
+  return earn({ type: 'buychest', at: Date.now() }) ? got : null;
 }
 
 export const buy = (item) => tryRecord({ type: 'buy', item });

@@ -406,6 +406,21 @@ must be later than the last chest's day and at most 7 days old (so a chest
 opened offline still counts, but nobody can backdate a year of them). Days
 played use the same 7-day limit.
 
+**The coin chest** (the "Can't wait? Buy one." row at the bottom of the
+daily chest) costs 500 🪙 and is a `{ type: 'buychest', at }` event. It takes
+5 taps to open, and each tap may bump it up one rarity (6.9% from common,
+14.5% from rare, 12% from epic), which comes out at about 70% common, 22%
+rare, 7% epic and 1% legendary. Common holds 250 to 350 🪙 (40% a snack),
+rare 450 to 600 🪙 (50% a snack, 15% 1 💎), epic 900 to 1200 🪙, 1 💎 and a
+Floppy Disk Waffle, and legendary 500 🪙, 3 💎 and a piece of furniture you
+don't own priced 2000 🪙 or more (or 3000 🪙 and 5 💎 once you own them all).
+On average that's about 473 🪙 of stuff (a 💎 counted as 150 🪙): a little
+under the price, so it's a treat, not a money printer, and about 0.13 💎 a
+chest. Everything, tap by tap, comes from `boughtChest(seed, n, owned)` in
+`src/economy/chest.js`, with `n` the wallet's `stats.boughtChests`, so the
+server pays the same chest; `node scripts/check-economy.mjs` checks the odds
+and the average.
+
 ## Adventure games
 
 The Games screen has two shelves: **Story** (How I Met Your Cursor, The Reason,

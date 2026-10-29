@@ -425,6 +425,57 @@
 @keyframes readySheen { to { background-position: -200% 0; } }
 @keyframes fadeIn { from { opacity: 0; } }
 
+/* ---------- the coin chest: rarities ---------- */
+.chest-art.rarity { --glow: transparent; filter: drop-shadow(0 0 calc(var(--s) * 0.12) var(--glow)); transition: filter 0.3s ease; }
+.chest-art.rarity .chest-body, .chest-art.rarity .chest-lid, .chest-art.rarity .chest-lock { transition: background 0.3s ease, border-color 0.3s ease; }
+.chest-art.rarity-common { --wood: #8a8d9e; --wood-d: #5f6273; --trim: #eceef5; --glow: rgba(255, 255, 255, 0.18); }
+.chest-art.rarity-rare { --wood: #2f6fd6; --wood-d: #1c4592; --trim: #bfe0ff; --glow: rgba(90, 170, 255, 0.75); }
+.chest-art.rarity-epic { --wood: #7b3fd0; --wood-d: #4a2196; --trim: #f1c9ff; --glow: rgba(190, 110, 255, 0.85); }
+.chest-art.rarity-legendary { --wood: #d99a1e; --wood-d: #94600b; --trim: #fff1a8; --glow: rgba(255, 205, 70, 0.95); }
+.chest-art.tapped { animation: chestTap 0.35s ease-out; }
+.coin-chest { --rc: #eceef5; transition: background 0.4s ease; }
+.coin-chest.r-rare { --rc: #8ec8ff; background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(90, 170, 255, 0.25), transparent 70%), linear-gradient(180deg, #1f2c4e, #171a2c); }
+.coin-chest.r-epic { --rc: #d8a6ff; background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(190, 110, 255, 0.3), transparent 70%), linear-gradient(180deg, #2b2450, #171a2c); }
+.coin-chest.r-legendary { --rc: #ffd75e; background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(255, 205, 70, 0.35), transparent 70%), linear-gradient(180deg, #3a2f22, #171a2c); }
+.coin-chest .kicker { color: var(--rc); }
+.coin-chest .chest-rays { background: repeating-conic-gradient(color-mix(in srgb, var(--rc) 55%, transparent) 0 10deg, transparent 10deg 30deg); }
+.coin-chest.closed .chest-hit:not(:disabled) .chest-art:not(.tapped) { animation: chestHop 1.8s ease-in-out infinite; }
+.rarity-burst { position: absolute; left: 50%; top: 55%; pointer-events: none; }
+.rarity-burst i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--rc); box-shadow: 0 0 10px var(--rc); opacity: 0; animation: rarityBurst 0.7s ease-out forwards; }
+.rarity-burst::before { content: ''; position: absolute; left: -90px; top: -90px; width: 180px; height: 180px; border-radius: 50%; box-shadow: 0 0 0 4px var(--rc), 0 0 30px var(--rc); opacity: 0; animation: rarityRing 0.6s ease-out; }
+.tap-dots { display: inline-flex; gap: 8px; }
+.tap-dots i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); transition: background 0.2s ease; }
+.tap-dots i.on { animation: medalPop 0.4s cubic-bezier(0.34, 1.8, 0.64, 1); }
+.tap-dots i.r-common { background: #eceef5; }
+.tap-dots i.r-rare { background: #5aaaff; box-shadow: 0 0 8px #5aaaff; }
+.tap-dots i.r-epic { background: #be6eff; box-shadow: 0 0 8px #be6eff; }
+.tap-dots i.r-legendary { background: #ffcd46; box-shadow: 0 0 10px #ffcd46; }
+.chest-odds { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0; font-size: 13px; }
+.chest-odds span { padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); font-weight: 600; }
+.chest-odds b { opacity: 0.75; font-weight: 700; }
+.chest-odds .r-common { color: #eceef5; }
+.chest-odds .r-rare { color: #8ec8ff; }
+.chest-odds .r-epic { color: #d8a6ff; }
+.chest-odds .r-legendary { color: #ffd75e; }
+.coin-chest-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.coin-chest .pill:disabled { opacity: 0.45; cursor: not-allowed; filter: saturate(0.4); }
+/* the hub's flat pills are light; on the dark chest card a ghost one goes see-through */
+.chest-dialog .chest-card .pill.ghost,
+.chest-dialog .chest-card .pill.ghost:hover:not(:disabled),
+.chest-dialog .chest-card .pill.ghost:active:not(:disabled) { background: rgba(255, 255, 255, 0.08); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.18); }
+.chest-loot li.item { background: rgba(255, 205, 70, 0.14); box-shadow: inset 0 0 0 1px rgba(255, 205, 70, 0.5); color: #fff1c2; }
+.chest-loot .loot-art { flex: none; width: 44px; height: 44px; }
+/* the way in, at the bottom of the daily chest */
+.chest-shop-link { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 6px; padding: 10px 14px; border: 0; border-radius: 16px; background: rgba(255, 205, 70, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 205, 70, 0.3); color: var(--ink); text-align: left; cursor: pointer; transition: background 0.2s ease; }
+.chest-shop-link:hover { background: rgba(255, 205, 70, 0.16); }
+.chest-shop-link:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+.chest-shop-link .chest-art { --s: 40px; margin: 0; flex: none; }
+.chest-shop-link span { display: flex; flex-direction: column; gap: 2px; }
+.chest-shop-link small { color: #ffd98f; font-weight: 700; }
+@keyframes chestTap { 0% { transform: scale(1) rotate(0); } 30% { transform: scale(1.12, 0.9) rotate(-5deg); } 60% { transform: scale(0.96, 1.06) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes rarityRing { 0% { opacity: 0.9; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1); } }
+@keyframes rarityBurst { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(0.5); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(-90px) scale(1.2); } }
+
 /* ---------- small screens ---------- */
 @media (max-width: 720px) {
   .ach-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -440,9 +491,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ach-overview, .ach-grid li, .ach-card, .ach-card.ready::before, .medal-disc, .pill.claim, .ach-burst *, .chest-art, .chest-art *, .chest-fly i,
-  .chest-loot li, .chest-card, .chest-dialog, .hub-perks, .perk-ico, .perk-badge, .ach-ready-line, .streak i {
+  .chest-loot li, .chest-card, .chest-dialog, .hub-perks, .perk-ico, .perk-badge, .ach-ready-line, .streak i,
+  .tap-dots i {
     animation: none !important;
     transition: none !important;
   }
-  .chest-fly { display: none; }
+  .chest-fly, .rarity-burst { display: none; }
 }
