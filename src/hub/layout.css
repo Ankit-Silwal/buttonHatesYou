@@ -1,0 +1,187 @@
+/* =====================================================================
+   Saved layouts of the home screen (layout.js, LayoutEditor.jsx).
+   A moved control is listed in the hub's `data-lay` and gets
+   --lay-<id>-x/-y (0..100). It sits that far along the free space of its
+   container, `--g` from the edges, so it can't leave the screen:
+     left = g + (100% - 2g) * x/100,  translate = -x% of its own width
+   (and the same for y). The gutters match CONTROLS in layout.js.
+   ===================================================================== */
+
+.hub[data-lay~='top'] > .hub-top { --x: var(--lay-top-x); --y: var(--lay-top-y); --g: 0px; }
+.hub[data-lay~='rings'] > .need-rings { --x: var(--lay-rings-x); --y: var(--lay-rings-y); --g: 8px; }
+.hub[data-lay~='line'] .rs-line { --x: var(--lay-line-x); --y: var(--lay-line-y); --g: 8px; }
+.hub[data-lay~='mic'] .mic-btn { --x: var(--lay-mic-x); --y: var(--lay-mic-y); --g: 8px; }
+.hub[data-lay~='tray'] .rs-tray { --x: var(--lay-tray-x); --y: var(--lay-tray-y); --g: 4px; }
+.hub[data-lay~='dock'] > .dock { --x: var(--lay-dock-x); --y: var(--lay-dock-y); --g: 10px; }
+
+.hub[data-lay~='top'] > .hub-top,
+.hub[data-lay~='rings'] > .need-rings,
+.hub[data-lay~='line'] .rs-line,
+.hub[data-lay~='mic'] .mic-btn,
+.hub[data-lay~='tray'] .rs-tray,
+.hub[data-lay~='dock'] > .dock {
+  position: absolute;
+  left: calc(var(--g) + (100% - 2 * var(--g)) * var(--x) / 100);
+  top: calc(var(--g) + (100% - 2 * var(--g)) * var(--y) / 100);
+  right: auto;
+  bottom: auto;
+  margin: 0;
+  translate: calc(var(--x) * -1%) calc(var(--y) * -1%);
+}
+/* the bubble's own centring and entrance used `transform` */
+.hub[data-lay~='line'] .rs-line { transform: none; animation-name: layFade; }
+.hub[data-lay~='tray'] .rs-tray { width: max-content; max-width: calc(100% - 8px); }
+.hub[data-lay~='dock'] > .dock { width: min(560px, calc(100% - 20px)); }
+@keyframes layFade { from { opacity: 0; } }
+
+/* ---------- edit mode ---------- */
+.hub[data-lay-edit] > .hub-top { right: auto; } /* just the chips, not the whole top edge */
+.hub[data-lay-edit] :is(.hub-top, .need-rings, .rs-line, .mic-btn, .rs-tray, .dock) {
+  outline: 2px dashed var(--btn);
+  outline-offset: 3px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.hub[data-lay-edit] :is(.hub-top, .need-rings, .rs-tray, .dock) * { cursor: grab; }
+.hub[data-lay-edit] .lay-dragging,
+.hub[data-lay-edit] .lay-dragging * { cursor: grabbing; }
+.hub[data-lay-edit] .lay-dragging { outline-style: solid; z-index: 45; }
+.hub[data-lay-edit] .rs-line { visibility: visible; pointer-events: auto; }
+.hub[data-lay-edit] .rs-line:empty::before { content: '…'; }
+.hub[data-lay-edit] .rs-tray .pill { animation: none; }
+
+.lay-bar {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 58%; /* over him: he doesn't move */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100vw - 16px);
+  padding: 6px;
+  translate: -50% 0;
+  border: 1px solid rgba(74, 52, 40, 0.12);
+  border-radius: 18px;
+  background: var(--cream);
+  box-shadow: 0 10px 28px -10px rgba(74, 52, 40, 0.5);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  animation: layBarIn 0.25s ease-out;
+}
+.lay-bar.low { top: auto; bottom: calc(var(--dock-h, 80px) + 14px); }
+.lay-save { display: flex; align-items: center; gap: 4px; padding: 0 4px 0 8px; border-right: 1px solid rgba(74, 52, 40, 0.12); }
+.lay-label, .lay-note { padding: 0 6px; color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
+.lay-slot, .lay-btn {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(74, 52, 40, 0.07);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.lay-slot { padding: 0; }
+.lay-slot.on { box-shadow: inset 0 0 0 2px var(--btn); color: var(--btn-dark); }
+.lay-slot.saved { background: #4caf6a; color: #fff; box-shadow: none; }
+.lay-btn.main { background: var(--btn); color: #fff; }
+.lay-btn.warn { background: var(--btn-dark); color: #fff; }
+.lay-btn.icon { min-width: 36px; padding: 0; }
+.lay-btn:disabled { opacity: 0.4; cursor: default; }
+.lay-slot:focus-visible, .lay-btn:focus-visible { outline: 2px solid var(--btn); outline-offset: 2px; }
+@media (hover: hover) {
+  .lay-slot:hover, .lay-btn:not(.main):not(.warn):hover:not(:disabled) { background: rgba(74, 52, 40, 0.13); }
+}
+@keyframes layBarIn { from { opacity: 0; translate: -50% 10px; } }
+@media (max-width: 400px) {
+  .lay-bar { gap: 4px; padding: 5px; }
+  .lay-label { display: none; }
+  .lay-save { padding-left: 2px; }
+  .lay-slot, .lay-btn { min-width: 38px; padding: 0 10px; }
+  .lay-slot { padding: 0; }
+}
+
+/* ---------- Settings: the layout list (ProfilePage.jsx) ---------- */
+.pf-card.pf-layout { margin-top: 14px; }
+.pf-layout h2 { margin: 0 0 8px; font-size: 18px; }
+.pf-lay-list { display: flex; flex-direction: column; margin: 0; padding: 0; border: 0; }
+.pf-lay-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-top: 1px solid rgba(74, 52, 40, 0.09); }
+.pf-lay-row:first-of-type { border-top: 0; }
+.pf-lay-pick { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; cursor: pointer; }
+.pf-lay-pick.empty { cursor: default; }
+.pf-lay-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.pf-lay-radio { flex: none; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 2px #cdbba5; transition: box-shadow 0.15s; }
+.pf-lay-pick input:checked + .pf-lay-radio { box-shadow: inset 0 0 0 7px var(--btn); }
+.pf-lay-pick input:focus-visible + .pf-lay-radio { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.pf-lay-name { display: flex; flex-direction: column; min-width: 0; }
+.pf-lay-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-lay-name span { color: var(--ink-soft); font-size: 13px; }
+.pf-lay-pick.empty .pf-lay-name b { color: var(--ink-soft); }
+.pf-lay-thumb {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f3e4cf 62%, #e2c9a8 62%);
+  box-shadow: inset 0 0 0 1.5px rgba(74, 52, 40, 0.16);
+}
+.pf-lay-thumb i {
+  position: absolute;
+  left: calc(2px + (100% - 4px) * var(--x) / 100);
+  top: calc(2px + (100% - 4px) * var(--y) / 100);
+  width: var(--w);
+  height: var(--h);
+  translate: calc(var(--x) * -1%) calc(var(--y) * -1%);
+  border-radius: 2px;
+  background: var(--ink);
+  opacity: 0.55;
+}
+.pf-lay-thumb i.mic, .pf-lay-thumb i.rings { border-radius: 99px; }
+.pf-lay-thumb i.moved { background: var(--btn); opacity: 0.9; }
+.pf-lay-pick.empty .pf-lay-thumb { opacity: 0.45; }
+.pf-lay-end { display: flex; align-items: center; gap: 4px; }
+.pf-lay-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 16px;
+  cursor: pointer;
+}
+.pf-lay-icon:hover { background: rgba(74, 52, 40, 0.07); color: var(--ink); }
+.pf-lay-icon:focus-visible { outline: 3px solid var(--mustard); outline-offset: 1px; }
+.pf-lay-rename { display: flex; flex: 1; gap: 6px; min-width: 0; }
+.pf-lay-rename input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(74, 52, 40, 0.06);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+.pf-lay-rename input:focus { outline: none; box-shadow: inset 0 0 0 2.5px var(--btn); }
+.pf-layout .pf-lay-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; text-decoration: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lay-bar { animation: none; }
+  .pf-lay-radio { transition: none; }
+}

@@ -23,6 +23,8 @@ import BathPane from '@/hub/BathPane';
 import BuySheet from '@/hub/BuySheet';
 import WakeSheet from '@/hub/WakeSheet';
 import PotionSheet from '@/hub/PotionSheet';
+import LayoutEditor from '@/hub/LayoutEditor';
+import { useHubLayout } from '@/hub/layout';
 import '@/hub/hub-panes.css';
 import '@/house/chip.css';
 import '@/hub/flat.css';
@@ -131,6 +133,7 @@ export default function Hub({ initial = 'home' }) {
   const me = useMe();
   const calmTimer = useRef(0);
   const pager = useRef(null);
+  const layout = useHubLayout(); // where the controls sit (Settings → Layout)
 
   const say = useCallback((text, mood = 'calm') => {
     setLine((l) => ({ text, mood, n: l.n + 1 }));
@@ -328,7 +331,7 @@ export default function Hub({ initial = 'home' }) {
   const equipped = preview ?? wearing;
 
   return (
-    <main className="hub" data-panel={panel ?? undefined} data-at={PANES[at]?.id}>
+    <main className="hub" data-panel={panel ?? undefined} data-at={PANES[at]?.id} {...layout}>
       <div className={`pager ${panel ? 'locked' : ''}`} ref={pager} onScroll={onScroll}>
         <section className="pane pane-games" aria-label="Games" inert={at !== 0}>
           <GamesPane needs={needs} equipped={wearing} go={go} active={at === 0} />
@@ -438,6 +441,7 @@ export default function Hub({ initial = 'home' }) {
       {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} target={potionFor} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
       {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} moved={moved} onClose={close} />}
 
+      <LayoutEditor />
       <Loading done={ready && needs.ready} />
     </main>
   );

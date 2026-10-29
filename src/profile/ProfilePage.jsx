@@ -18,6 +18,7 @@ import { useWorn } from './undress';
 import { readyCount } from '@/economy/achievements';
 import { isCode, usedCode } from '@/economy/codes';
 import { redeemCode } from './store';
+import LayoutSettings from '@/hub/LayoutSettings';
 import '@/hub/flat.css';
 import './profile.css';
 
@@ -77,6 +78,7 @@ export default function ProfilePage({ initial = 'me' }) {
       {tab === 'settings' && (
         <>
           <SettingsTab me={me} />
+          <LayoutSettings />
           <CodesCard profile={profile} />
         </>
       )}
