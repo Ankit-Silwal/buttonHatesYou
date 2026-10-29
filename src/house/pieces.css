@@ -1,0 +1,116 @@
+/* Free-placed furniture (src/house/Pieces.jsx). A band is the strip of the
+   room a kind of piece can go in; a piece's anchor sits at x%, y% of it
+   (the top edge for things that hang, the bottom edge for things that
+   stand). The bands have no z-index, so pieces stack with the rest of the
+   room, in DOM order: back to front. */
+
+.pz, .pz-band { position: absolute; pointer-events: none; }
+.pz { inset: 0; }
+.pz-band { left: 0; right: 0; }
+
+.pz-piece {
+  --pw: calc(var(--w) * var(--pu, 1cqw) * var(--s, 1));
+  position: absolute;
+  z-index: 2;
+  width: var(--pw);
+  left: clamp(calc(var(--pw) / 2), var(--x), calc(100% - var(--pw) / 2));
+  transform: translate(-50%, var(--ty, 0));
+  -webkit-tap-highlight-color: transparent;
+}
+.pz-piece .art { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.pz-piece:not(.pz-glow) .art { filter: drop-shadow(0 3px 3px rgba(60, 30, 10, 0.22)); }
+.pz-piece[data-band='floor'], .pz-piece[data-band='counter'] { --ty: -100%; }
+.pz-piece[data-band='floor'], .pz-piece[data-band='rug'] { --s: calc(0.95 + var(--y) * 0.0025); } /* a touch bigger nearer the front */
+.pz-piece[data-band='rug'] { z-index: 1; }
+.pz-piece[data-band='wall'] .art { filter: drop-shadow(0 4px 4px rgba(40, 20, 10, 0.25)); }
+.pz-piece.pz-glow { z-index: 6; pointer-events: none; }
+
+/* ---------- decorating: drag them around ---------- */
+.pz[data-edit] .pz-piece:not(.pz-glow) { pointer-events: auto; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.pz[data-edit] .pz-piece:not(.pz-glow)::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 10px;
+  border: 1.5px dashed rgba(255, 255, 255, 0);
+  transition: border-color 0.15s, background 0.15s;
+  pointer-events: none;
+}
+.pz[data-edit] .pz-piece:hover::before { border-color: rgba(255, 255, 255, 0.55); }
+.pz[data-edit] .pz-piece.is-sel { z-index: 8; }
+.pz[data-edit] .pz-piece.is-sel::before { border-color: var(--mustard, #f0c36d); background: rgba(240, 195, 109, 0.1); }
+.pz[data-edit] .pz-piece:focus-visible { outline: none; }
+.pz[data-edit] .pz-piece:focus-visible::before { border-style: solid; border-color: var(--mustard, #f0c36d); }
+.pz-piece.is-drag { cursor: grabbing; z-index: 9; }
+.pz-piece.is-drag .art { filter: drop-shadow(0 10px 10px rgba(40, 20, 10, 0.35)); transform: scale(1.04); transform-origin: 50% 100%; transition: transform 0.12s; }
+.pz-x {
+  position: absolute;
+  right: -14px;
+  top: -14px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #3b2a20;
+  color: #ffe9b8;
+  font: 700 18px/1 system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  animation: pzPop 0.18s ease-out;
+}
+.pz-x:focus-visible { outline: 3px solid var(--mustard, #f0c36d); outline-offset: 2px; }
+.pz-piece[data-band='floor'] .pz-x, .pz-piece[data-band='counter'] .pz-x { top: -14px; }
+@keyframes pzPop { from { transform: scale(0.4); opacity: 0; } }
+
+/* previewing a piece from the decorating sheet */
+.pz-piece.is-preview { z-index: 9; }
+.pz-piece.is-preview::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 12px;
+  border: 2px dashed var(--mustard, #f0c36d);
+  background: rgba(240, 195, 109, 0.12);
+  pointer-events: none;
+  animation: rsPreview 1.4s ease-in-out infinite alternate;
+}
+.pz-piece.is-preview:not(.is-drag) .art { animation: rsDrop 0.5s cubic-bezier(0.34, 1.5, 0.64, 1); }
+.pz-piece[data-band='ceiling'] .preview-tag, .pz-piece[data-band='wall'] .preview-tag { top: auto; bottom: -10px; transform: translate(-50%, 100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-piece .art, .pz-piece::before, .pz-piece::after, .pz-x { animation: none !important; transition: none !important; }
+  .pz-piece.is-drag .art { transform: none; }
+}
+
+/* ---------- the home screen's rooms (RoomScene, scene.css) ---------- */
+.rs-scene { --pu: var(--u); }
+.rs-scene .pz-band[data-band='ceiling'] { top: 0; height: 0; }
+.rs-scene .pz-band[data-band='wall'] { top: 64px; height: max(0px, calc(var(--hz) - var(--hs) * 1.1 - 64px)); }
+.rs-scene .pz-band[data-band='counter'] { left: var(--cs, 30%); right: auto; width: var(--cw, 40cqw); top: calc(var(--hz) - var(--hs) * 0.47); height: 0; }
+.rs-scene .pz-band[data-band='floor'] { top: calc(var(--hz) + var(--hs) * 0.14); bottom: 6px; }
+.rs-scene .pz-band[data-band='rug'] { top: calc(var(--hz) - var(--hs) * 0.2); bottom: calc(var(--hs) * 0.3); }
+/* strings of lights span the ceiling */
+.rs-scene .pz-piece:is([data-item='lights-fairy'], [data-item='string-lights'], [data-item='led-strip']) { --pw: min(100cqw, calc(var(--hs) * 5)); top: 50px !important; }
+.rs-scene .pz-piece[data-item='led-strip'] { top: 56px !important; }
+/* far enough forward, a piece stands in front of the button; it is then
+   above the room's night tint, so it dims itself */
+.rs-scene .pz-piece.is-front { z-index: 8; }
+.rs:is([data-sky='night'], [data-kind='bedroom']) .pz-piece.is-front:not(.pz-glow) .art { filter: brightness(0.72) drop-shadow(0 3px 3px rgba(60, 30, 10, 0.22)); }
+/* decorating: he lets you reach what is behind him */
+.rs:has(.pz[data-edit]) .rs-stage { pointer-events: none; opacity: 0.8; transition: opacity 0.2s; }
+.rs:has(.pz[data-edit]) .rs-stage * { pointer-events: none; }
+.rs:has(.pz[data-edit]) .rs-lamp { z-index: 1; pointer-events: none; }
+.rs[data-asleep] .pz-piece:is([data-item='lights-fairy'], [data-item='neon-sign'], [data-item='lamp-lava'], [data-item='disco-ball'], [data-item='led-strip'], [data-item='desk-gaming'], [data-item='string-lights']) { z-index: 6; }
+
+/* ---------- /house (Room.jsx, room.css) ---------- */
+.hs-room .pz-band[data-band='ceiling'] { top: 0; height: 0; }
+.hs-room .pz-band[data-band='wall'] { top: 6%; height: 34%; }
+.hs-room .pz-band[data-band='counter'] { left: 40%; right: auto; width: 40%; top: calc(64% - 13.4cqw); height: 0; }
+.hs-room .pz-band[data-band='floor'] { top: 66%; bottom: 3%; }
+.hs-room .pz-band[data-band='floor'] .pz-piece { z-index: 4; }
+.hs-room .pz-band[data-band='rug'] { top: 70%; bottom: 8%; }
+.hs-room .pz-piece:is([data-item='lights-fairy'], [data-item='string-lights']) { --pw: 100cqw; }

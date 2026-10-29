@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Wallet from '@/components/Wallet';
 import { useNeeds, faceOf } from '@/profile/needs';
 import { ROOMS, ROOM_IDS, roomOf } from '@/economy/house';
+import { placePiece, unplacePiece } from '@/profile/store';
 import Room, { skyOf } from './Room';
 import DecorSheet from './DecorSheet';
 
@@ -52,6 +53,18 @@ export default function House() {
     say(pick(MOOD_LINES[needs.mood] ?? MOOD_LINES.calm), 4200);
   }, [needs.ready, needs.mood, say]);
 
+  // With the sheet open the furniture can be dragged around the room.
+  const [moved, setMoved] = useState(null);
+  const editor = useMemo(
+    () => ({
+      onMove: (item, x, y) => {
+        if (!placePiece(item, x, y, room)) setMoved({ item, x, y, n: Date.now() });
+      },
+      onRemove: (item) => unplacePiece(item, room),
+    }),
+    [room]
+  );
+
   const face = faceOf(needs);
   const house = view?.house ?? roomOf(wallet, room);
 
@@ -90,6 +103,7 @@ export default function House() {
             sky={sky}
             house={house}
             preview={view?.at}
+            edit={open ? editor : null}
             equipped={wallet.equipped}
             mood={face.mood}
             sleepy={face.sleepy}
@@ -108,7 +122,7 @@ export default function House() {
         )}
       </div>
 
-      {open && <DecorSheet key={room} room={room} wallet={wallet} onPreview={setView} onClose={() => setOpen(false)} fullLink={false} />}
+      {open && <DecorSheet key={room} room={room} wallet={wallet} onPreview={setView} moved={moved} onClose={() => setOpen(false)} fullLink={false} />}
     </main>
   );
 }

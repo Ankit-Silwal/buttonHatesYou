@@ -3,11 +3,11 @@
 import Avatar from '@/components/Avatar';
 import { Art, ART } from './art';
 import { HOUSE_ITEM, ROOMS } from '@/economy/house';
+import Pieces from './Pieces';
 import './room.css';
 
-// Paint order: things further back first.
-const ORDER = ['ceiling', 'wall-left', 'wall-right', 'corner', 'bed', 'nightstand', 'counter', 'rug', 'floor-right', 'floor-left'];
-const BEHIND = new Set(['ceiling', 'wall-left', 'wall-right', 'corner', 'bed', 'nightstand', 'counter', 'rug']);
+// The fixed spots, in paint order (the rest of the furniture is free-placed, see Pieces).
+const ORDER = ['bed', 'nightstand'];
 
 // Morning / day / evening / night for the windows and the lighting.
 export function skyOf(h) {
@@ -184,14 +184,15 @@ function WallScene({ wall }) {
 
 // The room: wallpaper, floor, furniture in its spots, and the button.
 //   room      'living' | 'kitchen' | 'bedroom' (which spots it has, what it adds)
-//   house     { wall, floor, place } to draw (already including any preview)
-//   preview   the spot (or 'wall' / 'floor') being previewed, for the outline
+//   house     { wall, floor, place, items } to draw (already including any preview)
+//   preview   the spot (or 'wall' / 'floor', or a free piece's item id) being previewed
+//   edit      decorating: { onMove, onRemove } makes the furniture draggable (see Pieces)
 //   mood, asleep, fx, eating: what the button is up to. Asleep = night: the
 //             room dims; with a bed he is tucked into it, without one he dozes
 //   lamp      { on, label, onToggle }: makes the nightstand lamp a
 //             real button (the bedroom turns it off to go to sleep)
 //   sky       'day' | 'dusk' | 'dawn' | 'night': what the windows show
-export default function Room({ room = 'living', sky, sleepy, house, preview, equipped, mood, dirty, grime, asleep, fx, eating, offer, line, lamp, onPoke, onPick }) {
+export default function Room({ room = 'living', sky, sleepy, house, preview, equipped, mood, dirty, grime, asleep, fx, eating, offer, line, lamp, onPoke, onPick, edit }) {
   const spots = ROOMS[room].spots;
   const placed = ORDER.filter((s) => spots.includes(s) && house.place[s] && ART[house.place[s]]);
   const bed = house.place.bed;
@@ -221,9 +222,10 @@ export default function Room({ room = 'living', sky, sleepy, house, preview, equ
       <i className="hs-shade" />
       {room === 'kitchen' && <KitchenFixtures />}
 
-      {placed.filter((s) => BEHIND.has(s)).map((s) => (
+      {placed.map((s) => (
         <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} onPick={onPick} />
       ))}
+      <Pieces items={house.items} preview={preview} edit={edit} />
 
       <div className={`resident ${eating ? 'chomp' : ''}`} {...poke}>
         <i className="res-shadow" />
@@ -244,15 +246,11 @@ export default function Room({ room = 'living', sky, sleepy, house, preview, equ
         {fx === 'hiccup' && <i className="fx-hic">hic!</i>}
       </div>
 
-      {placed.filter((s) => !BEHIND.has(s)).map((s) => (
-        <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} onPick={onPick} />
-      ))}
-
       <i className="hs-dim" />
       {room === 'bedroom' && <i className="hs-warm" />}
       {room === 'bedroom' && <i className="hs-moonlight" />}
       {placed.map((s) => (s === 'nightstand' && !lampOn ? null : <Glow key={s} spot={s} id={house.place[s]} />))}
-      {house.place.ceiling === 'disco-ball' && <i className="disco-specks" />}
+      {house.items?.some((p) => p.item === 'disco-ball') && <i className="disco-specks" />}
 
       {lamp && lampId && ART[lampId] && (
         <button

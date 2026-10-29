@@ -166,18 +166,94 @@ export const HOUSE_ITEM = Object.fromEntries(HOUSE_ITEMS.map((i) => [i.id, i]));
 // bed and a bedside lamp so nobody is ever stuck without a way to sleep.
 // `DEFAULT_HOUSE` is the living room (wallet.house, as it was before there
 // were other rooms); the others are in wallet.rooms.
+// `place` only holds the fixed spots (FIXED_SPOTS: the bed and the
+// nightstand); every other piece is free-placed, in `items` (see below).
+const NONE = Object.freeze([]);
 export const DEFAULT_HOUSE = Object.freeze({
   wall: 'wall-cozy',
   floor: 'floor-oak',
   place: Object.freeze({}),
+  items: NONE,
 });
 export const DEFAULT_ROOMS = Object.freeze({
-  kitchen: Object.freeze({ wall: 'wall-kitchen-tile', floor: 'floor-kitchen-checker', place: Object.freeze({}) }),
-  bedroom: Object.freeze({ wall: 'wall-bedroom-blue', floor: 'floor-oak', place: Object.freeze({ bed: 'bed-basic', nightstand: 'lamp-bedside' }) }),
+  kitchen: Object.freeze({ wall: 'wall-kitchen-tile', floor: 'floor-kitchen-checker', place: Object.freeze({}), items: NONE }),
+  bedroom: Object.freeze({ wall: 'wall-bedroom-blue', floor: 'floor-oak', place: Object.freeze({ bed: 'bed-basic', nightstand: 'lamp-bedside' }), items: NONE }),
 });
 
 // A room's wallpaper, floor and furniture out of a wallet.
 export const roomOf = (wallet, room) => (room === 'living' ? wallet.house : wallet.rooms?.[room]) ?? (room === 'living' ? DEFAULT_HOUSE : DEFAULT_ROOMS[room]);
+
+/* ---------------------- free-placed furniture ----------------------
+   A room's furniture (all but its bed and nightstand) is a list of pieces
+   `items: [{ item, x, y }]`, at most MAX_PIECES, one of each item. x and y
+   are percent (0-100) of the piece's *band*, the strip of the room where
+   that kind of piece can go, worked out from the spots it used to fit:
+     ceiling  hangs from the top: only x counts
+     wall     on the wall: x across, y from high up (0) to low (100)
+     counter  on the kitchen counter: x along it, y is 0
+     floor    stands on the floor: y from the back wall (0) to the front (100)
+     rug      lies on the floor, under everything else
+   The renderers (src/house/Pieces.jsx) draw each band from the room's own
+   geometry, so the same numbers look right at any size. */
+export const MAX_PIECES = 10;
+export const FIXED_SPOTS = ['bed', 'nightstand'];
+export const BANDS = ['rug', 'ceiling', 'wall', 'counter', 'floor']; // back to front
+export const SPOT_BAND = { ceiling: 'ceiling', 'wall-left': 'wall', 'wall-right': 'wall', counter: 'counter', corner: 'floor', 'floor-left': 'floor', 'floor-right': 'floor', rug: 'rug' };
+// Where the old named spots are, as band positions (old wallets and old
+// queued `decor` events land here).
+export const SPOT_AT = Object.freeze({
+  ceiling: { x: 50, y: 0 },
+  'wall-left': { x: 32, y: 20 },
+  'wall-right': { x: 70, y: 20 },
+  counter: { x: 70, y: 0 },
+  corner: { x: 94, y: 0 },
+  'floor-left': { x: 14, y: 6 },
+  'floor-right': { x: 82, y: 6 },
+  rug: { x: 50, y: 0 },
+});
+const FLAT = new Set(['ceiling', 'counter']); // bands where only x counts
+
+// A piece's band, or null when it isn't free-placed (walls, floors, beds, lamps).
+export function bandOf(item) {
+  if (item?.kind !== 'furniture') return null;
+  const s = item.spots.find((s) => SPOT_BAND[s]);
+  return s ? SPOT_BAND[s] : null;
+}
+// Whether a piece can be free-placed in a room: it names the room, and the
+// room has a spot of its band (only the kitchen has a counter).
+export const fitsRoom = (item, room) => !!bandOf(item) && item.rooms.includes(room) && item.spots.some((s) => SPOT_BAND[s] && ROOMS[room]?.spots.includes(s));
+
+// A position made safe: numbers only, clamped to the band, 1 decimal.
+// Null when x or y is not a finite number.
+export function clampAt(band, x, y) {
+  if (typeof x !== 'number' || !Number.isFinite(x)) return null;
+  if (!FLAT.has(band) && (typeof y !== 'number' || !Number.isFinite(y))) return null;
+  const c = (v) => Math.round(Math.min(100, Math.max(0, v)) * 10) / 10;
+  return { x: c(x), y: FLAT.has(band) ? 0 : c(y) };
+}
+
+// A free spot for a piece being added: its old spot if nobody is near it,
+// otherwise the candidate furthest from the other pieces of its band.
+const GRID = {
+  ceiling: [[50, 0], [25, 0], [75, 0], [12, 0], [88, 0], [38, 0], [62, 0]],
+  wall: [[32, 20], [70, 20], [14, 30], [88, 30], [50, 8], [22, 60], [80, 60], [50, 45]],
+  counter: [[70, 0], [30, 0], [50, 0], [12, 0], [88, 0]],
+  floor: [[14, 6], [82, 6], [30, 40], [70, 40], [50, 80], [10, 75], [90, 75], [94, 0], [50, 10]],
+  rug: [[50, 0], [30, 50], [70, 50], [50, 70]],
+};
+export function freeSpotFor(item, items = []) {
+  const band = bandOf(item);
+  if (!band) return null;
+  const others = items.filter((p) => p.item !== item.id && bandOf(HOUSE_ITEM[p.item]) === band);
+  const own = item.spots.filter((s) => SPOT_AT[s]).map((s) => [SPOT_AT[s].x, SPOT_AT[s].y]);
+  let best = null;
+  for (const [x, y] of [...own, ...GRID[band]]) {
+    const gap = Math.min(Infinity, ...others.map((p) => Math.hypot(p.x - x, (p.y - y) * 0.6)));
+    if (gap >= 18) return { x, y };
+    if (!best || gap > best.gap) best = { x, y, gap };
+  }
+  return { x: best.x, y: best.y };
+}
 
 // Silly things a button eats. Bought and eaten in one go. `hunger`/`energy`
 // are how much they restore; `fx` is a funny side effect the house plays.

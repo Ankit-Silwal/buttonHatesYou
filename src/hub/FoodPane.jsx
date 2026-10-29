@@ -18,7 +18,7 @@ const FULL = ["I'm stuffed. Absolutely stuffed.", 'One more bite and I pop.'];
 // the whole menu. When he's broke the cheapest food is free (FREE_FOOD), so
 // he first makes you admit you're poor, then hands it over with a Free tag. `view` is what the decorating sheet is trying out in this
 // room; `onDecorate` and `onBuy` open the sheets.
-export default function FoodPane({ needs, wallet, active, sky, view, quip, onDecorate, onBuy, onPotions }) {
+export default function FoodPane({ needs, wallet, active, sky, view, edit, quip, onDecorate, onBuy, onPotions }) {
   const face = faceOf(needs);
   const [eating, setEating] = useState(null); // { id, n }
   const [fx, setFx] = useState(null);
@@ -87,6 +87,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
       sky={sky}
       house={view?.house ?? roomOf(wallet, 'kitchen')}
       preview={view?.at}
+      edit={edit}
       equipped={wallet.equipped}
       mood={eating ? 'scared' : face.mood}
       sleepy={face.sleepy}
