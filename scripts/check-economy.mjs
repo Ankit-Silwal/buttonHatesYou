@@ -276,6 +276,13 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.deepEqual([p4.needs.hunger, p4.needs.energy, p4.needs.dirt, p4.needs.asleep, p4.diamonds], [100, 100, 0, false, 3]);
   assert.equal(applyEvent({ ...worn, coins: 100 }, { type: 'potion', item: 'potion-energy', at: T0 }), null, 'cannot afford a potion');
   assert.equal(applyEvent(worn, { type: 'potion', item: 'nope', at: T0 }), null, 'unknown potion');
+  // and the nasty ones drain them: never refilling what is already lower
+  const fresh = { ...worn, coins: 5000, needs: { ...worn.needs, hunger: 90, energy: 90, dirt: 0 } };
+  const starved = applyEvent(fresh, { type: 'potion', item: 'potion-starve', at: T0 });
+  assert.deepEqual([starved.needs.hunger, starved.needs.energy, starved.needs.dirt, starved.coins], [10, 90, 0, 4100]);
+  assert.equal(applyEvent(fresh, { type: 'potion', item: 'potion-yawn', at: T0 }).needs.energy, 10);
+  assert.equal(applyEvent(fresh, { type: 'potion', item: 'potion-mud', at: T0 }).needs.dirt, 90);
+  assert.equal(applyEvent({ ...fresh, needs: { ...fresh.needs, hunger: 4 } }, { type: 'potion', item: 'potion-starve', at: T0 }).needs.hunger, 4);
 
   // broke: the cheapest food is free, nothing else is
   const broke = { ...worn, coins: 5, diamonds: 0, pantry: {} };

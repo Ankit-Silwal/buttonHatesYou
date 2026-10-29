@@ -1,5 +1,5 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
-import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, FREE_FOOD, isBroke, roomOf } from './house';
+import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, DRAINED, DRAINED_DIRT, FREE_FOOD, isBroke, roomOf } from './house';
 import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
@@ -217,7 +217,9 @@ function applyLegacyReward(wallet, ev) {
                                        energy boost: it wakes him if he's asleep,
                                        and works while he's awake too
    { id, type: 'potion', item, at }    bought and drank a POTIONS potion: fills
-                                       its needs to 100 (dirt to 0); wakes him
+                                       its needs to 100 (dirt to 0), or drains
+                                       them (hunger/energy to DRAINED, dirt to
+                                       DRAINED_DIRT); wakes him
    { id, type: 'play', kind, at }      started a game: costs PLAY_COST[kind] energy
                                        and adds PLAY_DIRT[kind] dirt
    { id, type: 'wash', at }            soaped and showered: no more dirt
@@ -339,15 +341,17 @@ function applyHouseEvent(wallet, ev, now) {
     const potion = own(POTION, ev.item);
     const needs = potion && needsFor(wallet, ev, now);
     if (!needs || !canAfford(wallet, potion)) return null;
-    const fill = potion.fill;
+    const fill = potion.fill ?? [];
+    const drain = potion.drain ?? [];
+    const level = (k, v, full, empty) => (fill.includes(k) ? full : drain.includes(k) ? empty : v);
     return {
       ...pay(wallet, potion.price),
       needs: {
         ...needs,
         asleep: false,
-        hunger: fill.includes('hunger') ? 100 : needs.hunger,
-        energy: fill.includes('energy') ? 100 : needs.energy,
-        dirt: fill.includes('clean') ? 0 : needs.dirt,
+        hunger: level('hunger', needs.hunger, 100, Math.min(needs.hunger, DRAINED)),
+        energy: level('energy', needs.energy, 100, Math.min(needs.energy, DRAINED)),
+        dirt: level('clean', needs.dirt, 0, Math.max(needs.dirt, DRAINED_DIRT)),
       },
     };
   }
