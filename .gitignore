@@ -49,3 +49,6 @@ desktop.ini
 
 # The Android app lives in its own repo (button-hates-you-android)
 /button-hates-you-android/
+
+# agent worktrees
+/.claude/worktrees/
