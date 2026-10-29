@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useProfile } from '@/profile/useProfile';
 import { readyCount } from '@/economy/achievements';
 import Icon from '@/components/Icon';
-import { ChestDialog, useChest } from './Chest';
+import { ChestArt, ChestDialog, useChest } from './Chest';
 
 // The trophy and the daily chest on the home screen, under the wallet:
 // a badge counts the achievement levels waiting to be claimed, and the chest
@@ -52,6 +52,25 @@ export default function HubPerks({ compact = false }) {
           {chest?.ready && <span className="perk-badge">!</span>}
         </button>
       </div>
+      {open && <ChestDialog onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+// The daily chest on its own, drawn (it sits after the need rings).
+export function ChestButton() {
+  const { ready } = useProfile();
+  const chest = useChest();
+  const [open, setOpen] = useState(false);
+  if (!ready) return null;
+  return (
+    <>
+      <button type="button" className={`chest-btn ${chest?.ready ? 'hot' : ''}`} onClick={() => setOpen(true)} aria-label={chest?.ready ? 'Daily chest: ready to open' : 'Chests'} title="Chests">
+        <span className="chest-mini">
+          <ChestArt state={chest?.ready ? 'closed' : 'open'} />
+        </span>
+        {chest?.ready && <span className="perk-badge">!</span>}
+      </button>
       {open && <ChestDialog onClose={() => setOpen(false)} />}
     </>
   );

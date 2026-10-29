@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Art } from '@/house/art';
 import RoomScene from './RoomScene';
-import { NeedHud } from './NeedBar';
 import { feed } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { FOODS, FREE_FOOD, isBroke, roomOf } from '@/economy/house';
@@ -95,9 +94,9 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
       asleep={needs.asleep}
       fx={fx}
       eating={eating}
+      pose={needs.hunger < 25 && !needs.asleep && !eating ? 'tummy' : undefined}
       line={line}
       onPoke={() => say(needs.asleep ? 'Zzz…' : stock.length ? 'Tap something from the fridge, not me.' : 'The fridge is empty. Buy me something.')}
-      hud={<NeedHud kind="hunger" icon="🍔" label="Hunger" value={needs.hunger} />}
       tray={
         <>
           {stock.length ? (

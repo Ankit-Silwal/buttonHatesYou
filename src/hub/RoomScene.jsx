@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Avatar from '@/components/Avatar';
 import { Art, ART } from '@/house/art';
 import { skyOf } from '@/house/Room';
@@ -26,8 +26,11 @@ export { skyOf };
 //   hero      replaces the button (the bathroom drags him around)
 //   hud       a small meter on the scene;  extras: more scene children
 //   talking   his mouth flaps (he's repeating what you said)
+//   onPat     stroking him (dragging across him) instead of tapping
+//   pose      'tummy' (holding his hungry tummy) | 'fallen' (knocked over)
+//   hearts    a number that changes each time hearts should float up
 //   state     a word for CSS, e.g. 'showering' in the bathroom
-export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking }) {
+export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, onPat, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking, pose, hearts }) {
   const [pressed, setPressed] = useState(false);
   const cfg = ROOMS[kind];
   const defaults = kind === 'living' ? DEFAULT_HOUSE : DEFAULT_ROOMS[kind];
@@ -41,7 +44,27 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
   const lampId = kind === 'bedroom' ? place.nightstand : null;
   const winSky = kind === 'bedroom' && asleep ? 'night' : sky;
 
+  // A tap is a poke; dragging across him is a pat (one per stretch of
+  // stroking), and then the click that ends the stroke is not a poke.
+  const stroke = useRef(null); // { x, y, moved, pats }
+  function down(e) {
+    stroke.current = { x: e.clientX, y: e.clientY, moved: 0, pats: 0 };
+  }
+  function move(e) {
+    const s = stroke.current;
+    if (!s || !onPat) return;
+    s.moved += Math.hypot(e.clientX - s.x, e.clientY - s.y);
+    s.x = e.clientX;
+    s.y = e.clientY;
+    if (s.moved > 70 + s.pats * 220) {
+      s.pats++;
+      onPat();
+    }
+  }
   function poke() {
+    const patted = stroke.current?.pats;
+    stroke.current = null;
+    if (patted) return;
     setPressed(true);
     setTimeout(() => setPressed(false), 140);
     onPoke?.();
@@ -119,11 +142,22 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
               dirty={dirty}
               grime={grime}
               data-talking={talking || undefined}
+              data-pose={pose || undefined}
+              onPointerDown={down}
+              onPointerMove={(e) => e.buttons && move(e)}
+              onPointerLeave={() => !stroke.current?.pats && (stroke.current = null)}
               onClick={poke}
               aria-label="The button. It would rather you didn't."
             />
           )}
           {tucked && <i className="rs-blanket" />}
+          {hearts > 0 && (
+            <span className="hero-hearts" key={hearts} aria-hidden="true">
+              <i>♥</i>
+              <i>♥</i>
+              <i>♥</i>
+            </span>
+          )}
           {asleep && (
             <span className="hero-zz" aria-hidden="true">
               <i>z</i>

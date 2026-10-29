@@ -742,3 +742,4 @@ body.boss .char { --c: var(--btn); --cd: var(--btn-dark); }
 /* asleep: eyes shut, a tiny round mouth */
 [data-mood='sleep'] .eyes i::before { height: 100% !important; display: block !important; }
 [data-mood='sleep'] .mouth { width: calc(var(--s) * 0.1); height: calc(var(--s) * 0.07); transform: translateX(-50%); border: 0; border-radius: 50%; background: var(--face); top: 64%; }
+.char .arms { display: none; } /* only poses show arms (src/hub/scene.css) */

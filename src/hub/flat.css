@@ -36,11 +36,11 @@
   align-items: flex-start;
   justify-content: center;
   gap: 0;
-  padding: 4px 10px;
-  font-size: 13px;
-  line-height: 17px;
+  padding: 6px 14px 6px 10px;
+  font-size: 16px;
+  line-height: 23px;
 }
-.wallet-chip > span { display: inline-flex; align-items: center; gap: 5px; }
+.wallet-chip > span { display: inline-flex; align-items: center; gap: 7px; }
 .wallet-chip b { font-weight: 600; }
 .wallet-chip .gems { color: var(--ink-soft); }
 .sync-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }

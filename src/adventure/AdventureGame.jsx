@@ -14,6 +14,7 @@ import { W, H, lookOf } from './kit';
 import { CREATE } from './games';
 import { ReadyLine } from '@/achievements/Chest';
 import { GameGlyph, gameTint } from '@/components/GameIcon';
+import { getMe } from '@/profile/me';
 
 const SAVE_KEY = 'buttonHatesYou.adventure.v1';
 
@@ -39,7 +40,7 @@ export default function AdventureGame({ id }) {
 
   useEffect(() => {
     const s = loadSave();
-    Sound.setMuted(s.muted);
+    Sound.setMuted(s.muted || !getMe().sound); // the profile's Sound effects switch wins
     setSave(s);
   }, []);
 
@@ -80,7 +81,7 @@ export default function AdventureGame({ id }) {
 
   const toggleMute = () =>
     update((s) => {
-      Sound.setMuted(!s.muted);
+      Sound.setMuted(!s.muted || !getMe().sound);
       return { ...s, muted: !s.muted };
     });
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import RoomScene from './RoomScene';
-import { NeedHud } from './NeedBar';
 import { sleep, wake } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { NEEDS, wakesAt, FILTHY_AT } from '@/economy/needs';
@@ -64,7 +63,7 @@ export default function SleepPane({ needs, wallet, go, active, sky, view, quip, 
       line={{ text, n: line.n }}
       lamp={lamp}
       onPoke={() => say(needs.energy < 40 ? 'Tap the lamp. I need a nap.' : 'Do not poke me. Tap the lamp if you must.')}
-      hud={<NeedHud kind="energy" icon={needs.asleep ? '💤' : '⚡'} label="Energy" value={needs.energy} note={note} />}
+      hud={note ? <p className="hud-note">{note}</p> : null}
       tray={
         <>
           <Hint active={active} show={lampHint} from={filthy ? '.pill.to-bath' : '.rs-lamp'} />
