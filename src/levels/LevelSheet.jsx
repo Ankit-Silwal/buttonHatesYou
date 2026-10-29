@@ -60,7 +60,7 @@ export function Thumb({ kind, id, equipped, size = 44 }) {
 }
 
 // One mission: what to do, how far along, and a way to go and do it.
-function Mission({ m, equipped, onGo }) {
+export function Mission({ m, equipped, onGo }) {
   let icon;
   let title;
   let sub;

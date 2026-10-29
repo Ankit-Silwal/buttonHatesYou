@@ -7,6 +7,7 @@ import Account from '@/components/Account';
 import Wallet from '@/components/Wallet';
 import Icon from '@/components/Icon';
 import Achievements from '@/achievements/Achievements';
+import LevelRoad from '@/levels/LevelRoad';
 import { useProfile } from './useProfile';
 import { useMe, setMe } from './me';
 import { readyCount } from '@/economy/achievements';
@@ -14,6 +15,7 @@ import './profile.css';
 
 const TABS = [
   { id: 'me', name: 'Profile', icon: '👕' },
+  { id: 'levels', name: 'Levels', icon: '⭐' },
   { id: 'achievements', name: 'Achievements', icon: '🏆' },
   { id: 'settings', name: 'Settings', icon: '⚙️' },
 ];
@@ -63,6 +65,7 @@ export default function ProfilePage() {
       </div>
 
       {tab === 'me' && <MeTab profile={profile} me={me} />}
+      {tab === 'levels' && <LevelRoad />}
       {tab === 'achievements' && <Achievements embedded />}
       {tab === 'settings' && <SettingsTab me={me} />}
     </main>

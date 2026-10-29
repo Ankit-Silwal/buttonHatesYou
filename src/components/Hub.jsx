@@ -7,7 +7,7 @@ import Avatar from './Avatar';
 import Wardrobe from './Wardrobe';
 import Icon from './Icon';
 import Loading from './Loading';
-import LevelChip from '@/levels/LevelChip';
+import { LevelRing } from '@/levels/LevelChip';
 import NeedRings from '@/hub/NeedRings';
 import { ChestButton } from '@/achievements/HubPerks';
 import Welcome from '@/profile/Welcome';
@@ -393,12 +393,13 @@ export default function Hub({ initial = 'home' }) {
 
       <header className="hub-top">
         <div className="hub-left">
-          <Link href={ready && readyCount(wallet) ? '/profile#achievements' : '/profile'} className="profile-btn" aria-label={`Profile${me?.name ? `: ${me.name}` : ''}`}>
-            <Avatar size={44} equipped={wallet.equipped} mood="smug" />
-            {ready && readyCount(wallet) > 0 && <span className="perk-badge">{readyCount(wallet)}</span>}
-          </Link>
+          <LevelRing go={go} openWardrobe={() => setPanel('wardrobe')} openDecor={openDecor} openFood={() => setPanel('buy')}>
+            <Link href={ready && readyCount(wallet) ? '/profile#achievements' : '/profile'} className="profile-btn" aria-label={`Profile${me?.name ? `: ${me.name}` : ''}`}>
+              <Avatar size={44} equipped={wallet.equipped} mood="smug" />
+              {ready && readyCount(wallet) > 0 && <span className="perk-badge">{readyCount(wallet)}</span>}
+            </Link>
+          </LevelRing>
           <Wallet profile={profile} compact />
-          <LevelChip go={go} openWardrobe={() => setPanel('wardrobe')} openDecor={openDecor} openFood={() => setPanel('buy')} />
         </div>
       </header>
 

@@ -174,3 +174,96 @@
 
 .lv-note { margin: 0 0 10px; color: var(--ink-soft); font-size: 13px; font-weight: 600; }
 .buybar .pill .lv-lock { background: rgba(255, 255, 255, 0.25); color: inherit; }
+
+/* ---------- the level ring round the home screen's profile button ---------- */
+.lv-around { position: relative; display: inline-grid; place-items: center; flex: none; width: 76px; height: 76px; margin: -7px -3px -7px -7px; }
+.lv-around > * { grid-area: 1 / 1; }
+.lv-around > .profile-btn { position: relative; z-index: 2; }
+.lv-around-hit { position: relative; z-index: 1; width: 76px; height: 76px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.lv-around-ring { position: relative; z-index: 1; width: 76px; height: 76px; pointer-events: none; }
+.lv-around-ring circle { stroke: rgba(74, 52, 40, 0.16); transition: stroke 0.4s; }
+.lv-around-ring circle.on { stroke: var(--good, #4e9f6b); }
+.lv-around.ready .lv-around-ring circle.on { stroke: var(--btn); }
+.lv-around.ready .lv-around-ring { animation: lvGlow 1.6s ease-in-out infinite alternate; }
+@keyframes lvGlow { to { filter: drop-shadow(0 0 4px rgba(226, 103, 79, 0.7)); } }
+.lv-around-badge {
+  position: absolute;
+  z-index: 3;
+  right: -2px;
+  bottom: 0;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 6px;
+  border: 2px solid var(--cream, #fffaf2);
+  border-radius: 99px;
+  background: var(--ink);
+  color: var(--cream, #fffaf2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.lv-around.ready .lv-around-badge { background: var(--btn); }
+.lv-around-badge i { position: absolute; top: -9px; right: -6px; width: 15px; height: 15px; border-radius: 50%; background: #ffb547; color: #2b1a05; font-size: 10px; font-style: normal; line-height: 15px; text-align: center; }
+.lv-around-badge:focus-visible { outline: 2.5px solid var(--mustard); outline-offset: 2px; }
+.lv-around > .profile-btn .perk-badge { top: -2px; right: auto; left: -2px; } /* achievements ready: the other corner */
+@media (prefers-reduced-motion: reduce) { .lv-around.ready .lv-around-ring { animation: none; } }
+
+/* ---------- the profile's Levels tab: the level road (arcade dark theme) ---------- */
+.lv-road { display: flex; flex-direction: column; gap: 14px; }
+.lv-road-head { display: flex; flex-direction: column; gap: 8px; }
+.lv-road-head b { font-size: 22px; }
+.lv-road-head b span { color: var(--ink-soft); font-size: 14px; font-weight: 600; }
+.lv-road .lv-track { background: rgba(255, 255, 255, 0.08); }
+.lv-road-got { display: flex; align-items: center; gap: 6px; margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255, 181, 71, 0.14); color: #ffcf7a; font-weight: 700; }
+.lv-road-list { position: relative; display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lv-road-list::before { /* the road */
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.lv-step { position: relative; display: flex; align-items: flex-start; gap: 12px; }
+.lv-step-n {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  background: #2a2f4d;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.lv-step.done .lv-step-n { background: #2f6b4a; box-shadow: none; color: #d8ffe6; }
+.lv-step.now .lv-step-n { background: linear-gradient(180deg, #ffb547, #ff7a5c); box-shadow: 0 0 0 4px rgba(255, 122, 92, 0.22), 0 0 18px rgba(255, 122, 92, 0.5); color: #2b1a05; }
+.lv-step-body { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); }
+.lv-step.ahead .lv-step-body { opacity: 0.72; }
+.lv-step.done .lv-step-body { opacity: 0.6; }
+.lv-step.big .lv-step-body { background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+.lv-step.now .lv-step-body { opacity: 1; padding: 12px; background: linear-gradient(180deg, #2c3254, #232842); box-shadow: inset 0 0 0 1.5px rgba(255, 181, 71, 0.5); }
+.lv-step-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lv-step-name { font-size: 14px; font-weight: 700; }
+.lv-step-pay { display: inline-flex; gap: 10px; color: var(--ink-soft); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lv-step-pay > span { display: inline-flex; align-items: center; gap: 4px; }
+.lv-step.gem .lv-step-pay > span + span { color: #8fd9ff; }
+.lv-step-unlocks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.lv-step-x { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 2px; border-radius: 99px; background: rgba(255, 255, 255, 0.07); font-size: 13px; font-weight: 650; }
+.lv-step-x .lv-thumb { border-radius: 50%; }
+.lv-road .lv-missions { margin: 10px 0; }
+.lv-road .lv-mission { border-color: rgba(255, 255, 255, 0.07); background: #1d2138; box-shadow: none; }
+.lv-road .lv-mission.done { background: #1f3a33; }
+.lv-road .lv-bar { background: rgba(255, 255, 255, 0.08); }
+.lv-road .lv-go { background: var(--ink); color: #1a1e33; }
+.lv-road .lv-up { width: 100%; justify-content: center; }
