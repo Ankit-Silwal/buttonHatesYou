@@ -723,4 +723,19 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(HOUSE_ITEMS.filter((i) => i.moving && i.price.coins && i.level).length, 3);
 }
 
+/* ---------- codes (economy/codes.js) ---------- */
+{
+  const { levelsCleared, levelLocked } = await import('../src/economy/levels.js');
+  const w = normalize(START);
+  const got = applyEvent(w, { type: 'code', code: ' isuckat coding ' });
+  assert.ok(got, 'a code works however it is typed');
+  assert.equal(got.coins, START.coins + 9_999_999);
+  assert.equal(got.diamonds, START.diamonds + 9_999_999);
+  assert.equal(levelsCleared(got), 200, 'and clears every level');
+  assert.equal(levelLocked(got, { level: 200 }), false, 'so nothing is level-locked any more');
+  assert.equal(applyEvent(got, { type: 'code', code: 'ISUCKATCODING' }), null, 'once per wallet');
+  assert.equal(applyEvent(w, { type: 'code', code: 'NOPE' }), null, 'unknown code');
+  assert.equal(applyEvent(w, { type: 'code', code: 42 }), null, 'junk code');
+}
+
 console.log('all economy checks passed');

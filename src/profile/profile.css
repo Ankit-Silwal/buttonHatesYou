@@ -168,3 +168,12 @@
 @media (prefers-reduced-motion: reduce) {
   .pf-switch, .pf-switch i { transition: none; }
 }
+
+/* Codes (under Settings) */
+.pf-codes { margin-top: 14px; }
+.pf-codes h2 { margin: 0 0 12px; font-size: 18px; }
+.pf-codes .pf-name-form { width: 100%; }
+.pf-codes input { text-transform: uppercase; letter-spacing: 0.08em; user-select: text; }
+.pf-code-said { margin: 10px 2px 0; font-size: 14px; font-weight: 600; }
+.pf-code-said.good { color: #6fdc8c; }
+.pf-code-said.bad { color: #ff8f7a; }

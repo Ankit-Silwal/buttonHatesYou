@@ -521,6 +521,14 @@ level 10 within the first day, 50 in about 8 days, 100 in about a month, and
 reach 50 and 9 months to reach 200. Even someone at the daily run cap needs
 about 7 weeks.
 
+## Codes
+
+Profile → Settings → Codes. `CODES` in `src/economy/codes.js`; each works
+once per wallet, as an event `{ type: 'code', code }` the server replays like
+any other (case and spaces don't matter). `ISUCKATCODING` gives 9,999,999
+coins and diamonds and clears every level. The table ships to the browser,
+so anyone reading the source can find the codes.
+
 ## Adventure games
 
 The Games screen has two shelves: **Story** (How I Met Your Cursor, The Reason,
