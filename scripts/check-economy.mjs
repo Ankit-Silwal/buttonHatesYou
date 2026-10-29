@@ -743,6 +743,9 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
     assert.equal(got.coins, w.coins + c.loot.coins, `${r} pays its loot`);
     assert.equal(applyEvent(got, { type: 'code', code: r }), null, 'once');
   }
+  const viaTypo = applyEvent(w, { type: 'code', code: 'legendry' });
+  assert.ok(viaTypo && viaTypo.stats.codeChests === 1, 'LEGENDRY works too');
+  assert.equal(applyEvent(viaTypo, { type: 'code', code: 'LEGENDARY' }), null, 'but they give one legendary chest between them');
   const leg = codeChest(w, 'LEGENDARY');
   assert.ok(leg.loot.item, 'a legendary chest holds furniture');
   assert.ok(applyEvent(w, { type: 'code', code: 'LEGENDARY' }).owned.includes(leg.loot.item));

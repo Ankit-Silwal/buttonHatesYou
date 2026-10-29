@@ -561,7 +561,7 @@ every character joins you). (It replaced `ISUCKATCODING`,
 which is retired: refused when typed, still replayed for wallets that used
 it, and the two pay once between them.) The table ships to the browser,
 so anyone reading the source can find the codes. `COMMON`, `RARE`, `EPIC` and
-`LEGENDARY` each give a free chest of that rarity (`forcedChest` in
+`LEGENDARY` (or `LEGENDRY`, one chest between them) each give a free chest of that rarity (`forcedChest` in
 `src/economy/chest.js`), opened with the usual five taps.
 
 ## Adventure games
