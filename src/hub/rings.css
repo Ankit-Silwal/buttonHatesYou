@@ -128,3 +128,4 @@
 }
 .gtile.dim .gtile-art { filter: grayscale(0.85) brightness(0.95); opacity: 0.6; }
 .gtile.dim .gtile-name { opacity: 0.55; }
+.hub[data-panel='wardrobe'] .rs-line { visibility: hidden; } /* his face is the point */
