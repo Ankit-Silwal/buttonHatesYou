@@ -71,7 +71,13 @@ export const START = Object.freeze({
 const pick = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
 
 // Free items are always owned, except a free one with a `level` (a character): from that level on.
-export const owns = (wallet, item) => (item.price ? wallet.owned.includes(item.id) : levelReached(wallet) >= (item.level ?? 0));
+// Bought things are owned once bought; a character (no price) once the story
+// part where you meet them is finished (`unlock.claim`); anything else free
+// once its level is reached.
+export const owns = (wallet, item) =>
+  item.price ? wallet.owned.includes(item.id) : item.unlock ? !!wallet.claimed?.includes(item.unlock.claim) : levelReached(wallet) >= (item.level ?? 0);
+// Locked behind a story part not played yet (a character).
+export const storyLocked = (wallet, item) => !!item?.unlock && !wallet.claimed?.includes(item.unlock.claim);
 
 export const canAfford = (wallet, item) =>
   wallet.coins >= (item.price?.coins ?? 0) && wallet.diamonds >= (item.price?.diamonds ?? 0);
@@ -109,7 +115,7 @@ function applyAnyEvent(wallet, ev, now) {
   /* ---------- spending ---------- */
   if (ev.type === 'buy') {
     const item = pick(ITEM, ev.item);
-    if (!item || owns(wallet, item) || !canAfford(wallet, item)) return null;
+    if (!item?.price || owns(wallet, item) || !canAfford(wallet, item)) return null; // (free things, like characters, aren't for sale)
     return {
       ...wallet,
       coins: wallet.coins - (item.price.coins ?? 0),

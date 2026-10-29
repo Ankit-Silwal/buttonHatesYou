@@ -7,6 +7,8 @@ import { useProfile } from '@/profile/useProfile';
 import { useEnergyGate } from '@/house/EnergyGate';
 import { claimStory } from '@/profile/store';
 import { ReadyLine } from '@/achievements/Chest';
+import Avatar from '@/components/Avatar';
+import { ITEMS } from '@/economy/catalog';
 import { Game } from './engine';
 import { Bobby } from './actors';
 import { SPEAKERS } from './draw';
@@ -185,6 +187,15 @@ function Finished({ cfg, n, prize, skipped, onClose, onNext }) {
           !skipped && <p>Already paid out. Replays are just for fun.</p>
         )}
         <ReadyLine ready={prize?.ready} />
+        {prize &&
+          ITEMS.filter((i) => i.unlock?.claim === `${cfg.story}:${n}`).map((c) => (
+            <p key={c.id} className="joined">
+              <Avatar size={54} equipped={{ char: c.id }} mood="smug" className="has-legs" />
+              <span>
+                <b>{c.name} joined you!</b> Play as {c.name} from the Wardrobe.
+              </span>
+            </p>
+          ))}
         <div className="row">
           <button className="pill ghost" onClick={onClose}>
             {cfg.unit}s
