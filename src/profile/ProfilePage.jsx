@@ -14,6 +14,7 @@ import { levelState } from '@/economy/levels';
 import { useRouter } from 'next/navigation';
 import { useProfile } from './useProfile';
 import { useMe, setMe } from './me';
+import { useWorn } from './undress';
 import { readyCount } from '@/economy/achievements';
 import { isCode, usedCode } from '@/economy/codes';
 import { redeemCode } from './store';
@@ -85,6 +86,7 @@ export default function ProfilePage({ initial = 'me' }) {
 
 function MeTab({ profile, me }) {
   const { wallet, ready, user } = profile;
+  const look = useWorn(wallet.equipped);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [copied, setCopied] = useState(false);
@@ -107,7 +109,7 @@ function MeTab({ profile, me }) {
   return (
     <section className="pf-card pf-me">
       <div className="pf-hero">
-        <Avatar size={96} equipped={wallet.equipped} mood="smug" className="has-legs" />
+        <Avatar size={96} equipped={look} mood="smug" className="has-legs" />
       </div>
       {editing ? (
         <form className="pf-name-form" onSubmit={save}>

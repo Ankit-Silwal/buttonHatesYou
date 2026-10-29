@@ -18,6 +18,7 @@ import { GameArt } from '@/components/Arcade';
 import { PAINT } from '@/components/gameArt';
 import Icon from '@/components/Icon';
 import { getMe } from '@/profile/me';
+import { useWorn } from '@/profile/undress';
 
 const SAVE_KEY = 'buttonHatesYou.adventure.v1';
 
@@ -35,6 +36,7 @@ function loadSave() {
 export default function AdventureGame({ id }) {
   const meta = GAME[id];
   const profile = useProfile();
+  const look = useWorn(profile.wallet.equipped); // without clothes while they're on the bath stand
   const gate = useEnergyGate('adventure'); // starting a run costs energy
   const [save, setSave] = useState(null);
   const [mode, setMode] = useState('title'); // title | play | over
@@ -103,14 +105,14 @@ export default function AdventureGame({ id }) {
       </header>
 
       {mode === 'play' && (
-        <Stage key={run} id={id} equipped={profile.wallet.equipped} diamonds={profile.wallet.diamonds} onOver={finish} onRestart={start} />
+        <Stage key={run} id={id} equipped={look} diamonds={profile.wallet.diamonds} onOver={finish} onRestart={start} />
       )}
 
       {mode === 'title' && (
         <div className="adv-overlay">
           <div className="adv-card">
             <span className="adv-art" aria-hidden="true">
-              {PAINT[id] ? <GameArt id={id} equipped={profile.wallet.equipped} /> : <GameIcon id={id} />}
+              {PAINT[id] ? <GameArt id={id} equipped={look} /> : <GameIcon id={id} />}
             </span>
             <h1>{meta.name}</h1>
             <p>{meta.blurb}</p>
@@ -129,7 +131,7 @@ export default function AdventureGame({ id }) {
       {mode === 'over' && result && (
         <div className="adv-overlay">
           <div className={`adv-card${good ? ' win' : ''}`}>
-            <Avatar size={84} equipped={profile.wallet.equipped} mood={good ? 'sad' : 'smug'} />
+            <Avatar size={84} equipped={look} mood={good ? 'sad' : 'smug'} />
             <p className="kicker">{good ? 'Nice run' : 'Game over'}</p>
             <h2>
               {result.score} <small>{meta.unit}</small>

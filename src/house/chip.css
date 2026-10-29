@@ -88,3 +88,22 @@
 .buybar:has(.try-list) { flex-wrap: wrap; }
 .buybar:has(.try-list) .try-list { flex: 1 1 100%; }
 .buybar:has(.try-list) .row { flex: 1 1 100%; justify-content: flex-end; }
+
+/* the wardrobe while his clothes are on the bathroom stand */
+.ward-bare {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 16px 6px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(226, 103, 79, 0.12);
+  color: var(--btn-dark);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.ward-bare b { flex: none; padding: 5px 12px; border-radius: 99px; background: var(--btn); color: #fff; font-size: 13px; }

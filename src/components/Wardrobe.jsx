@@ -7,6 +7,7 @@ import { SLOTS, ITEMS, ITEM } from '@/economy/catalog';
 import { owns, canAfford } from '@/economy/rules';
 import { levelLocked } from '@/economy/levels';
 import { buy, equip } from '@/profile/store';
+import { CLOTHES } from '@/profile/undress';
 import { takeFocus, lockLabel } from '@/levels/focus';
 import LockTag from '@/levels/LockTag';
 
@@ -21,7 +22,9 @@ const priceOf = ({ coins, diamonds }) => [coins && `${coins.toLocaleString('en-U
 // The Character tab is who you play as: Bobby, and the friends levels unlock
 // (a locked one only says which level; they're never bought). A level
 // mission's "Go" opens the wardrobe on its item (takeFocus).
-export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
+// `undressed`: his clothes are on the bathroom stand, so nothing that comes
+// off can be put on (or tried on) until he's been taken back to it.
+export default function Wardrobe({ wallet, undressed = false, onPreview, onSay, onClose, onBath }) {
   const [focus] = useState(() => ITEM[takeFocus()] ?? null);
   const [slot, setSlot] = useState(focus?.slot ?? 'color');
   const [trying, setTrying] = useState(() => (focus && !owns(wallet, focus) && !levelLocked(wallet, focus) ? { [focus.slot]: focus.id } : {})); // { [slot]: item id }, not owned yet
@@ -42,7 +45,9 @@ export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
       return rest;
     });
 
+  const stuck = (item) => undressed && (CLOTHES.includes(item.slot) || (item.slot === 'eyes' && item.id !== 'eyes-classic' && /shades|glasses|aviators|visor|monocle|3d/.test(item.id)));
   function choose(item) {
+    if (stuck(item)) return onSay('My clothes are on the stand in the bathroom. Take me there.', 'annoyed');
     if (!owns(wallet, item) && levelLocked(wallet, item)) return onSay(`${lockLabel(item)} first.`, 'smug');
     if (!owns(wallet, item)) {
       if (trying[item.slot] === item.id) return untry(item.slot); // tap again: take it off
@@ -83,6 +88,12 @@ export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
         ))}
       </div>
 
+      {undressed && (
+        <button type="button" className="ward-bare" onClick={onBath}>
+          <span>His clothes are on the bathroom stand.</span>
+          <b>Go get them</b>
+        </button>
+      )}
       <div className="sheet-body">
         {slot === 'color' && !bobby && <p className="lv-note">Colors only show on Bobby.</p>}
         <div className="tiles">

@@ -205,6 +205,16 @@ Enter on the soap), and once he is lathered drag him into the shower (or press
 "Turn on the shower"). The rinse records a `wash` event and resets his dirt. A
 small 🫧 bar on the home screen shows how clean he is.
 
+## Undressing for a bath
+
+In the Bathroom he won't be scrubbed with clothes on: drag him to the
+clothes stand and he takes them off ("Don't look at me!", hands over
+himself, blushing). After the shower, drag him back to the stand to put
+them on again. Until then he wears nothing anywhere (rooms, games,
+profile) and the wardrobe can't dress him. This is only how he looks:
+`src/profile/undress.js` keeps it on the device, and what he owns and has
+equipped doesn't change.
+
 ## Teen look and wardrobe
 
 The button's art got a more grown-up finish (relaxed eyes, thin brows, a subtler

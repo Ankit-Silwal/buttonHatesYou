@@ -12,6 +12,7 @@ import NeedRings from '@/hub/NeedRings';
 import { ChestButton } from '@/achievements/HubPerks';
 import Welcome from '@/profile/Welcome';
 import { useMe } from '@/profile/me';
+import { useUndressed, worn } from '@/profile/undress';
 import { readyCount } from '@/economy/achievements';
 import RoomScene, { skyOf } from '@/hub/RoomScene';
 import DecorSheet from '@/house/DecorSheet';
@@ -319,13 +320,17 @@ export default function Hub({ initial = 'home' }) {
   }, [mimicOff]);
 
   const mood = line.mood ?? face.mood;
-  const equipped = preview ?? wallet.equipped;
+  // what he's actually wearing: nothing, while his clothes are on the bathroom stand
+  const off = useUndressed();
+  const wearing = worn(wallet.equipped, off);
+  const shown = off ? { ...wallet, equipped: wearing } : wallet; // for the rooms
+  const equipped = preview ?? wearing;
 
   return (
     <main className="hub" data-panel={panel ?? undefined} data-at={PANES[at]?.id}>
       <div className={`pager ${panel ? 'locked' : ''}`} ref={pager} onScroll={onScroll}>
         <section className="pane pane-games" aria-label="Games" inert={at !== 0}>
-          <GamesPane needs={needs} equipped={wallet.equipped} go={go} active={at === 0} />
+          <GamesPane needs={needs} equipped={wearing} go={go} active={at === 0} />
         </section>
 
         <section className="pane pane-room pane-home" aria-label="Living Room" inert={at !== HOME}>
@@ -380,11 +385,11 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} edit={editIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
+          <FoodPane needs={needs} wallet={shown} active={at === 2} sky={sky} view={tryingIn('kitchen')} edit={editIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} edit={editIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
+          <SleepPane needs={needs} wallet={shown} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} edit={editIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
@@ -396,7 +401,7 @@ export default function Hub({ initial = 'home' }) {
         <div className="hub-left">
           <LevelRing go={go} openWardrobe={() => setPanel('wardrobe')} openDecor={openDecor} openFood={() => setPanel('buy')}>
             <Link href={ready && readyCount(wallet) ? '/profile#achievements' : '/profile'} className="profile-btn" aria-label={`Profile${me?.name ? `: ${me.name}` : ''}`}>
-              <Avatar size={44} equipped={wallet.equipped} mood="smug" />
+              <Avatar size={44} equipped={wearing} mood="smug" />
               {ready && readyCount(wallet) > 0 && <span className="perk-badge">{readyCount(wallet)}</span>}
             </Link>
           </LevelRing>
@@ -426,7 +431,7 @@ export default function Hub({ initial = 'home' }) {
         </nav>
       )}
 
-      {panel === 'wardrobe' && <Wardrobe wallet={wallet} onPreview={setPreview} onSay={say} onClose={close} />}
+      {panel === 'wardrobe' && <Wardrobe wallet={wallet} undressed={off} onPreview={setPreview} onSay={say} onClose={close} onBath={() => (close(), go(4))} />}
       {panel === 'buy' && <BuySheet wallet={wallet} onClose={close} />}
       {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
       {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
