@@ -182,6 +182,8 @@
 }
 @keyframes advPrize { 50% { box-shadow: 0 0 0 1px rgba(180, 120, 20, 0.25) inset, 0 8px 34px 0 rgba(255, 190, 40, 0.95); transform: scale(1.04); } }
 .adv-card .row { margin-top: 18px; }
+.adv-misfit { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; padding: 12px 14px; border-radius: 18px; background: rgba(255, 90, 70, 0.08); text-align: left; }
+.adv-misfit .quip { margin: 0; }
 .adv-card .pill { text-decoration: none; }
 .adv-card .pill:not(.ghost) {
   position: relative;

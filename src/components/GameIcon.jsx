@@ -15,6 +15,7 @@ const TINT = {
   hop: '#1e9480',
   run: '#4a8f2c',
   slice: '#c23b4a',
+  'table-tennis': '#2a62b4',
   'the-reason': '#3d4a7a',
   'how-i-met-your-cursor': '#c4567a',
 };
@@ -100,6 +101,14 @@ const ICONS = {
     <>
       <path d="M4 20 17 7Q21 3 20 3.5Q20.5 4 18 8.5L6 20.5Z" {...FILL} />
       <path d="M3 10 9 4M14 21 20 15" {...THIN} />
+    </>
+  ),
+  // a paddle and its ball
+  'table-tennis': (
+    <>
+      <circle cx="10" cy="10" r="6.5" {...LINE} />
+      <path d="M14.6 14.6 19.5 19.5" {...LINE} strokeWidth={3} />
+      <circle cx="18.5" cy="5.5" r="2.2" {...FILL} />
     </>
   ),
   // a sword

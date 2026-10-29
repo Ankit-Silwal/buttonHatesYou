@@ -314,6 +314,7 @@ Regret (`per` 10 pipes, `base` 25): 10 pipes pay 25, 15 pay 50, 20 pay 75,
 | Run Away | 600 m | 1000 → 58 | 1800 → 150 |
 | Tower of Regret | 12 floors | 20 → 58 | 36 → 150 |
 | Slice Spree | 30 slices | 50 → 58 | 90 → 150 |
+| Ping Pong Grudge | 5 points | 8 → 55 | 15 → 150 |
 
 Button Run instead pays exactly the coins the button picked up (the counter in
 the corner; x2 coins count double), typically 30 to 100 a run.
@@ -379,7 +380,7 @@ Diamonds already earned the old way are kept.
 
 ## Achievements and the daily chest
 
-40 achievements. Most have five medals: Bronze, Silver and Gold, then
+41 achievements. Most have five medals: Bronze, Silver and Gold, then
 Platinum and Diamond far beyond (x4 and x15 of Gold); the stories keep
 three. New ones count baths, stocked food, energy boosts, free wake-ups,
 outfit changes, furniture moves, potions, coin chests, Continues, levels,
@@ -404,6 +405,7 @@ with a Claim button. The table lives in `src/economy/achievements.js`:
 | Back Problems | floors in Tower of Regret | 12 · 1 | 24 · 2 | 48 · 3 |
 | Knife to Meet You | slices in Slice Spree | 30 · 1 | 60 · 2 | 120 · 3 |
 | Coin Goblin | coins grabbed in one Button Run | 50 · 1 | 100 · 2 | 200 · 3 |
+| Speak to the Manager | points in Ping Pong Grudge | 5 · 1 | 10 · 2 | 20 · 3 |
 | Professional Loser | Adventure runs finished | 10 · 1 | 50 · 3 | 200 · 6 |
 | Capitalism Enjoyer | 🪙 earned from runs | 1000 · 1 | 10000 · 3 | 50000 · 6 |
 | Emotional Damage | episodes of The Reason | 1 · 1 | 5 · 3 | 9 · 8 |
@@ -479,7 +481,8 @@ next few unlocks.
 Every level has three missions, all worked out from the level number:
 
 1. **Play**: reach a score in one run of an Adventure game. The game rotates
-   through the nine Adventure games, and the target goes from 0.4 of a pay tier
+   through nine Adventure games (a fixed list, `PLAY_GAMES`: Ping Pong Grudge
+   came later and isn't in it, so nobody's missions moved), and the target goes from 0.4 of a pay tier
    at level 1 (4 Flappy pipes) up to 3 tiers at level 200 (30 pipes). Button
    Run counts coins grabbed, 50 to a "tier". Only runs played during the level
    count (`lv.best`, the score as `applyRun` clamped it).
@@ -537,7 +540,12 @@ The part's results card says who joined. Each one sets `data-char` on the avatar
 (`src/app/avatar-chars.css`) and brings its own colours; a Color item repaints
 any of them (the default one, shown as "Own colour", keeps theirs). Items can
 list the slots that `fits` them: Cursor, an arrow, is only offered Character,
-Color, Ears and Hat. In the canvas games they show up as their colour.
+Color, Ears and Hat. In the canvas games they show up as their colour, except
+Ping Pong Grudge, which draws each in their own shape (`src/adventure/cast.js`).
+Games built around a round button list who can't play them (`notFor` in
+`GAMES`, read by `cantPlay`): Cursor sits out Flappy Regret, Sky Hop, Tower of
+Regret, Run Away and Button Run. Their tiles are greyed with "Not for Cursor"
+(tapping one, he says why), and their page offers "Play as Bobby" instead of Play.
 
 **Moving furniture** (`src/house/art-moving.jsx`, `moving.css`) keeps moving
 on its own. There's one coin piece per room, locked behind a level: Jukebox
@@ -569,7 +577,7 @@ so anyone reading the source can find the codes. `COMMON`, `RARE`, `EPIC` and
 ## Adventure games
 
 The Games screen has two shelves: **Story** (How I Met Your Cursor, The Reason,
-Please Don't) and **Adventure**, nine short arcade games starring the button
+Please Don't) and **Adventure**, ten short arcade games starring the button
 in whatever it's wearing:
 
 | Game | What you do | How a run pays |
@@ -583,6 +591,7 @@ in whatever it's wearing:
 | Run Away | Jump and duck while the button flees the cursor | 25 🪙 per 600 meters, rising |
 | Tower of Regret | Drop swinging clones to stack a tower | 25 🪙 per 12 floors, rising |
 | Slice Spree | Swipe to slice what flies up, just not the button | 25 🪙 per 30 slices, rising |
+| Ping Pong Grudge | Table tennis against Karen Popup (Lord 404 if you are Karen): drag or ← → to move the paddle; where the ball meets it aims the return, moving as you hit puts spin on it (it curves and kicks off the bounce), high balls get smashed, edge hits pop up. She gets better as you score; her 5th point ends the run | 25 🪙 per 5 points, rising |
 
 Every run pays, by how it went; there is no goal score. See [Economy](#economy).
 Best scores are kept on the device.
@@ -599,14 +608,14 @@ Copy Me replays the same tune; Sky Hop drops a wide rescue cloud; Whack adds
 15 s (the pace keeps rising); Run Away and Button Run clear the track ahead,
 stand the button back up and ease the speed back in; Tower of Regret drops the
 missed clone and widens the top floor; Slice Spree gives a life back and
-clears the air. Most add about 2 s of blinking invulnerability. Paying is a
+clears the air; Ping Pong Grudge takes 2 points off Karen and gives you the serve. Most add about 2 s of blinking invulnerability. Paying is a
 `{ type: 'continue', game, n, at }` wallet event (`applyContinueEvent` in
 `rules.js`), checked on the server like a purchase; the run event at the end
 pays by the final score, with `ms` covering all its segments and
 `continues` saying how many it used, so the usual caps still hold.
 
 - `src/adventure/AdventureGame.jsx`: title card, canvas loop, pause, results
-  and payouts, shared by all ten (routed from `/games/adventure/[id]`)
+  and payouts, shared by all of them (routed from `/games/adventure/[id]`)
 - `src/adventure/kit.js`: the 480x800 canvas, the button drawn in its outfit,
   speech bubbles and particles
 - `src/adventure/games/<id>.js`: one file per game; `index.js` describes

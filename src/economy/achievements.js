@@ -169,6 +169,7 @@ export const ACHIEVEMENTS = [
   scoreAch('stack', 'Back Problems', '🗼', [12, 24, 48]),
   scoreAch('slice', 'Knife to Meet You', '🔪', [30, 60, 120]),
   scoreAch('button-run', 'Coin Goblin', '⌨️', [50, 100, 200]),
+  scoreAch('table-tennis', 'Speak to the Manager', '🏓', [5, 10, 20]),
   ach('runs', 'adventure', '🎮', 'Professional Loser', (s) => s.runs, (n) => `Finish ${plural(n, 'Adventure run')}`, [[10, 1], [50, 3], [200, 6]]),
   ach('run-coins', 'adventure', '🪙', 'Capitalism Enjoyer', (s) => s.runCoins, (n) => `Earn ${n} 🪙 from Adventure runs`, [[1000, 1], [10000, 3], [50000, 6]]),
 

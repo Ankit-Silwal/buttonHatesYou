@@ -6,9 +6,9 @@ import Wallet from '@/components/Wallet';
 import Avatar from '@/components/Avatar';
 import { useProfile } from '@/profile/useProfile';
 import { useEnergyGate } from '@/house/EnergyGate';
-import { recordRun, continueRun } from '@/profile/store';
+import { recordRun, continueRun, equip } from '@/profile/store';
 import { MAX_CONTINUES, continueCost } from '@/economy/rules';
-import { GAME } from '@/economy/catalog';
+import { GAME, cantPlay } from '@/economy/catalog';
 import { Sound } from '@/game/sound';
 import { W, H, lookOf } from './kit';
 import { CREATE } from './games';
@@ -76,7 +76,11 @@ export default function AdventureGame({ id }) {
   // a run that paid at least a full first tier counts as a good one
   const good = result && (result.prize.coins >= (meta.payout.base ?? 25) || result.prize.diamonds > 0);
 
+  // a game the character he's playing as can't play (Cursor and the round-button games)
+  const misfit = cantPlay(meta, profile.wallet.equipped);
+
   const start = () => {
+    if (misfit) return;
     if (!gate.spend()) return; // too tired or asleep: shows a refusal
     Sound.init();
     setResult(null);
@@ -116,15 +120,35 @@ export default function AdventureGame({ id }) {
             </span>
             <h1>{meta.name}</h1>
             <p>{meta.blurb}</p>
-            {look?.char === 'char-cursor' && <p className="quip">“How tf did I get square too?”</p>}
-            <p className="how">{meta.howTo}</p>
-            <p className="goal">
-              {meta.rule}
-              {save.best[id] ? <span> · Best: {save.best[id]}</span> : null}
-            </p>
-            <button className="pill big" onClick={start} autoFocus>
-              Play
-            </button>
+            {look?.char === 'char-cursor' && !meta.shapes && !misfit && <p className="quip">“How tf did I get square too?”</p>}
+            {misfit ? (
+              <>
+                {/* the character he's playing as can't play this one: he says why */}
+                <div className="adv-misfit">
+                  <Avatar size={64} equipped={look} mood="annoyed" />
+                  <p className="quip">“{misfit}”</p>
+                </div>
+                <div className="row">
+                  <Link href="/games" className="pill ghost">
+                    Games
+                  </Link>
+                  <button className="pill" onClick={() => equip('char', 'char-bobby')} autoFocus>
+                    Play as Bobby
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="how">{meta.howTo}</p>
+                <p className="goal">
+                  {meta.rule}
+                  {save.best[id] ? <span> · Best: {save.best[id]}</span> : null}
+                </p>
+                <button className="pill big" onClick={start} autoFocus>
+                  Play
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

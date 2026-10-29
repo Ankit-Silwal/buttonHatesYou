@@ -311,6 +311,20 @@ const OUTFITS = {
   },
 };
 
+// For friends drawn in their own shape (src/adventure/cast.js): the outfit's
+// clothes on a 38-wide body whose top left is (x, y), unclipped (the caller
+// clips them to its shape), and a hat on a w-wide head.
+export function clothesOf(c, kind, x, y) {
+  try {
+    OUTFITS[kind]?.(c, x, y);
+  } catch {}
+}
+export function hatOf(c, kind, x, y, w = 38) {
+  try {
+    hat(c, kind, x, y, w);
+  } catch {}
+}
+
 function outfit(c, kind, x, y) {
   const draw = OUTFITS[kind];
   if (!draw) return;

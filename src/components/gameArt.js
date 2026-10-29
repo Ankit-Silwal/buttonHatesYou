@@ -4,6 +4,7 @@ import { drawAtmosphere } from '@/reason/draw';
 import { glow } from '@/reason/fx';
 import { W as AW, H as AH, drawBobby, bubble } from '@/adventure/kit';
 import { CREATE } from '@/adventure/games';
+import { card as tableTennisCard } from '@/adventure/games/table-tennis';
 
 // The pictures on the Games screen cards, drawn with each game's own drawing
 // code. Every painter draws on a 480x270 canvas: paint(c, look) where `look`
@@ -279,4 +280,6 @@ function adventure(id, { sec, top, taps = [] }) {
 export const PAINT = {
   ...STORY,
   ...Object.fromEntries(Object.entries(ADVENTURE).map(([id, o]) => [id, adventure(id, o)])),
+  // a still from Ping Pong Grudge needs both ends of the table: it paints its own
+  'table-tennis': tableTennisCard,
 };
