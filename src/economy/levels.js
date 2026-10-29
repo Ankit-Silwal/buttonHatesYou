@@ -186,7 +186,7 @@ export function levelState(w) {
   const owned = Array.isArray(w?.owned) ? w.owned : [];
   const since = (k) => Math.max(0, num(s[k]) - num(lv.at[k]));
   const missions = [
-    { kind: 'play', game: d.play.game, have: num(lv.best[d.play.game]), need: d.play.target },
+    { kind: 'play', game: d.play.game, have: num(lv.best[d.play.game]), need: d.play.target, level: L, skip: skipCost(L) },
     d.buy.item ? { kind: 'buy', item: d.buy.item, have: owned.includes(d.buy.item) ? 1 : 0, need: 1 } : { kind: 'stock', have: since('stocked'), need: d.buy.stock },
     { kind: 'care', care: d.care.id, have: since(d.care.stat), need: d.care.count },
   ].map((m) => ({ ...m, have: Math.min(m.have, m.need), done: m.have >= m.need }));
@@ -213,6 +213,15 @@ export function applyLevelEvent(w, ev, item) {
       lv: { n: st.level, at: snapshot(w.stats), best: {} },
     };
   }
+  // { id, type: 'skipplay', level }: pays skipCost(level) diamonds to count
+  // the current level's play mission as done
+  if (ev.type === 'skipplay') {
+    const st = levelState(w);
+    const play = st.missions?.find((m) => m.kind === 'play');
+    if (st.max || ev.level !== st.level || !play || play.done || w.diamonds < play.skip) return null;
+    const lv = levelsOf(w);
+    return { ...w, diamonds: w.diamonds - play.skip, lv: { ...lv, best: { ...lv.best, [play.game]: play.need } } };
+  }
   if (ev.type === 'buy' && levelLocked(w, item)) return null;
   if (ev.type === 'claim') {
     const game = STORY_OF_CLAIM(ev.claim);
@@ -220,6 +229,10 @@ export function applyLevelEvent(w, ev, item) {
   }
   return undefined;
 }
+
+// The play mission can be bought instead of played: 1 diamond at first,
+// rising by one every 25 levels (8 at level 200).
+export const skipCost = (L) => 1 + Math.floor((L - 1) / 25);
 
 // A run's score, for the play mission (the clamped one applyRun uses).
 export function levelBest(w, game, score) {

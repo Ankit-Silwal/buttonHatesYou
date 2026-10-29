@@ -267,3 +267,22 @@
 .lv-road .lv-bar { background: rgba(255, 255, 255, 0.08); }
 .lv-road .lv-go { background: var(--ink); color: #1a1e33; }
 .lv-road .lv-up { width: 100%; justify-content: center; }
+
+/* the play mission's Go, and finishing it with diamonds */
+.lv-go-pair { display: inline-flex; align-items: center; gap: 6px; }
+.lv-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(63, 134, 224, 0.13);
+  color: #2f6fb8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lv-skip:disabled { opacity: 0.45; cursor: not-allowed; }
+.lv-skip:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
