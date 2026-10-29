@@ -14,7 +14,7 @@ const useful = (p, n) =>
   p.fill.some((k) => (k === 'clean' ? (n.dirt ?? 0) > 0.5 : n[k] < 99.5));
 
 // Potions: bought and drunk on the spot, each fills a need right up (the
-// elixir fills them all). Drinking one wakes him if he was asleep.
+// Fill Everything Elixir fills them all). Drinking one wakes him if he was asleep.
 export default function PotionSheet({ wallet, needs, onSay, onClose }) {
   const [said, setSaid] = useState('');
   const timer = useRef(0);
@@ -35,7 +35,7 @@ export default function PotionSheet({ wallet, needs, onSay, onClose }) {
           {said || 'Each one fills a need right up, no waiting. Drinking one wakes him if he is asleep.'}
         </p>
         <ul className="menu potions">
-          {POTIONS.map((p) => {
+          {POTIONS.filter((p) => !p.retired).map((p) => {
             const worth = useful(p, needs);
             return (
               <li key={p.id}>

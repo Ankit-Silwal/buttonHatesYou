@@ -279,7 +279,7 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
-          <BathPane needs={needs} wallet={wallet} active={at === 4} sky={sky} onPotions={() => setPanel('potions')} />
+          <BathPane needs={needs} wallet={wallet} active={at === 4} sky={sky} />
         </section>
       </div>
 

@@ -189,10 +189,12 @@ export const WAKE_OPTION = Object.fromEntries(WAKE_OPTIONS.map((w) => [w.id, w])
 // Potions: bought and drunk in one go, they fill a need right up (or, for
 // dirt, empty it). `fill` lists what goes to 100: 'hunger', 'energy', and
 // 'clean' (dirt back to 0). Drinking one while he's asleep wakes him.
+// `retired`: no longer sold (the bathroom has its own shower), but kept so
+// potions already drunk still replay.
 export const POTIONS = [
   { id: 'potion-hunger', name: 'Bottomless Tummy Tonic', icon: '🍔', color: '#e2674f', price: { coins: 200 }, fill: ['hunger'], quip: 'I am full. Forever. Do not show me food.' },
   { id: 'potion-energy', name: 'Bottled Nap', icon: '⚡', color: '#f0a81c', price: { coins: 250 }, fill: ['energy'], quip: 'Eight hours of sleep in one gulp. I can see sounds.' },
-  { id: 'potion-clean', name: 'Liquid Shower', icon: '🫧', color: '#3fa7d6', price: { coins: 150 }, fill: ['clean'], quip: 'I drank a shower. I feel sparkly inside.' },
-  { id: 'potion-all', name: 'Factory Reset Elixir', icon: '✨', color: '#8a5cd6', price: { diamonds: 2 }, fill: ['hunger', 'energy', 'clean'], quip: 'Fully restored. Same grudge, though.' },
+  { id: 'potion-clean', name: 'Liquid Shower', icon: '🫧', color: '#3fa7d6', price: { coins: 150 }, fill: ['clean'], retired: true, quip: 'I drank a shower. I feel sparkly inside.' },
+  { id: 'potion-all', name: 'Fill Everything Elixir', icon: '✨', color: '#8a5cd6', price: { diamonds: 2 }, fill: ['hunger', 'energy', 'clean'], quip: 'Full tummy, full battery, squeaky clean. Same grudge, though.' },
 ];
 export const POTION = Object.fromEntries(POTIONS.map((p) => [p.id, p]));

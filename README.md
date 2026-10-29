@@ -156,14 +156,15 @@ Coming back with the browser Back button restores the panel he left (kept in
   still wake him. It's the same `wake` event with an `item`; the rules just
   no longer require him to be asleep.
 - **Potions** (`POTIONS` in `src/economy/house.js`, the 🧪 Potions pill in the
-  Kitchen, Bedroom and Bathroom) are bought and drunk on the spot and fill a
-  need right up: Bottomless Tummy Tonic (hunger, 200 🪙), Bottled Nap
-  (energy, 250 🪙), Liquid Shower (clean, 150 🪙) and the Factory Reset
-  Elixir (all three, 2 💎). Event: `{ type: 'potion', item, at }`; drinking
-  one wakes him.
+  Kitchen and Bedroom) are bought and drunk on the spot and fill a need
+  right up: Bottomless Tummy Tonic (hunger, 200 🪙), Bottled Nap (energy,
+  250 🪙) and the Fill Everything Elixir (hunger, energy and clean, 2 💎).
+  Liquid Shower (clean) is retired: the bathroom has its shower. Event:
+  `{ type: 'potion', item, at }`; drinking one wakes him.
 - **Free food when broke.** If you can't afford any food and the fridge is
-  empty, the cheapest food (`FREE_FOOD`, the Browser Cookie) is free: it
-  shows in the Kitchen strip with a Free tag. The server checks `isBroke`
+  empty, the cheapest food (`FREE_FOOD`, the Browser Cookie) is free: he
+  first makes you tap "I'm poor", then it shows in the Kitchen strip with
+  a Free tag. The server checks `isBroke`
   too, so it's only free while you really are broke.
 
 ## Getting dirty, and the Bathroom
