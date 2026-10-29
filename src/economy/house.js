@@ -158,6 +158,24 @@ const RAW = [
   { id: 'desk-study', kind: 'furniture', name: 'Study Desk', spots: ['floor-right', 'floor-left'], price: { coins: 1500 }, rooms: BED },
   { id: 'stars-ceiling', kind: 'furniture', name: 'Star Mobile', spots: ['ceiling'], price: { coins: 800 }, rooms: BED },
   { id: 'dresser', kind: 'furniture', name: 'Dresser', spots: ['floor-right', 'floor-left'], price: { coins: 1400 }, rooms: BED },
+
+  // Moving furniture (animated, art-more.jsx). `level`: only sold from that
+  // level on, as that level's buy mission (see levels.js). One per room for
+  // coins, and one per room for a small fortune in diamonds.
+  { id: 'jukebox', kind: 'furniture', name: 'Jukebox', spots: ['floor-left', 'floor-right'], price: { coins: 9000 }, level: 60, rooms: ['living'], moving: true },
+  { id: 'robot-chef', kind: 'furniture', name: 'Robot Chef', spots: ['floor-left', 'floor-right'], price: { coins: 10500 }, level: 90, rooms: KIT, moving: true },
+  { id: 'galaxy-projector', kind: 'furniture', name: 'Galaxy Projector', spots: ['floor-left', 'floor-right'], price: { coins: 12000 }, level: 130, rooms: BED, moving: true },
+  { id: 'fireplace', kind: 'furniture', name: 'Roaring Fireplace', spots: ['floor-left', 'floor-right'], price: { diamonds: 280 }, rooms: ['living'], moving: true },
+  { id: 'popcorn-machine', kind: 'furniture', name: 'Popcorn Machine', spots: ['floor-left', 'floor-right'], price: { diamonds: 200 }, rooms: KIT, moving: true },
+  { id: 'raincloud', kind: 'furniture', name: 'Pet Raincloud', spots: ['ceiling'], price: { diamonds: 240 }, rooms: BED, moving: true },
+
+  // Cursor's Collection: the last levels' buy missions (195 to 200)
+  { id: 'cursor-rug', kind: 'furniture', name: 'Pointer Rug', spots: ['rug'], price: { coins: 6000 }, level: 195, rooms: ALL },
+  { id: 'cursor-pendant', kind: 'furniture', name: 'Pointer Pendant', spots: ['ceiling'], price: { coins: 6500 }, level: 196, rooms: ALL },
+  { id: 'cursor-hourglass', kind: 'furniture', name: 'Loading Hourglass', spots: ['floor-left', 'floor-right', 'counter'], price: { coins: 7000 }, level: 197, rooms: ALL },
+  { id: 'cursor-neon', kind: 'furniture', name: 'Pointer Neon', spots: ['wall-left', 'wall-right'], price: { coins: 8000 }, level: 198, rooms: ALL },
+  { id: 'cursor-statue', kind: 'furniture', name: 'Golden Cursor', spots: ['floor-left', 'floor-right', 'corner'], price: { coins: 9000 }, level: 199, rooms: LB },
+  { id: 'wall-cursor', kind: 'wall', name: "Cursor's Wallpaper", price: { coins: 10000 }, level: 200 },
 ];
 export const HOUSE_ITEMS = RAW.map((i) => ({ ...i, rooms: i.rooms ?? ALL }));
 export const HOUSE_ITEM = Object.fromEntries(HOUSE_ITEMS.map((i) => [i.id, i]));

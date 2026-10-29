@@ -1,0 +1,201 @@
+/* ---------- the friends you can play as ----------
+   The 'char' slot (catalog.js) sets data-char on the avatar (look.js); its
+   colors come in through --skin like a Color item. Each friend reshapes the
+   body and its keycap finish (.body::before / ::after), and the clothes are
+   cut to the new shape. Sized off --s like the rest of the wardrobe. The
+   doubled [data-char] is only there to beat the .char.static finish. */
+
+/* ---------- Tabby: the Tab key, a blue keycap labelled TAB ---------- */
+.char[data-char='tabby'][data-char] .body { inset: 0 -9%; border-radius: 22%; }
+.char[data-char='tabby'][data-char] .body::before { /* the top face of the key */
+  left: 9%; right: 9%; top: 6%; width: auto; height: auto; bottom: 16%;
+  border-radius: 18%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.04) 60%);
+  transform: none;
+}
+.char[data-char='tabby'][data-char] .body::after { /* the legend */
+  content: 'TAB ⇥';
+  inset: auto auto auto 14%;
+  top: 9%;
+  border: 0;
+  border-radius: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font: 800 calc(var(--s) * 0.11) / 1 ui-rounded, system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 0 rgba(30, 60, 110, 0.35);
+}
+.char[data-char='tabby'] .eyes { top: 38%; }
+.char[data-char='tabby'] .brows { top: 28%; }
+.char[data-char='tabby'] .mouth { top: 64%; }
+
+/* ---------- Bella: a pink button with a bow and lashes ---------- */
+.char[data-char='bella'][data-char] .body::after { /* blush */
+  inset: 0;
+  border: 0;
+  background:
+    radial-gradient(circle at 24% 60%, rgba(255, 80, 130, 0.32) 0 8%, transparent 9.5%),
+    radial-gradient(circle at 76% 60%, rgba(255, 80, 130, 0.32) 0 8%, transparent 9.5%);
+}
+.char[data-char='bella']::after { /* the bow */
+  content: '';
+  position: absolute;
+  z-index: 3;
+  right: 4%;
+  top: -3%;
+  width: 40%;
+  height: 26%;
+  background:
+    radial-gradient(circle at 50% 50%, #b8285a 0 15%, transparent 16%),
+    linear-gradient(180deg, #ff6f9f, #d93a6a);
+  clip-path: polygon(0 4%, 44% 36%, 50% 30%, 56% 36%, 100% 4%, 96% 96%, 56% 64%, 50% 70%, 44% 64%, 4% 96%);
+  transform: rotate(14deg);
+  filter: drop-shadow(0 1px 0 rgba(120, 20, 60, 0.4));
+  pointer-events: none;
+}
+.char[data-char='bella'][data-hat]::after { right: -6%; top: 26%; width: 30%; height: 20%; } /* tucked at the side under a hat */
+.char[data-char='bella'] .eyes i { height: calc(var(--s) * 0.17); }
+.char[data-char='bella'] .brows { top: 25%; opacity: 1; gap: calc(var(--s) * 0.13); }
+.char[data-char='bella'] .brows i { /* lashes: a dark lid line with a flick at the outer corner */
+  position: relative;
+  width: calc(var(--s) * 0.15);
+  height: calc(var(--s) * 0.028);
+  border-radius: 99px;
+}
+.char[data-char='bella'] .brows i::before,
+.char[data-char='bella'] .brows i::after {
+  content: '';
+  position: absolute;
+  top: -70%;
+  width: 32%;
+  height: 90%;
+  border-radius: 99px;
+  background: var(--face);
+}
+.char[data-char='bella'] .brows i:first-child::before { left: -16%; transform: rotate(32deg); }
+.char[data-char='bella'] .brows i:first-child::after { left: 10%; top: -110%; transform: rotate(14deg); width: 26%; }
+.char[data-char='bella'] .brows i:last-child::before { right: -16%; transform: rotate(-32deg); }
+.char[data-char='bella'] .brows i:last-child::after { right: 10%; top: -110%; transform: rotate(-14deg); width: 26%; }
+
+/* ---------- Old Backspace: a wide grey key, wise and a little tired ---------- */
+.char[data-char='backspace'][data-char] .body { inset: 4% -20% 0; border-radius: 16%; }
+.char[data-char='backspace'][data-char] .body::before {
+  left: 7%; right: 7%; top: 6%; width: auto; height: auto; bottom: 16%;
+  border-radius: 14%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.04) 60%);
+  transform: none;
+}
+.char[data-char='backspace'][data-char] .body::after { /* the legend, and a white moustache */
+  content: '⌫';
+  inset: auto 10% auto auto;
+  top: 6%;
+  border: 0;
+  color: rgba(40, 44, 54, 0.55);
+  font: 700 calc(var(--s) * 0.13) / 1 system-ui, sans-serif;
+}
+.char[data-char='backspace'] .mouth::before {
+  content: '';
+  position: absolute;
+  left: -40%;
+  top: -150%;
+  width: 180%;
+  height: 120%;
+  border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%;
+  background: radial-gradient(ellipse at 50% 30%, #fff, #dfe2e8);
+  box-shadow: 0 1px 0 rgba(60, 64, 74, 0.25);
+}
+.char[data-char='backspace'] .brows { opacity: 1; top: 21%; }
+.char[data-char='backspace'] .brows i { height: calc(var(--s) * 0.06); border-radius: 50%; background: #fbfbfd; box-shadow: 0 1px 0 rgba(60, 64, 74, 0.3); }
+.char[data-char='backspace'] .eyes i::before { height: 34%; } /* heavy-lidded: he has seen things */
+
+/* ---------- Lord 404: a purple error, glitching, with a tiny crown ---------- */
+.char[data-char='lord404'][data-char] .body { border-radius: 28%; animation: charGlitch 3.2s steps(1) infinite; }
+.char[data-char='lord404'][data-char] .body::after {
+  content: '404';
+  inset: auto 0 auto 0;
+  top: 7%;
+  border: 0;
+  text-align: center;
+  color: #e6c8ff;
+  font: 800 calc(var(--s) * 0.12) / 1 ui-monospace, 'Cascadia Mono', monospace;
+  letter-spacing: 0.08em;
+}
+.char[data-char='lord404'] .eyes i::after { background: #3a0f5c; }
+.char[data-char='lord404']::after { /* the crown */
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 34%;
+  top: -15%;
+  width: 32%;
+  height: 18%;
+  background: linear-gradient(#ffe08a, #d9a21c);
+  clip-path: polygon(0 100%, 0 20%, 25% 60%, 50% 0, 75% 60%, 100% 20%, 100% 100%);
+  filter: drop-shadow(0 1px 0 rgba(90, 50, 0, 0.5));
+  pointer-events: none;
+}
+.char[data-char='lord404'][data-hat]::after { display: none; }
+@keyframes charGlitch {
+  0%, 86%, 100% { filter: none; translate: 0 0; }
+  88% { filter: drop-shadow(calc(var(--s) * 0.03) 0 0 #ff2fa0) drop-shadow(calc(var(--s) * -0.03) 0 0 #2fd6ff); translate: calc(var(--s) * 0.02) 0; }
+  91% { filter: drop-shadow(calc(var(--s) * -0.02) 0 0 #ff2fa0) hue-rotate(40deg); translate: calc(var(--s) * -0.02) 0; }
+  94% { filter: drop-shadow(calc(var(--s) * 0.02) 0 0 #2fd6ff); translate: 0 0; }
+}
+
+/* ---------- Karen Popup: a popup window, title bar and all ---------- */
+.char[data-char='karen'][data-char] .body { inset: 6% -6% 0; border-radius: 9%; }
+.char[data-char='karen'][data-char] .body::before { /* the title bar */
+  left: 0; right: 0; top: 0; width: auto; height: 22%;
+  border-radius: 9% 9% 0 0 / 40% 40% 0 0;
+  background: linear-gradient(180deg, #ff8f6d, #e8603e);
+  transform: none;
+}
+.char[data-char='karen'][data-char] .body::after { /* × and a manager-summoning "!" */
+  content: '! ✕';
+  inset: auto 6% auto auto;
+  top: 3.5%;
+  border: 0;
+  color: #fff;
+  font: 800 calc(var(--s) * 0.12) / 1 system-ui, sans-serif;
+  letter-spacing: 0.12em;
+}
+.char[data-char='karen'] .eyes { top: 40%; }
+.char[data-char='karen'] .brows { top: 31%; opacity: 0.95; }
+.char[data-char='karen'] .brows i:first-child { transform: rotate(14deg); }
+.char[data-char='karen'] .brows i:last-child { transform: rotate(-14deg); }
+.char[data-char='karen'] .mouth { top: 68%; }
+
+/* ---------- Cursor: the white arrow pointer himself ---------- */
+.char[data-char='cursor'] {
+  filter:
+    drop-shadow(calc(var(--s) * 0.018) 0 0 #1d1d24) drop-shadow(calc(var(--s) * -0.018) 0 0 #1d1d24)
+    drop-shadow(0 calc(var(--s) * 0.018) 0 #1d1d24) drop-shadow(0 calc(var(--s) * -0.018) 0 #1d1d24)
+    drop-shadow(0 calc(var(--s) * 0.06) calc(var(--s) * 0.05) rgba(30, 20, 10, 0.3));
+}
+.char[data-char='cursor'][data-char] .body {
+  border-radius: 0;
+  clip-path: polygon(22% 0, 22% 88%, 40% 71%, 54% 100%, 68% 93%, 54% 65%, 80% 65%);
+  background: linear-gradient(160deg, #ffffff 30%, #e4e6ee);
+  box-shadow: none;
+}
+.char[data-char='cursor'][data-char] .body::before { display: none; }
+.char[data-char='cursor'][data-char] .body::after { display: none; }
+.char[data-char='cursor'] .eyes { left: 38%; top: 34%; gap: calc(var(--s) * 0.06); }
+.char[data-char='cursor'] .eyes i { width: calc(var(--s) * 0.1); height: calc(var(--s) * 0.12); background: #1d1d24; }
+.char[data-char='cursor'] .eyes i::after { background: #fff; width: 34%; height: 34%; left: 22%; top: 18%; }
+.char[data-char='cursor'] .eyes i::before { background: #fff; }
+.char[data-char='cursor'] .brows { left: 38%; top: 25%; gap: calc(var(--s) * 0.04); }
+.char[data-char='cursor'] .brows i { width: calc(var(--s) * 0.1); }
+.char[data-char='cursor'] .mouth { left: 36%; top: 52%; width: calc(var(--s) * 0.12); }
+.char[data-char='cursor'] :is(.outfit, .scarf) { display: none !important; } /* nothing fits an arrow */
+.char[data-char='cursor'][data-hat] .hat { left: 37%; }
+.char[data-char='cursor'] .ears { left: -12%; right: 12%; }
+
+/* clothes are cut to the new shapes */
+.char[data-char='tabby'][data-outfit] .outfit { inset: 0 -9%; clip-path: inset(0 round 22%); }
+.char[data-char='backspace'][data-outfit] .outfit { inset: 4% -20% 0; clip-path: inset(0 round 16%); }
+.char[data-char='lord404'][data-outfit] .outfit { clip-path: inset(0 round 28%); }
+.char[data-char='karen'][data-outfit] .outfit { inset: 6% -6% 0; clip-path: inset(0 round 9%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .char[data-char='lord404'] .body { animation: none !important; }
+}

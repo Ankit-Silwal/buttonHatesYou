@@ -7,6 +7,9 @@ import { lookOf } from '@/adventure/kit';
 import { useFavorites } from '@/profile/favorites';
 import { PAINT, ART_W, ART_H } from './gameArt';
 import GameIcon from './GameIcon';
+import { useProfile } from '@/profile/useProfile';
+import { STORY_UNLOCKS, storyOpen } from '@/economy/levels';
+import LockTag from '@/levels/LockTag';
 
 // Menu order: the Adventure games, then the story games (Please Don't, the
 // original game, and the two long stories) together under Story mode.
@@ -21,12 +24,14 @@ const MENU = [...ORDER.map((id) => GAME[id]).filter((g) => g && !g.retired), ...
 // calls `onBlocked(reason)` instead.
 export function GameGrid({ equipped, why, onBlocked }) {
   const [favorites, toggle] = useFavorites();
+  const { wallet, ready } = useProfile();
+  const locked = (g) => ready && !storyOpen(wallet, g.id); // story games open as levels are cleared
   const starred = favorites.map((id) => MENU.find((g) => g.id === id)).filter(Boolean);
   const rest = MENU.filter((g) => !favorites.includes(g.id) && g.category !== 'story');
   const stories = MENU.filter((g) => !favorites.includes(g.id) && g.category === 'story');
   const tile = (g, i, on) => (
     <li key={g.id} style={{ '--i': Math.min(i, 10) }}>
-      <GameTile game={g} equipped={equipped} why={why?.(g)} onBlocked={onBlocked} favorite={on} onStar={() => toggle(g.id)} />
+      <GameTile game={g} equipped={equipped} why={why?.(g)} onBlocked={onBlocked} favorite={on} locked={locked(g)} onStar={() => toggle(g.id)} />
     </li>
   );
 
@@ -53,20 +58,34 @@ export function GameGrid({ equipped, why, onBlocked }) {
 }
 
 // One game: a picture of it and its name, with a star to pin it to the top.
-function GameTile({ game: g, equipped, why, onBlocked, favorite, onStar }) {
+// A story game a level still locks shows a padlock and doesn't open; a game
+// he can't play right now (`why`) is greyed out and calls onBlocked instead.
+function GameTile({ game: g, equipped, why, onBlocked, favorite, locked, onStar }) {
   const stop = (e) => {
     if (!why) return;
     e.preventDefault();
     onBlocked?.(why);
   };
+  const inner = (
+    <>
+      <span className="gtile-art" style={{ '--tint': g.color }}>
+        {PAINT[g.id] ? <GameArt id={g.id} equipped={equipped} /> : <GameIcon id={g.id} />}
+      </span>
+      <span className="gtile-name">{g.name}</span>
+      {locked && <LockTag className="gtile-lockpin">Beat level {STORY_UNLOCKS[g.id]}</LockTag>}
+    </>
+  );
   return (
-    <div className={`gtile ${why ? 'dim' : ''}`}>
-      <Link href={g.href} className="gtile-link" title={why ?? g.blurb} aria-disabled={why ? true : undefined} onClick={stop}>
-        <span className="gtile-art" style={{ '--tint': g.color }}>
-          {PAINT[g.id] ? <GameArt id={g.id} equipped={equipped} /> : <GameIcon id={g.id} />}
+    <div className={`gtile ${why ? 'dim' : ''} ${locked ? 'locked' : ''}`}>
+      {locked ? (
+        <span className="gtile-link" role="link" aria-disabled="true" title={`Beat level ${STORY_UNLOCKS[g.id]} to unlock`}>
+          {inner}
         </span>
-        <span className="gtile-name">{g.name}</span>
-      </Link>
+      ) : (
+        <Link href={g.href} className="gtile-link" title={why ?? g.blurb} aria-disabled={why ? true : undefined} onClick={stop}>
+          {inner}
+        </Link>
+      )}
       <button
         type="button"
         className={`gtile-star ${favorite ? 'on' : ''}`}

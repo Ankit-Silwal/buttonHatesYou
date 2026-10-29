@@ -275,9 +275,9 @@ E talk / use · Esc pause. Phones get an on-screen pad.
 
 ## Economy
 
-Coins (🪙) come from playing; diamonds (💎) come only from
-[achievements](#achievements-and-the-daily-chest) (plus, rarely, the daily
-chest). All numbers live in
+Coins (🪙) come from playing (and from [levels](#levels)); diamonds (💎)
+come from [achievements](#achievements-and-the-daily-chest), every 5th level
+and, rarely, the daily chest. All numbers live in
 `src/economy/catalog.js` (`STORY_REWARDS`, `RUN_LIMITS`, each Adventure
 game's `payout`) and the rules in `src/economy/rules.js`, which the browser
 and the server both run. `node scripts/check-economy.mjs` checks them.
@@ -443,6 +443,83 @@ chest. Everything, tap by tap, comes from `boughtChest(seed, n, owned)` in
 `src/economy/chest.js`, with `n` the wallet's `stats.boughtChests`, so the
 server pays the same chest; `node scripts/check-economy.mjs` checks the odds
 and the average.
+
+## Levels
+
+There are 200 levels (`src/economy/levels.js`). The level chip in the top bar
+(`src/levels/LevelChip.jsx`, the level number in a ring of its three missions,
+with a "!" when it's ready) opens the level sheet (`LevelSheet.jsx`): three
+mission cards, each with a Go button, the reward, a Level up button and the
+next few unlocks.
+
+Every level has three missions, all worked out from the level number:
+
+1. **Play**: reach a score in one run of an Adventure game. The game rotates
+   through the nine Adventure games, and the target goes from 0.4 of a pay tier
+   at level 1 (4 Flappy pipes) up to 3 tiers at level 200 (30 pipes). Button
+   Run counts coins grabbed, 50 to a "tier". Only runs played during the level
+   count (`lv.best`, the score as `applyRun` clamped it).
+2. **Buy**: own a particular item. The items are the coin-priced outfits and
+   house items, cheapest first, with outfits and house items taking turns, so
+   prices go up level by level. If you already own it, that counts. Every 4th
+   level asks you to stock N foods for the fridge instead (3 + level/25,
+   counted by `stats.stocked`).
+3. **Care**: feed him, put him to bed, or wash him. These rotate, and the
+   number goes up by one every 30 levels (feeding counts double).
+
+**Level up** is an `{ type: 'levelup', level }` event, claimed by hand. It
+only works for the current level (cleared + 1) and only once all three
+missions are done. It pays coins worth about half of the next level's buy
+mission. For levels 1 to 3 that's exactly half, rounded down, so it's never
+enough on its own. The share drops to a quarter by level 200, and level 200
+pays 5000. Every 5th level also pays diamonds: 1 + level/50. The next level
+then starts counting from that moment (`lv.at`).
+
+The wallet keeps `lv = { n, at, best }`. A wallet saved before levels gets
+`n: 0` and its counters as they are now, the first time any event is applied,
+so the browser and the server agree.
+
+**Unlocks:**
+
+| After level | Unlocks |
+| --- | --- |
+| 1 | Please Don't |
+| 20 | Tabby (play as him) |
+| 40 | Bella |
+| 50 | How I Met Your Cursor |
+| 59 / 89 / 129 | Jukebox / Robot Chef / Galaxy Projector go on sale (the buy missions of levels 60, 90 and 130) |
+| 70 | Old Backspace |
+| 100 | The Reason |
+| 110 | Lord 404 |
+| 150 | Karen Popup |
+| 194 to 199 | Cursor's Collection (Pointer Rug, Pointer Pendant, Loading Hourglass, Pointer Neon, Golden Cursor, Cursor's Wallpaper: the buy missions of levels 195 to 200, 6000 to 10000 🪙) |
+| 200 | Cursor |
+
+Locked story games show a padlock on their Games tile, and their page shows a
+locked card. The rules also refuse a story reward for a story that's still
+locked. If you've already claimed part of a story, you keep it. Items with a
+`level` can't be bought before that level, and the shops show them with a
+padlock.
+
+**Characters** are the outfit slot `char` (the wardrobe's Character tab). Bobby
+is the default. The others have no price and a `level`, and you own them once
+you reach that level. Each one sets `data-char` on the avatar
+(`src/app/avatar-chars.css`) and brings its own colours (the Color slot only
+paints Bobby). In the canvas games they show up as their colour.
+
+**Moving furniture** (`src/house/art-moving.jsx`, `moving.css`) keeps moving
+on its own. There's one coin piece per room, locked behind a level: Jukebox
+(living room, 9000 🪙), Robot Chef (kitchen, 10500 🪙) and Galaxy Projector
+(bedroom, 12000 🪙). There's also one diamond piece per room: Roaring Fireplace
+280 💎, Popcorn Machine 200 💎 and Pet Raincloud 240 💎. A year of play brings in
+about 330 💎 in all.
+
+**Balance** (`node scripts/check-economy.mjs` walks the 200 levels). A typical
+player plays 18 decent runs a day plus the daily chest, about 1080 🪙 a day:
+level 10 within the first day, 50 in about 8 days, 100 in about a month, and
+200 in about 4.5 months. A casual player (8 runs a day) takes about 16 days to
+reach 50 and 9 months to reach 200. Even someone at the daily run cap needs
+about 7 weeks.
 
 ## Adventure games
 

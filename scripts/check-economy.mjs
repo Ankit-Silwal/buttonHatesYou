@@ -66,7 +66,7 @@ assert.equal(d.day.coins, 20 * 250);
 assert.equal(d.coins, 3000 + Math.floor(250 * 0.25) * 8);
 
 // Story parts pay once
-let s = { ...START, coins: 0 };
+let s = { ...START, coins: 0, lv: { n: 100, at: {}, best: {} } }; // The Reason opens after level 100
 s = applyEvent(s, { type: 'claim', claim: 'reason:1' });
 assert.equal(s.coins, 200);
 assert.equal(applyEvent(s, { type: 'claim', claim: 'reason:1' }), null);
@@ -232,7 +232,8 @@ assert.equal(applyEvent(c99, { type: 'stock', item: 'food-cookie' }), null); // 
 assert.equal(c99.coins, 1_000_000 - 15);
 
 /* ---------- the diamond balance ---------- */
-const itemDiamonds = [...ITEMS, ...HOUSE_ITEMS].reduce((n, i) => n + (i.price?.diamonds ?? 0), 0);
+// (the moving diamond furniture is a year-long goal of its own: see the levels simulation)
+const itemDiamonds = [...ITEMS, ...HOUSE_ITEMS].filter((i) => !i.moving).reduce((n, i) => n + (i.price?.diamonds ?? 0), 0);
 console.log(`achievements: ${ACHIEVEMENTS.length}, ${ACHIEVEMENT_DIAMONDS} 💎 in all; diamond items cost ${itemDiamonds} 💎`);
 assert.ok(ACHIEVEMENT_DIAMONDS > itemDiamonds, 'every diamond item is reachable');
 assert.ok(ACHIEVEMENT_DIAMONDS < itemDiamonds * 3, 'but diamonds stay scarce');
@@ -310,7 +311,7 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
 {
   const { ROOMS, ROOM_IDS, DEFAULT_ROOMS, DEFAULT_HOUSE, HOUSE_ITEM, roomOf, MAX_PIECES, SPOT_AT, bandOf, fitsRoom, freeSpotFor } = await import('../src/economy/house.js');
   const { readFileSync } = await import('node:fs');
-  const artSrc = ['art.jsx', 'art-more.jsx'].map((f) => readFileSync(new URL(`../src/house/${f}`, import.meta.url), 'utf8')).join('\n');
+  const artSrc = ['art.jsx', 'art-more.jsx', 'art-moving.jsx'].map((f) => readFileSync(new URL(`../src/house/${f}`, import.meta.url), 'utf8')).join('\n');
 
   // the catalog is consistent: every piece fits a spot of every room it names, and has a picture
   for (const i of HOUSE_ITEMS) {
@@ -435,7 +436,7 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(applyEvent(f, { type: 'unplace', item: 'plant-cactus', room: 'kitchen' }), null, 'other rooms are separate');
   // at most MAX_PIECES in a room
   assert.equal(MAX_PIECES, 10);
-  const lb = HOUSE_ITEMS.filter((i) => i.kind === 'furniture' && fitsRoom(i, 'living')).map((i) => i.id);
+  const lb = HOUSE_ITEMS.filter((i) => i.kind === 'furniture' && i.level == null && fitsRoom(i, 'living')).map((i) => i.id); // (level-locked pieces can't be bought yet)
   assert.ok(lb.length > MAX_PIECES + 1);
   let full = buyAll({ ...rich, coins: 1e9, diamonds: 1e6 }, ...lb);
   for (const id of lb.slice(0, MAX_PIECES)) full = p(full, id, 50, 50);
@@ -532,6 +533,194 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   // replayed in a queue: the same as one by one
   const q = replay(normalize({ ...START, coins: 5000, seed: 'xyz' }), Array.from({ length: 12 }, () => ({ type: 'buychest', at: T })));
   assert.ok(q.stats.boughtChests >= 10);
+}
+
+
+/* ---------- levels: 200 of them, three missions each (levels.js) ---------- */
+{
+  const L = await import('../src/economy/levels.js');
+  const { ITEM } = await import('../src/economy/catalog.js');
+  const { HOUSE_ITEM } = await import('../src/economy/house.js');
+  const { MAX_LEVEL, LEVELS, BUY_TRACK, rewardOf, levelState, levelsOf, unlocksOf, storyOpen, STORY_UNLOCKS } = L;
+  const anyItem = (id) => ITEM[id] ?? HOUSE_ITEM[id];
+  const lvAt = (w, n) => ({ ...normalize(w), lv: { n, at: {}, best: {} } });
+
+  assert.equal(LEVELS.length, MAX_LEVEL);
+  // every buy mission is a coin item that exists, is for sale and can be bought at its level
+  for (const { level, item } of BUY_TRACK) {
+    const i = anyItem(item);
+    assert.ok(i && i.price?.coins && !i.price.diamonds && !i.retired, `level ${level}: ${item}`);
+    assert.ok(i.level == null || i.level === level, `${item} is on sale at level ${level}`);
+    assert.ok(applyEvent(lvAt({ ...START, coins: 1e6 }, level - 1), { type: 'buy', item }), `${item} can be bought at level ${level}`);
+  }
+  // every level-locked coin item is the buy mission of its own level
+  for (const i of [...ITEMS, ...HOUSE_ITEMS].filter((i) => i.level != null && i.price?.coins)) assert.equal(LEVELS[i.level - 1].buy.item, i.id);
+  assert.equal(new Set(BUY_TRACK.map((t) => t.item)).size, BUY_TRACK.length, 'no item is asked for twice');
+  // prices rise: the regular items in price order, then Cursor's Collection at the end
+  const regular = BUY_TRACK.filter((t) => anyItem(t.item).level == null).map((t) => anyItem(t.item).price.coins);
+  regular.forEach((p, k) => k && assert.ok(p >= regular[k - 1], 'prices rise level by level'));
+  assert.ok(anyItem(LEVELS[0].buy.item).price.coins <= 150, 'level 1 asks for something cheap');
+  assert.deepEqual(BUY_TRACK.slice(-6).map((t) => t.item), ['cursor-rug', 'cursor-pendant', 'cursor-hourglass', 'cursor-neon', 'cursor-statue', 'wall-cursor']);
+  // every 4th level stocks the fridge instead (unless a special piece sits there)
+  assert.ok(LEVELS[3].buy.stock > 0 && LEVELS[7].buy.stock > 0);
+  // the first levels' reward never covers the next level's item
+  for (const n of [1, 2, 3]) {
+    const next = LEVELS[n].buy;
+    const cost = next.item ? anyItem(next.item).price.coins : next.stock * 15; // the cheapest food
+    assert.ok(rewardOf(n).coins < cost && rewardOf(n).coins >= Math.floor(cost / 2 / 10) * 10 - 10, `level ${n} pays ${rewardOf(n).coins}, under ${cost}`);
+  }
+  // diamonds every 5 levels, more later on
+  for (let n = 1; n <= MAX_LEVEL; n++) assert.equal(rewardOf(n).diamonds > 0, n % 5 === 0);
+  assert.ok(rewardOf(200).diamonds > rewardOf(5).diamonds);
+  // play missions get harder, care missions need more
+  for (const g of new Set(LEVELS.map((d) => d.play.game))) {
+    const t = LEVELS.filter((d) => d.play.game === g).map((d) => d.play.target);
+    assert.ok(t.at(-1) > t[0] * 4, `${g}: ${t[0]} -> ${t.at(-1)}`);
+  }
+  assert.ok(LEVELS[198].care.count > LEVELS[0].care.count);
+  // unlocks: the stories, the friends, Cursor last
+  assert.deepEqual(unlocksOf(1).map((u) => u.id), ['please-dont']);
+  assert.ok(unlocksOf(50).some((u) => u.id === 'how-i-met-your-cursor') && unlocksOf(100).some((u) => u.id === 'the-reason'));
+  assert.deepEqual(unlocksOf(200).map((u) => u.id), ['char-cursor']);
+  assert.ok(unlocksOf(20).some((u) => u.id === 'char-tabby') && unlocksOf(40).some((u) => u.id === 'char-bella'));
+
+  // a brand new player clears level 1 for real: play, buy, care
+  let w = normalize({ ...START, seed: 'lv' });
+  let st = levelState(w);
+  assert.deepEqual([st.level, st.done, st.ready], [1, 0, false]);
+  assert.equal(applyEvent(w, { type: 'levelup', level: 1 }), null, 'missions not done');
+  const [play, shop, care] = st.missions;
+  assert.equal(care.care, 'feed');
+  w = applyEvent(w, { type: 'run', game: play.game, score: play.need, extra: play.need, ms: 60_000, at: T });
+  assert.equal(levelState(w).missions[0].done, true);
+  w = applyEvent(w, { type: 'buy', item: shop.item });
+  for (let k = 0; k < care.need; k++) w = applyEvent(w, { type: 'feed', item: 'food-cookie', at: T + 1000 + k });
+  st = levelState(w);
+  assert.ok(st.ready, JSON.stringify(st.missions));
+  assert.equal(applyEvent(w, { type: 'levelup', level: 2 }), null, 'wrong level');
+  assert.equal(applyEvent(w, { type: 'levelup', level: '1' }), null, 'not a number');
+  const before = w.coins;
+  w = applyEvent(w, { type: 'levelup', level: 1, coins: 99999 });
+  assert.equal(w.coins, before + rewardOf(1).coins, 'pays the reward, never what the event says');
+  assert.equal(w.lv.n, 1);
+  assert.equal(applyEvent(w, { type: 'levelup', level: 1 }), null, 'only once');
+  st = levelState(w);
+  assert.deepEqual([st.level, st.done], [2, 0], 'the next level starts from scratch');
+  // a low run doesn't count; the clamped score does
+  const lw = applyEvent(lvAt(START, 0), { type: 'run', game: play.game, score: 9999, extra: 9999, ms: 1000, at: T });
+  assert.ok(lw.lv.best[play.game] <= lw.stats.best[play.game]);
+  // stocking counts for the stock missions
+  const s4 = applyEvent(lvAt({ ...START, coins: 500 }, 3), { type: 'stock', item: 'food-cookie' });
+  assert.equal(s4.stats.stocked, 1);
+  assert.equal(levelState(s4).missions[1].have, 1);
+
+  // an old wallet: its counters so far don't count, the next action does
+  const old = { ...START, stats: { ...START.stats, eaten: 50, naps: 9 } };
+  assert.equal(levelsOf(old).at.eaten, 50);
+  const fed = applyEvent(old, { type: 'feed', item: 'food-cookie', at: T });
+  assert.deepEqual([fed.lv.n, fed.lv.at.eaten, fed.stats.eaten, levelState(fed).missions[2].have], [0, 50, 51, 1]);
+  // the server replays the same queue to the same level
+  const q = [
+    { type: 'run', game: play.game, score: play.need, extra: play.need, ms: 60_000, at: T },
+    { type: 'buy', item: shop.item },
+    ...Array.from({ length: care.need }, (_, k) => ({ type: 'feed', item: 'food-cookie', at: T + 1000 + k })),
+    { type: 'levelup', level: 1 },
+  ];
+  assert.deepEqual(replay(START, q).lv, replay(START, q, T + 1e6).lv);
+  assert.equal(replay(START, q).lv.n, 1);
+
+  // level-locked items, stories and characters
+  const rich = { ...START, coins: 1e6, diamonds: 1e4 };
+  assert.equal(applyEvent(lvAt(rich, 0), { type: 'buy', item: 'cursor-rug' }), null, 'locked until level 195');
+  assert.equal(applyEvent(lvAt(rich, 193), { type: 'buy', item: 'cursor-rug' }), null);
+  assert.ok(applyEvent(lvAt(rich, 194), { type: 'buy', item: 'cursor-rug' }));
+  assert.equal(applyEvent(lvAt(rich, 58), { type: 'buy', item: 'jukebox' }), null);
+  assert.ok(applyEvent(lvAt(rich, 59), { type: 'buy', item: 'jukebox' }));
+  assert.ok(applyEvent(lvAt(rich, 0), { type: 'buy', item: 'fireplace' }), 'the diamond pieces only cost diamonds');
+  assert.equal(applyEvent(lvAt(rich, 0), { type: 'equip', slot: 'char', item: 'char-tabby' }), null);
+  assert.equal(applyEvent(lvAt(rich, 19), { type: 'equip', slot: 'char', item: 'char-tabby' }), null);
+  assert.equal(applyEvent(lvAt(rich, 20), { type: 'equip', slot: 'char', item: 'char-tabby' }).equipped.char, 'char-tabby');
+  assert.equal(applyEvent(lvAt(rich, 199), { type: 'equip', slot: 'char', item: 'char-cursor' }), null);
+  assert.ok(applyEvent(lvAt(rich, 200), { type: 'equip', slot: 'char', item: 'char-cursor' }));
+  assert.equal(applyEvent(lvAt(rich, 0), { type: 'buy', item: 'char-tabby' }), null, 'characters are not for sale');
+  assert.ok(applyEvent(lvAt(rich, 0), { type: 'equip', slot: 'char', item: 'char-bobby' }));
+  assert.equal(applyEvent(lvAt(rich, 0), { type: 'claim', claim: 'please-dont' }), null, "Please Don't opens after level 1");
+  assert.ok(applyEvent(lvAt(rich, 1), { type: 'claim', claim: 'please-dont' }));
+  assert.equal(applyEvent(lvAt(rich, 49), { type: 'claim', claim: 'cursor:1' }), null);
+  assert.ok(applyEvent(lvAt(rich, 50), { type: 'claim', claim: 'cursor:1' }));
+  assert.equal(applyEvent(lvAt(rich, 99), { type: 'claim', claim: 'reason:1' }), null);
+  assert.ok(applyEvent(lvAt(rich, 100), { type: 'claim', claim: 'reason:1' }));
+  // nobody loses a story they had started
+  const started = { ...lvAt(rich, 0), claimed: ['reason:2', 'cursor:1', 'please-dont'] };
+  assert.ok(applyEvent(started, { type: 'claim', claim: 'reason:3' }) && applyEvent(started, { type: 'claim', claim: 'cursor:2' }));
+  assert.ok(Object.keys(STORY_UNLOCKS).every((g) => storyOpen(started, g)));
+  assert.ok(!storyOpen(lvAt(rich, 0), 'the-reason') && storyOpen(lvAt(rich, 0), 'flap'));
+  // max level: nothing more to claim
+  assert.equal(applyEvent(lvAt(rich, 200), { type: 'levelup', level: 201 }), null);
+  assert.ok(levelState(lvAt(rich, 200)).max);
+  // a legendary coin chest never hands out a level-locked piece
+  const { LEGENDARY_FURNITURE } = await import('../src/economy/chest.js');
+  assert.ok(LEGENDARY_FURNITURE.every((i) => i.level == null && !i.moving));
+
+  /* the balance: walk the 200 levels at a typical rate of play */
+  const decent = 55; // a decent run (one and a half tiers) pays about this
+  let chestCoins = 0;
+  let chestGems = 0;
+  for (let d = 0; d < 365; d++) {
+    const c = chestLoot('sim', 20000 + d, (d % 7) + 1);
+    chestCoins += c.coins;
+    chestGems += c.diamonds;
+  }
+  const chestPerDay = chestCoins / 365;
+  const food = 60; // a few snacks a day to keep him fed for the runs
+  const walk = (runs) => {
+    const daily = Math.min(runs * decent, RUN_LIMITS.dailyFull) + chestPerDay - food;
+    let coins = START.coins;
+    let day = 0;
+    let spent = 0;
+    let earned = 0;
+    let gems = 0;
+    const at = {};
+    const costAt = {};
+    for (const d of LEVELS) {
+      const cost = (d.buy.item ? anyItem(d.buy.item).price.coins : d.buy.stock * 25) + (d.care.id === 'feed' ? d.care.count * 20 : 0);
+      spent += cost;
+      if (coins < cost) {
+        day += (cost - coins) / daily;
+        coins = cost;
+      }
+      coins -= cost;
+      const r = rewardOf(d.level);
+      coins += r.coins;
+      earned += r.coins;
+      if (day <= 365) gems += r.diamonds;
+      if (d.level === 50) coins += 2200; // How I Met Your Cursor opens: its chapters pay once
+      if (d.level === 100) coins += 3100; // and The Reason
+      at[d.level] = day;
+      costAt[d.level] = `${cost}/+${r.coins}`;
+    }
+    return { daily, at, costAt, spent, earned, gems };
+  };
+  const typical = walk(18);
+  const casual = walk(8);
+  const heavy = walk(60);
+  const days = (r) => [10, 50, 100, 200].map((n) => `L${n} ${r.at[n] < 1 ? (r.at[n] * 24).toFixed(0) + 'h' : r.at[n].toFixed(0) + 'd'}`).join(', ');
+  console.log(`levels: ${BUY_TRACK.length} buy missions, ${typical.spent} 🪙 asked in all, ${typical.earned} 🪙 paid back by level-ups`);
+  console.log(`levels: cost/reward of a level: ${[1, 2, 3, 10, 50, 100, 150, 199, 200].map((n) => `L${n} ${typical.costAt[n]}`).join(', ')}`);
+  console.log(`levels: typical (18 runs, ${typical.daily.toFixed(0)} 🪙 a day): ${days(typical)}`);
+  console.log(`levels: casual (8 runs, ${casual.daily.toFixed(0)} 🪙 a day): ${days(casual)}`);
+  console.log(`levels: at the daily cap (${heavy.daily.toFixed(0)} 🪙 a day): ${days(heavy)}`);
+  assert.ok(typical.at[10] <= 2, 'the first 10 levels within a day or two');
+  assert.ok(typical.at[50] >= 5 && casual.at[50] <= 40, 'level 50 takes a week or a few');
+  assert.ok(typical.at[200] >= 120, 'level 200 takes many months');
+  assert.ok(heavy.at[200] >= 40, 'even at the daily cap it takes weeks');
+  // diamonds a year: achievements (all of them, generously), levels, daily chests
+  const yearGems = ACHIEVEMENT_DIAMONDS + typical.gems + chestGems;
+  const moving = HOUSE_ITEMS.filter((i) => i.moving && i.price.diamonds);
+  console.log(`levels: diamonds in a year ≈ ${yearGems} (achievements ${ACHIEVEMENT_DIAMONDS}, levels ${typical.gems}, chests ${chestGems}); other diamond items cost ${itemDiamonds}; moving pieces ${moving.map((i) => `${i.id} ${i.price.diamonds}`).join(', ')}`);
+  assert.equal(moving.length, 3);
+  for (const i of moving) assert.ok(i.price.diamonds >= (yearGems - itemDiamonds) * 0.6 && i.price.diamonds <= yearGems, `${i.id} takes about a year`);
+  assert.equal(HOUSE_ITEMS.filter((i) => i.moving && i.price.coins && i.level).length, 3);
 }
 
 console.log('all economy checks passed');

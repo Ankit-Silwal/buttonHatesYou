@@ -2,6 +2,7 @@
 // server, so prices and rewards are checked against the same table on both.
 
 export const SLOTS = [
+  { id: 'char', name: 'Character', icon: '🙂' },
   { id: 'color', name: 'Color', icon: '🎨' },
   { id: 'outfit', name: 'Clothes', icon: '👕' },
   { id: 'eyes', name: 'Eyes', icon: '👀' },
@@ -12,7 +13,21 @@ export const SLOTS = [
 
 // `look` is what the avatar CSS keys off (a color pair, or a data-attribute
 // value). Items without a price are free and always owned.
+// `level`: only from that level on (see levels.js). A priced item can't be
+// bought earlier; a free one (the characters) is owned once it is reached.
 export const ITEMS = [
+  // Who you play as. Bobby is the button; his friends join as you level up
+  // (`level` is the level reached, one past the level cleared). They come in
+  // their own colors, so the Color slot only paints Bobby. `look.char` is the
+  // avatar's data-char (avatar-chars.css).
+  { id: 'char-bobby', slot: 'char', name: 'Bobby', look: null },
+  { id: 'char-tabby', slot: 'char', name: 'Tabby', look: { char: 'tabby', c: '#5b9bd5', cd: '#3b77ad' }, level: 21 },
+  { id: 'char-bella', slot: 'char', name: 'Bella', look: { char: 'bella', c: '#f39ac0', cd: '#cc6f97' }, level: 41 },
+  { id: 'char-backspace', slot: 'char', name: 'Old Backspace', look: { char: 'backspace', c: '#b4b8c2', cd: '#7d818c' }, level: 71 },
+  { id: 'char-404', slot: 'char', name: 'Lord 404', look: { char: 'lord404', c: '#8a5cd6', cd: '#5b3a9c' }, level: 111 },
+  { id: 'char-karen', slot: 'char', name: 'Karen Popup', look: { char: 'karen', c: '#eef1f7', cd: '#a9b1c3' }, level: 151 },
+  { id: 'char-cursor', slot: 'char', name: 'Cursor', look: { char: 'cursor', c: '#ffffff', cd: '#b8bccb' }, level: 201 },
+
   { id: 'color-tomato', slot: 'color', name: 'Tomato', look: { c: '#e2674f', cd: '#b84a36' } },
   { id: 'color-ocean', slot: 'color', name: 'Ocean', look: { c: '#5b9bd5', cd: '#3b77ad' }, price: { coins: 300 } },
   { id: 'color-mint', slot: 'color', name: 'Mint', look: { c: '#7cc6a4', cd: '#549c7c' }, price: { coins: 300 } },
@@ -95,6 +110,7 @@ export const ITEMS = [
 export const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
 
 export const DEFAULT_LOOK = {
+  char: 'char-bobby',
   color: 'color-tomato',
   outfit: 'outfit-none',
   eyes: 'eyes-classic',

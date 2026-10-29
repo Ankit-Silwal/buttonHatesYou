@@ -3,14 +3,20 @@ import { ITEM, DEFAULT_LOOK, SLOTS } from '@/economy/catalog';
 // Turns an `equipped` map into what the character markup needs: the body
 // colors as CSS variables and one data-attribute per accessory. The CSS in
 // avatar.css draws the accessories from those attributes.
+// A character other than Bobby (the 'char' slot) brings its own shape
+// (data-char, avatar-chars.css) and its own colors, which win over the Color slot.
 export function lookProps(equipped = DEFAULT_LOOK) {
   const style = {};
   const data = {};
+  const who = ITEM[equipped?.char]?.slot === 'char' ? ITEM[equipped.char].look : null;
   for (const { id: slot } of SLOTS) {
     const item = ITEM[equipped?.[slot]] ?? ITEM[DEFAULT_LOOK[slot]];
-    if (slot === 'color') {
-      style['--skin'] = item.look.c;
-      style['--skin-dark'] = item.look.cd;
+    if (slot === 'char') {
+      if (who) data['data-char'] = who.char;
+    } else if (slot === 'color') {
+      const c = who ?? item.look;
+      style['--skin'] = c.c;
+      style['--skin-dark'] = c.cd;
     } else if (item.look) {
       data[`data-${slot}`] = item.look;
     }

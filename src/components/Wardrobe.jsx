@@ -5,7 +5,10 @@ import Avatar from './Avatar';
 import Sheet from './Sheet';
 import { SLOTS, ITEMS, ITEM } from '@/economy/catalog';
 import { owns, canAfford } from '@/economy/rules';
+import { levelLocked } from '@/economy/levels';
 import { buy, equip } from '@/profile/store';
+import { takeFocus, lockLabel } from '@/levels/focus';
+import LockTag from '@/levels/LockTag';
 
 export const price = (p) => (p.diamonds ? `${p.diamonds} 💎` : `${p.coins} 🪙`);
 const total = (items) => items.reduce((t, i) => ({ coins: t.coins + (i.price?.coins ?? 0), diamonds: t.diamonds + (i.price?.diamonds ?? 0) }), { coins: 0, diamonds: 0 });
@@ -15,15 +18,21 @@ const priceOf = ({ coins, diamonds }) => [coins && `${coins.toLocaleString('en-U
 // them), buy what you like. Things tried on in different slots stay on
 // together, so a whole look can be tried and bought at once (Buy all).
 // Owned things are put on with one tap.
+// The Character tab is who you play as: Bobby, and the friends levels unlock
+// (a locked one only says which level; they're never bought). A level
+// mission's "Go" opens the wardrobe on its item (takeFocus).
 export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
-  const [slot, setSlot] = useState('color');
-  const [trying, setTrying] = useState({}); // { [slot]: item id }, not owned yet
+  const [focus] = useState(() => ITEM[takeFocus()] ?? null);
+  const [slot, setSlot] = useState(focus?.slot ?? 'color');
+  const [trying, setTrying] = useState(() => (focus && !owns(wallet, focus) && !levelLocked(wallet, focus) ? { [focus.slot]: focus.id } : {})); // { [slot]: item id }, not owned yet
+  const bobby = (wallet.equipped.char ?? 'char-bobby') === 'char-bobby';
   const tried = Object.values(trying).map((id) => ITEM[id]);
   const cost = total(tried);
   const affordable = wallet.coins >= cost.coins && wallet.diamonds >= cost.diamonds;
 
   useEffect(() => {
-    onPreview(tried.length ? { ...wallet.equipped, ...trying } : null);
+    // a color shows on Bobby, so trying one shows him
+    onPreview(tried.length ? { ...wallet.equipped, ...trying, ...(trying.color ? { char: 'char-bobby' } : null) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trying, wallet.equipped, onPreview]);
 
@@ -34,6 +43,7 @@ export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
     });
 
   function choose(item) {
+    if (!owns(wallet, item) && levelLocked(wallet, item)) return onSay(`${lockLabel(item)} first.`, 'smug');
     if (!owns(wallet, item)) {
       if (trying[item.slot] === item.id) return untry(item.slot); // tap again: take it off
       return setTrying((t) => ({ ...t, [item.slot]: item.id }));
@@ -41,7 +51,7 @@ export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
     untry(item.slot);
     if (wallet.equipped[item.slot] !== item.id) {
       equip(item.slot, item.id);
-      onSay('Hmm. Acceptable.', 'smug');
+      onSay(item.slot === 'char' ? (item.id === 'char-bobby' ? 'Me again. The original.' : `Fine. Be ${item.name}. See if I care.`) : 'Hmm. Acceptable.', 'smug');
     }
   }
 
@@ -74,16 +84,18 @@ export default function Wardrobe({ wallet, onPreview, onSay, onClose }) {
       </div>
 
       <div className="sheet-body">
+        {slot === 'color' && !bobby && <p className="lv-note">Colors only show on Bobby.</p>}
         <div className="tiles">
           {ITEMS.filter((i) => i.slot === slot).map((item) => {
             const have = owns(wallet, item);
-            const on = wallet.equipped[slot] === item.id;
+            const on = (wallet.equipped[slot] ?? (slot === 'char' ? 'char-bobby' : null)) === item.id;
+            const lock = !have && levelLocked(wallet, item);
             return (
-              <button key={item.id} className={`tile ${trying[slot] === item.id ? 'trying' : ''}`} aria-pressed={on} onClick={() => choose(item)}>
+              <button key={item.id} className={`tile ${trying[slot] === item.id ? 'trying' : ''} ${lock ? 'locked' : ''}`} aria-pressed={on} onClick={() => choose(item)}>
                 {on && <span className="check">✓</span>}
-                <Avatar size={52} equipped={{ ...look, [slot]: item.id }} />
+                <Avatar size={52} equipped={{ ...look, [slot]: item.id, ...(slot === 'color' ? { char: 'char-bobby' } : null) }} />
                 <span className="name">{item.name}</span>
-                <span className="cost">{have ? (on ? 'Wearing' : 'Owned') : price(item.price)}</span>
+                <span className="cost">{lock ? <LockTag>{lockLabel(item)}</LockTag> : have ? (on ? (slot === 'char' ? 'Playing' : 'Wearing') : 'Owned') : price(item.price)}</span>
               </button>
             );
           })}

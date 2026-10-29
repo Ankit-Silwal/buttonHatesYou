@@ -5,6 +5,7 @@ import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
 import { CHEST, chestLoot } from './chest';
 import { BUY_CHEST, boughtChest } from './chest';
+import { applyLevelEvent, countLevelStats, levelBest, levelReached, withLevels } from './levels';
 
 export { tierPayout };
 
@@ -35,6 +36,9 @@ export { tierPayout };
 //   { id, type: 'buychest', at }        bought (and opened) a coin chest; its
 //                                       loot comes from the seed (see
 //                                       applyBuyChestEvent at the bottom)
+//   { id, type: 'levelup', level }      cleared a level (see levels.js, which
+//                                       also refuses items and stories that
+//                                       are still level-locked)
 //
 // Economy fields a wallet picks up as it is used (all optional, so wallets
 // saved before them still work):
@@ -44,6 +48,7 @@ export { tierPayout };
 //   legacy   { [REWARDS id]: times paid } (old events are paid a limited number of times)
 //   stats    what achievements count (see achievements.js); achieved { [id]: levels claimed }
 //   seed     the daily chest's seed (set by the server); pantry { [food]: free snacks from chests }
+//   lv       levels cleared and the current level's progress (levels.js)
 //
 // The house and the button's needs have their own events, handled by
 // applyHouseEvent below.
@@ -63,7 +68,8 @@ export const START = Object.freeze({
 
 const pick = (table, id) => (typeof id === 'string' && Object.hasOwn(table, id) ? table[id] : null);
 
-export const owns = (wallet, item) => !item.price || wallet.owned.includes(item.id);
+// Free items are always owned, except a free one with a `level` (a character): from that level on.
+export const owns = (wallet, item) => (item.price ? wallet.owned.includes(item.id) : levelReached(wallet) >= (item.level ?? 0));
 
 export const canAfford = (wallet, item) =>
   wallet.coins >= (item.price?.coins ?? 0) && wallet.diamonds >= (item.price?.diamonds ?? 0);
@@ -73,12 +79,14 @@ export const canAfford = (wallet, item) =>
 // `now` caps event times: runs and needs events (the server passes its own clock).
 export function applyEvent(wallet, ev, now = Infinity) {
   if (!ev || typeof ev !== 'object') return null;
-  wallet = normalize(wallet);
+  wallet = withLevels(normalize(wallet));
   const next = applyAnyEvent(wallet, ev, now);
-  return next && countDay(next, ev, now); // see "Achievements" below
+  return next && countDay(countLevelStats(next, ev), ev, now); // see "Achievements" below
 }
 
 function applyAnyEvent(wallet, ev, now) {
+  const level = applyLevelEvent(wallet, ev, ev.type === 'buy' ? (pick(ITEM, ev.item) ?? pick(HOUSE_ITEM, ev.item)) : null);
+  if (level !== undefined) return level;
   const achieved = applyAchievementEvent(wallet, ev, now);
   if (achieved !== undefined) return achieved;
   const house = applyHouseEvent(wallet, ev, now);
@@ -176,6 +184,7 @@ function applyRun(wallet, ev, now) {
     runs: { ...wallet.runs, [game.id]: Math.max(best, raw) },
     day: { n, coins: day.coins + raw, ms: day.ms + ms, end: at },
     stats: countRun(wallet.stats, game.id, p.coins ? extra : score, coins),
+    lv: levelBest(wallet, game.id, p.coins ? extra : score),
   };
 }
 

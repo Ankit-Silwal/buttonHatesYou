@@ -8,6 +8,9 @@ import './decor.css';
 import { buy, decorate, placePiece, unplacePiece } from '@/profile/store';
 import { owns, canAfford } from '@/economy/rules';
 import { HOUSE_ITEMS, HOUSE_ITEM, ROOMS, MAX_PIECES, bandOf, fitsRoom, freeSpotFor, roomOf } from '@/economy/house';
+import { levelLocked } from '@/economy/levels';
+import { takeFocus, lockLabel } from '@/levels/focus';
+import LockTag from '@/levels/LockTag';
 
 const TABS = [
   { id: 'wall', name: 'Walls', icon: '🖼️' },
@@ -29,7 +32,12 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fullLink = true }) {
   const cfg = ROOMS[room];
   const cur = roomOf(wallet, room);
-  const [tab, setTab] = useState('furniture');
+  // a level mission's "Go" opens the sheet on the piece it asks for
+  const [focus] = useState(() => {
+    const f = HOUSE_ITEM[takeFocus()];
+    return f?.rooms.includes(room) ? f : null;
+  });
+  const [tab, setTab] = useState(focus?.kind ?? 'furniture');
   const [trying, setTrying] = useState(null);
   const [pos, setPos] = useState(null); // where a free piece being tried would go
   const [said, setSaid] = useState('');
@@ -83,6 +91,13 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
     setSaid('');
     setPos(bandOf(it) ? freeSpotFor(it, cur.items) : null);
   }
+
+  useEffect(() => {
+    if (focus) choose(focus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const lockedNow = item ? !have && levelLocked(wallet, item) : false;
 
   // Puts the piece being tried in the room. False when it can't go in.
   function put() {
@@ -153,7 +168,7 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
             const mine = owns(wallet, it);
             const inUse = isUse(it);
             return (
-              <button key={it.id} className={`dtile ${trying === it.id ? 'trying' : ''}`} aria-pressed={inUse} onClick={() => choose(it)}>
+              <button key={it.id} className={`dtile ${trying === it.id ? 'trying' : ''} ${!mine && levelLocked(wallet, it) ? 'locked' : ''}`} aria-pressed={inUse} onClick={() => choose(it)}>
                 {inUse && <span className="check">✓</span>}
                 <span className="dthumb">
                   {it.kind === 'furniture' ? (
@@ -163,7 +178,7 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
                   )}
                 </span>
                 <span className="name">{it.name}</span>
-                <span className="cost">{inUse ? (it.kind === 'furniture' ? 'Placed' : 'In use') : mine ? 'Owned' : priceText(it.price)}</span>
+                <span className="cost">{inUse ? (it.kind === 'furniture' ? 'Placed' : 'In use') : mine ? 'Owned' : levelLocked(wallet, it) ? <LockTag>{lockLabel(it)}</LockTag> : priceText(it.price)}</span>
               </button>
             );
           })}
@@ -190,8 +205,8 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
               Cancel
             </button>
             {!have ? (
-              <button className="pill" onClick={buyItem} disabled={!canAfford(wallet, item)}>
-                Buy · {priceText(item.price)}
+              <button className="pill" onClick={buyItem} disabled={lockedNow || !canAfford(wallet, item)}>
+                {lockedNow ? <LockTag>{lockLabel(item)}</LockTag> : `Buy · ${priceText(item.price)}`}
               </button>
             ) : placed ? (
               <button className="pill alt" onClick={takeDown}>
