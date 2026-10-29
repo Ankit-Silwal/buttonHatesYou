@@ -379,7 +379,7 @@ export default function Hub({ initial = 'home' }) {
         </div>
         <div className="hub-right">
           <Link href={ready && readyCount(wallet) ? '/profile#achievements' : '/profile'} className="profile-btn" aria-label={`Profile${me?.name ? `: ${me.name}` : ''}`}>
-            <Avatar size={34} equipped={wallet.equipped} mood="smug" />
+            <Avatar size={44} equipped={wallet.equipped} mood="smug" />
             {ready && readyCount(wallet) > 0 && <span className="perk-badge">{readyCount(wallet)}</span>}
           </Link>
         </div>

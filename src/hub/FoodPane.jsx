@@ -1,20 +1,34 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Art } from '@/house/art';
 import RoomScene from './RoomScene';
 import { feed } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { FOODS, FREE_FOOD, isBroke, roomOf } from '@/economy/house';
 import Hint from './Hint';
+import { Sound } from '@/game/sound';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const HUNGRY = ['I could eat a keyboard.', 'My tummy is making dial-up noises.', 'Feed me. Please. Do not tell anyone I said please.'];
 const FULL = ["I'm stuffed. Absolutely stuffed.", 'One more bite and I pop.'];
+const NAAH = ['Naah.', 'Naaah. Not hungry.', 'Nope. Full. Go away.', 'Ew. Later. Maybe never.'];
+const YUM = ['Mmm!', 'Oh, that hit the spot.', 'Okay. That was good. Do not get used to it.'];
+const FULL_AT = 85; // above this he turns food down
+const DRAG_PX = 8; // moving this far turns a press into a drag
+
+// "Naah": a grumpy two-note no.
+function naah() {
+  Sound.init();
+  Sound.tone(300, 0.16, 'triangle', 0.6, 240);
+  Sound.tone(250, 0.3, 'triangle', 0.6, 160, 0.17);
+}
 
 // The kitchen: a real room with the button standing in it. What he owns is
-// in a strip under him (tap a food to feed it, free); the Buy food pill opens
-// the whole menu. When he's broke the cheapest food is free (FREE_FOOD), so
+// in a strip under him: drag a food onto him (or tap it) to feed him. Hungry,
+// he opens wide for it; full, he leans away and says naah. The Buy food pill
+// opens the whole menu. When he's broke the cheapest food is free (FREE_FOOD), so
 // he first makes you admit you're poor, then hands it over with a Free tag. `view` is what the decorating sheet is trying out in this
 // room; `onDecorate` and `onBuy` open the sheets.
 export default function FoodPane({ needs, wallet, active, sky, view, quip, onDecorate, onBuy, onPotions }) {
@@ -56,6 +70,55 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     say(`Wow. Okay. That was sad to watch. Here, a free ${FREE_FOOD.name}. Feed me.`);
   }
 
+  // Dragging a food: a copy follows the finger; near him he either opens
+  // wide (hungry) or leans away (full). Dropped on him, he eats it or not.
+  const [drag, setDrag] = useState(null); // { f, x, y, near, moved }
+  const [react, setReact] = useState(null); // 'yum' | 'naah', for a moment
+  const reactTimer = useRef(0);
+  const press = useRef(null);
+  useEffect(() => () => clearTimeout(reactTimer.current), []);
+  const full = needs.hunger > FULL_AT;
+  const moment = (r, ms) => {
+    setReact(r);
+    clearTimeout(reactTimer.current);
+    reactTimer.current = setTimeout(() => setReact(null), ms);
+  };
+  const heroNear = (x, y) => {
+    const r = document.querySelector('.pane-food .hero')?.getBoundingClientRect();
+    if (!r) return false;
+    return Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)) < r.width * 0.8;
+  };
+  function grab(e, f) {
+    if (eating || needs.asleep) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    press.current = { f, x0: e.clientX, y0: e.clientY };
+  }
+  function slide(e) {
+    const p = press.current;
+    if (!p) return;
+    const moved = Math.hypot(e.clientX - p.x0, e.clientY - p.y0) > DRAG_PX;
+    if (!moved && !drag) return;
+    setDrag({ f: p.f, x: e.clientX, y: e.clientY, near: heroNear(e.clientX, e.clientY) });
+  }
+  function drop(e) {
+    const p = press.current;
+    press.current = null;
+    if (!p) return;
+    const wasDrag = !!drag;
+    setDrag(null);
+    if (!wasDrag || heroNear(e.clientX, e.clientY)) offer(p.f);
+  }
+
+  function offer(f) {
+    if (needs.asleep) return say('Zzz… (he is asleep. Wake him up in the Bedroom first)');
+    if (full) {
+      naah();
+      moment('naah', 1300);
+      return say(pick(NAAH));
+    }
+    eat(f);
+  }
+
   function eat(f) {
     if (needs.asleep) return say('Zzz… (he is asleep. Wake him up in the Bedroom first)');
     const charity = broke && f.id === FREE_FOOD.id;
@@ -67,7 +130,8 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       setEating(null);
-      say(charity ? `Free food? For me? ...I still hate you. ${f.quip}` : f.quip);
+      moment('yum', 1800);
+      say(charity ? `Free food? For me? ...I still hate you. ${f.quip}` : pick([f.quip, f.quip, pick(YUM)]));
       if (f.fx) {
         setFx(f.fx);
         clearTimeout(fxTimer.current);
@@ -79,6 +143,20 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
   // Stuck while he's hungry? Point at what feeds him: the fridge, the
   // "I'm poor" button, or the shop.
   const feedMe = stock.length || (broke && begged) ? '.stock-item' : broke ? '.pill.beg' : '.pill.buy';
+  const offering = drag?.near ? (full ? 'refuse' : 'open') : null;
+  const pose = react === 'naah' ? 'refuse' : offering ?? (needs.hunger < 25 && !needs.asleep && !eating ? 'tummy' : undefined);
+  const mood = eating ? 'scared' : react === 'yum' ? 'happy' : react === 'naah' || offering === 'refuse' ? 'annoyed' : face.mood;
+  // a food in the strip: drag it to him, or tap it (Enter/Space too)
+  const food = (f) => ({
+    onPointerDown: (e) => grab(e, f),
+    onPointerMove: slide,
+    onPointerUp: drop,
+    onPointerCancel: () => {
+      press.current = null;
+      setDrag(null);
+    },
+    onKeyDown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), offer(f)),
+  });
 
   return (
     <RoomScene
@@ -87,25 +165,25 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
       house={view?.house ?? roomOf(wallet, 'kitchen')}
       preview={view?.at}
       equipped={wallet.equipped}
-      mood={eating ? 'scared' : face.mood}
+      mood={mood}
       sleepy={face.sleepy}
       dirty={face.dirty}
       grime={face.grime}
       asleep={needs.asleep}
       fx={fx}
       eating={eating}
-      pose={needs.hunger < 25 && !needs.asleep && !eating ? 'tummy' : undefined}
+      pose={pose}
       line={line}
-      onPoke={() => say(needs.asleep ? 'Zzz…' : stock.length ? 'Tap something from the fridge, not me.' : 'The fridge is empty. Buy me something.')}
+      onPoke={() => say(needs.asleep ? 'Zzz…' : stock.length ? 'Food. Not fingers. Bring me food.' : 'The fridge is empty. Buy me something.')}
       tray={
         <>
           {stock.length ? (
-            <ul className="stock" aria-label="Food in the fridge. Tap one to feed it to him.">
+            <ul className="stock" aria-label="Food in the fridge">
               {stock.map((f) => {
                 const n = wallet.pantry[f.id];
                 return (
                   <li key={f.id}>
-                    <button className="stock-item" onClick={() => eat(f)} disabled={!!eating || needs.asleep} aria-label={`Feed ${f.name}, ${n} in the fridge`}>
+                    <button className={`stock-item ${drag?.f === f ? 'lifted' : ''}`} {...food(f)} disabled={!!eating || needs.asleep} aria-label={`Feed ${f.name}, ${n} in the fridge`}>
                       <Art id={f.id} />
                       <small>{f.name}</small>
                       <span className="stock-count" aria-hidden="true">
@@ -123,9 +201,9 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
               </button>
             </div>
           ) : broke ? (
-            <ul className="stock" aria-label="You're out of coins, so this one is free. Tap it to feed him.">
+            <ul className="stock" aria-label="Free food">
               <li>
-                <button className="stock-item" onClick={() => eat(FREE_FOOD)} disabled={!!eating || needs.asleep} aria-label={`Feed ${FREE_FOOD.name}, free because you're out of coins`}>
+                <button className={`stock-item ${drag?.f === FREE_FOOD ? 'lifted' : ''}`} {...food(FREE_FOOD)} disabled={!!eating || needs.asleep} aria-label={`Feed ${FREE_FOOD.name}, free because you're out of coins`}>
                   <Art id={FREE_FOOD.id} />
                   <small>{FREE_FOOD.name}</small>
                   <span className="stock-count free" aria-hidden="true">
@@ -135,7 +213,14 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
               </li>
             </ul>
           ) : null}
-          <Hint active={active && !eating} show={!needs.asleep && needs.hunger < 60} from={feedMe} />
+          <Hint active={active && !eating && !drag} show={!needs.asleep && needs.hunger < 60} from={feedMe} to={feedMe === '.stock-item' ? '.hero' : undefined} />
+          {drag &&
+            createPortal(
+              <span className={`food-drag ${drag.near ? (full ? 'no' : 'yes') : ''}`} style={{ left: drag.x, top: drag.y }} aria-hidden="true">
+                <Art id={drag.f.id} />
+              </span>,
+              document.body
+            )}
           <div className="rs-pills">
             <button className="pill buy" onClick={onBuy} style={{ '--i': 0 }}>
               <span className="ico">🛒</span> Buy food
