@@ -190,6 +190,8 @@ export function buyChest() {
 export const levelUp = (level) => earn({ type: 'levelup', level });
 // A code from Profile → Settings (see economy/codes.js): what it paid, or null.
 export const redeemCode = (code) => earn({ type: 'code', code });
+// A finished hard quest (economy/quests.js): what it paid, or null.
+export const claimQuest = (quest) => earn({ type: 'quest', quest });
 
 export const buy = (item) => tryRecord({ type: 'buy', item });
 export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });

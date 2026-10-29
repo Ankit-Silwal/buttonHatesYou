@@ -738,4 +738,20 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(applyEvent(w, { type: 'code', code: 42 }), null, 'junk code');
 }
 
+/* ---------- hard quests (economy/quests.js) ---------- */
+{
+  const { QUESTS, questStates } = await import('../src/economy/quests.js');
+  const w = normalize(START);
+  assert.ok(questStates(w).every((x) => !x.done && !x.claimed), 'nobody starts with a quest done');
+  assert.equal(applyEvent(w, { type: 'quest', quest: 'q-feed' }), null, 'not before it is done');
+  const fed = { ...w, stats: { ...w.stats, eaten: 500 } };
+  const paid = applyEvent(fed, { type: 'quest', quest: 'q-feed' });
+  assert.equal(paid.diamonds, w.diamonds + 25);
+  assert.equal(applyEvent(paid, { type: 'quest', quest: 'q-feed' }), null, 'once');
+  assert.equal(applyEvent(w, { type: 'quest', quest: 'nope' }), null, 'unknown quest');
+  const flap = { ...w, stats: { ...w.stats, best: { ...w.stats.best, flap: 60 } } };
+  assert.ok(applyEvent(flap, { type: 'quest', quest: 'q-flap' }), 'a score quest');
+  console.log('quests:', QUESTS.length, 'worth', QUESTS.reduce((n, q) => n + q.reward.diamonds, 0), '💎');
+}
+
 console.log('all economy checks passed');

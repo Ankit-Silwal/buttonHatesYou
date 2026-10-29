@@ -217,7 +217,7 @@
 .lv-road-head b { font-size: 22px; }
 .lv-road-head b span { color: var(--ink-soft); font-size: 14px; font-weight: 600; }
 .lv-road .lv-track { background: rgba(255, 255, 255, 0.08); }
-.lv-road-got { display: flex; align-items: center; gap: 6px; margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255, 181, 71, 0.14); color: #ffcf7a; font-weight: 700; }
+.lv-road-got { display: flex; align-items: center; gap: 6px; margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(240, 180, 64, 0.18); color: #8a5a10; font-weight: 700; }
 .lv-road-list { position: relative; display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .lv-road-list::before { /* the road */
   content: '';

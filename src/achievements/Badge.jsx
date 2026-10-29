@@ -140,6 +140,8 @@ function star(cx, cy, R, r) {
 }
 const STAR = star(14, 23.5, 5, 2.2);
 
+const OFF = { color: 'var(--medal-off, #fff)' };
+
 // One medal of the bronze/silver/gold row. `state`: got, ready or locked.
 export function MedalArt({ medal, state, size = 30 }) {
   const uid = useId().replace(/:/g, '');
@@ -158,11 +160,12 @@ export function MedalArt({ medal, state, size = 30 }) {
           </radialGradient>
         </defs>
       )}
-      <path d="M6 1 h6 l3.6 12.5 h-6 z" fill={off ? 'rgba(255,255,255,0.08)' : '#e2674f'} />
-      <path d="M22 1 h-6 l-3.6 12.5 h6 z" fill={off ? 'rgba(255,255,255,0.12)' : '#a83d2c'} />
-      <circle cx="14" cy="23.5" r="10.5" fill={off ? 'rgba(255,255,255,0.05)' : `url(#${id})`} stroke={off ? 'rgba(255,255,255,0.22)' : m3} strokeWidth="1" />
-      <circle cx="14" cy="23.5" r="7.8" fill="none" stroke={off ? 'rgba(255,255,255,0.12)' : m3} strokeOpacity={off ? 1 : 0.55} strokeWidth="0.9" />
-      <path d={STAR} fill={off ? 'none' : m3} fillOpacity="0.7" stroke={off ? 'rgba(255,255,255,0.25)' : 'none'} strokeWidth="1" strokeLinejoin="round" />
+      {/* a locked medal is an outline in --medal-off (white on the dark arcade, brown on light pages) */}
+      <path d="M6 1 h6 l3.6 12.5 h-6 z" fill={off ? 'currentColor' : '#e2674f'} fillOpacity={off ? 0.08 : 1} style={off ? OFF : undefined} />
+      <path d="M22 1 h-6 l-3.6 12.5 h6 z" fill={off ? 'currentColor' : '#a83d2c'} fillOpacity={off ? 0.12 : 1} style={off ? OFF : undefined} />
+      <circle cx="14" cy="23.5" r="10.5" fill={off ? 'currentColor' : `url(#${id})`} fillOpacity={off ? 0.05 : 1} stroke={off ? 'currentColor' : m3} strokeOpacity={off ? 0.22 : 1} strokeWidth="1" style={off ? OFF : undefined} />
+      <circle cx="14" cy="23.5" r="7.8" fill="none" stroke={off ? 'currentColor' : m3} strokeOpacity={off ? 0.12 : 0.55} strokeWidth="0.9" style={off ? OFF : undefined} />
+      <path d={STAR} fill={off ? 'none' : m3} fillOpacity="0.7" stroke={off ? 'currentColor' : 'none'} strokeOpacity={off ? 0.25 : 1} strokeWidth="1" strokeLinejoin="round" style={off ? OFF : undefined} />
       {!off && <path d="M6.6 19.5 A8.6 8.6 0 0 1 10.5 15.4" fill="none" stroke="#fff" strokeOpacity="0.7" strokeWidth="1.3" strokeLinecap="round" />}
     </svg>
   );

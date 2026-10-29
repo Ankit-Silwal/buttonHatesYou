@@ -7,12 +7,17 @@ import Account from '@/components/Account';
 import Wallet from '@/components/Wallet';
 import Icon from '@/components/Icon';
 import Achievements from '@/achievements/Achievements';
-import LevelRoad from '@/levels/LevelRoad';
+import LevelTree from '@/levels/LevelTree';
+import { Mission } from '@/levels/LevelSheet';
+import { focusItem } from '@/levels/focus';
+import { levelState } from '@/economy/levels';
+import { useRouter } from 'next/navigation';
 import { useProfile } from './useProfile';
 import { useMe, setMe } from './me';
 import { readyCount } from '@/economy/achievements';
 import { isCode, usedCode } from '@/economy/codes';
 import { redeemCode } from './store';
+import '@/hub/flat.css';
 import './profile.css';
 
 const TABS = [
@@ -23,11 +28,12 @@ const TABS = [
 ];
 
 // The profile: who you are (name, player id, account), your achievements and
-// the settings, as three tabs. The tab is in the URL hash (#achievements).
-export default function ProfilePage() {
+// the settings, as tabs. The tab is in the URL hash (#achievements);
+// `initial` is the one to open on (the /achievements route opens there).
+export default function ProfilePage({ initial = 'me' }) {
   const profile = useProfile();
   const me = useMe();
-  const [tab, setTab] = useState('me');
+  const [tab, setTab] = useState(initial);
   const waiting = profile.ready ? readyCount(profile.wallet) : 0;
 
   useEffect(() => {
@@ -46,14 +52,12 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="arcade profile-page">
-      <header className="hub-top">
-        <div className="arcade-left">
-          <Link href="/" className="chip home" aria-label="Back home">
-            <Icon glyph="🛋️" size={20} tint="currentColor" />
-          </Link>
-          <Wallet profile={profile} />
-        </div>
+    <main className="profile-page">
+      <header className="pf-top">
+        <Link href="/" className="pf-home" aria-label="Back home">
+          <Icon glyph="🛋️" size={24} tint="currentColor" />
+        </Link>
+        <Wallet profile={profile} compact />
       </header>
 
       <div className="pf-tabs" role="tablist" aria-label="Profile">
@@ -67,7 +71,7 @@ export default function ProfilePage() {
       </div>
 
       {tab === 'me' && <MeTab profile={profile} me={me} />}
-      {tab === 'levels' && <LevelRoad />}
+      {tab === 'levels' && <LevelTree />}
       {tab === 'achievements' && <Achievements embedded />}
       {tab === 'settings' && (
         <>
@@ -150,6 +154,8 @@ function MeTab({ profile, me }) {
         </div>
       </div>
 
+      {ready && <LevelNow wallet={wallet} />}
+
       <div className="pf-row">
         <div>
           <b>Friends</b>
@@ -227,6 +233,30 @@ function CodesCard({ profile }) {
         </p>
       )}
     </section>
+  );
+}
+
+// The level being played, and how far along its three missions are.
+function LevelNow({ wallet }) {
+  const router = useRouter();
+  const st = levelState(wallet);
+  if (st.max) return null;
+  const onGo = (where) => {
+    if (where.buy) focusItem(where.buy);
+    router.push('/');
+  };
+  return (
+    <div className="pf-level">
+      <div className="pf-level-top">
+        <b>Level {st.level}</b>
+        <span>{st.done} of 3 done</span>
+      </div>
+      <ul className="lv-missions">
+        {st.missions.map((m) => (
+          <Mission key={m.kind} m={m} equipped={wallet.equipped} onGo={onGo} />
+        ))}
+      </ul>
+    </div>
   );
 }
 

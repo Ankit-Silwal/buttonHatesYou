@@ -7,6 +7,7 @@ import { CHEST, chestLoot } from './chest';
 import { BUY_CHEST, boughtChest } from './chest';
 import { applyLevelEvent, countLevelStats, levelBest, levelReached, withLevels } from './levels';
 import { applyCodeEvent } from './codes';
+import { applyQuestEvent } from './quests';
 
 export { tierPayout };
 
@@ -97,6 +98,8 @@ function applyAnyEvent(wallet, ev, now) {
   if (ev.type === 'buychest') return applyBuyChestEvent(wallet);
   const code = applyCodeEvent(wallet, ev); // see codes.js
   if (code !== undefined) return code;
+  const quest = applyQuestEvent(wallet, ev); // see quests.js
+  if (quest !== undefined) return quest;
 
   /* ---------- earning (economy) ---------- */
   if (ev.type === 'run') return applyRun(wallet, ev, now);
