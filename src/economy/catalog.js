@@ -27,7 +27,8 @@ export const ITEMS = [
   { id: 'char-backspace', slot: 'char', name: 'Old Backspace', look: { char: 'backspace', c: '#b4b8c2', cd: '#7d818c' }, unlock: { claim: 'reason:4', text: 'episode 4 of The Reason' } },
   { id: 'char-404', slot: 'char', name: 'Lord 404', look: { char: 'lord404', c: '#8a5cd6', cd: '#5b3a9c' }, unlock: { claim: 'cursor:4', text: 'chapter 4 of How I Met Your Cursor' } },
   { id: 'char-karen', slot: 'char', name: 'Karen Popup', look: { char: 'karen', c: '#eef1f7', cd: '#a9b1c3' }, unlock: { claim: 'cursor:3', text: 'chapter 3 of How I Met Your Cursor' } },
-  { id: 'char-cursor', slot: 'char', name: 'Cursor', look: { char: 'cursor', c: '#ffffff', cd: '#b8bccb' }, unlock: { claim: 'cursor:6', text: 'all of How I Met Your Cursor' } },
+  // (an arrow: only these slots fit him, the rest aren't offered in the wardrobe)
+  { id: 'char-cursor', slot: 'char', name: 'Cursor', fits: ['char', 'color', 'hat', 'ears'], look: { char: 'cursor', c: '#ffffff', cd: '#b8bccb' }, unlock: { claim: 'cursor:6', text: 'all of How I Met Your Cursor' } },
 
   { id: 'color-tomato', slot: 'color', name: 'Tomato', look: { c: '#e2674f', cd: '#b84a36' } },
   { id: 'color-ocean', slot: 'color', name: 'Ocean', look: { c: '#5b9bd5', cd: '#3b77ad' }, price: { coins: 300 } },

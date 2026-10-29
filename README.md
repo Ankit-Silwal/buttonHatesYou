@@ -534,8 +534,10 @@ once that part is finished (played, not skipped):
 | Old Backspace | The Reason, episode 4 (The Forgotten Kingdom) |
 
 The part's results card says who joined. Each one sets `data-char` on the avatar
-(`src/app/avatar-chars.css`) and brings its own colours (the Color slot only
-paints Bobby). In the canvas games they show up as their colour.
+(`src/app/avatar-chars.css`) and brings its own colours; a Color item repaints
+any of them (the default one, shown as "Own colour", keeps theirs). Items can
+list the slots that `fits` them: Cursor, an arrow, is only offered Character,
+Color, Ears and Hat. In the canvas games they show up as their colour.
 
 **Moving furniture** (`src/house/art-moving.jsx`, `moving.css`) keeps moving
 on its own. There's one coin piece per room, locked behind a level: Jukebox
