@@ -66,7 +66,8 @@ const careCount = (L) => 1 + Math.floor((L - 1) / 30);
 const stockCount = (L) => 3 + Math.floor(L / 25);
 const FOOD_COST = 30; // about what a stocked food costs, for the reward
 
-const coinPriced = (i) => !!i.price?.coins && !i.price.diamonds && !i.retired;
+// (`track: false`: sold, but never a buy mission)
+const coinPriced = (i) => !!i.price?.coins && !i.price.diamonds && !i.retired && i.track !== false;
 const SPECIAL = Object.fromEntries([...ITEMS, ...HOUSE_ITEMS].filter((i) => coinPriced(i) && i.level != null).map((i) => [i.level, i.id]));
 
 // The regular items, cheapest first, outfits and house items taking turns

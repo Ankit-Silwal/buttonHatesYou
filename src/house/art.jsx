@@ -5,7 +5,8 @@ import { useId } from 'react';
 // Pictures of everything in the house and the fridge, as SVG with soft
 // gradients and shadows (light comes from the top left). Keyed by the item
 // ids in src/economy/house.js. `w` is how wide a piece is in the room, in
-// percent of the room's width.
+// percent of the room's width. `par`: the svg's preserveAspectRatio (a
+// string of lights stretches along the ceiling).
 //
 // Gradient ids must be unique on the page (the same piece can be in the room
 // and in the shop at once), so each drawing gets `u(name)` for an id and
@@ -1583,7 +1584,7 @@ export function Art({ id, className = '', ...rest }) {
   const u = (k) => `${p}-${k}`;
   const f = (k) => `url(#${p}-${k})`;
   return (
-    <svg viewBox={a.vb} className={`art art-${id} ${className}`} aria-hidden="true" focusable="false" {...rest}>
+    <svg viewBox={a.vb} preserveAspectRatio={a.par} className={`art art-${id} ${className}`} aria-hidden="true" focusable="false" {...rest}>
       {a.draw(u, f)}
     </svg>
   );

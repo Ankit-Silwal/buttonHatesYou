@@ -1,0 +1,25 @@
+/* The little movements of the built-in pieces and the clocks (art-decor.jsx). */
+.art-pendant-red .bulb-lit { animation: dcFlick 4s ease-in-out infinite alternate; }
+.art-lights-twinkle .bulb { animation: dcTwinkle 2.4s ease-in-out infinite alternate; }
+.art-clock-digital .led-colon { animation: dcBlink 1s steps(2, jump-none) infinite; }
+
+/* pendulums swing from where they hang */
+.art-clock-cuckoo .cuckoo-pend { transform-box: view-box; transform-origin: 45px 92px; animation: dcSwing 1.2s ease-in-out infinite alternate; }
+.art-clock-grandfather .gf-pend { transform-box: view-box; transform-origin: 38px 66px; animation: dcSwing 1.6s ease-in-out infinite alternate; }
+/* now and then the cuckoo comes out */
+.art-clock-cuckoo .cuckoo-door { transform-box: view-box; transform-origin: 38px 31px; animation: dcDoor 12s ease-in-out infinite; }
+.art-clock-cuckoo .cuckoo-bird { transform: translateX(-6px); opacity: 0; animation: dcBird 12s ease-in-out infinite; }
+
+@keyframes dcFlick { to { opacity: 0.7; } }
+@keyframes dcTwinkle { 50% { opacity: 0.3; } }
+@keyframes dcBlink { 50% { opacity: 0.15; } }
+@keyframes dcSwing { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
+@keyframes dcDoor { 0%, 80%, 100% { transform: scaleX(1); } 84%, 94% { transform: scaleX(0.15); } }
+@keyframes dcBird {
+  0%, 82%, 100% { transform: translateX(-6px); opacity: 0; }
+  86%, 92% { transform: translateX(4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*='art-'] .bulb-lit, [class*='art-'] .bulb, .art-clock-digital .led-colon, .cuckoo-pend, .gf-pend, .cuckoo-door, .cuckoo-bird { animation: none !important; }
+}

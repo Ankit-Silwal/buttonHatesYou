@@ -1,5 +1,6 @@
 import { Lin, Rad, Shadow, Gloss } from './svg';
 import { MOVING_ART } from './art-moving';
+import { DECOR_ART } from './art-decor';
 
 // More furniture, drawn the same way as art.jsx (merged into its ART): soft
 // gradients, light from the top left, a contact shadow under floor pieces.
@@ -670,4 +671,5 @@ export const MORE_ART = {
     ),
   },
   ...MOVING_ART, // the animated pieces (art-moving.jsx)
+  ...DECOR_ART, // the rooms' built-in pieces, bookshelves and clocks (art-decor.jsx)
 };

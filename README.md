@@ -68,6 +68,24 @@ blinks and pulls faces that match how he feels.
   Pieces further forward are drawn in front, and far enough forward they stand
   in front of the button. The bedroom's bed and bedside lamp keep their fixed
   spots (the lamp is how he goes to sleep).
+  **What a room comes with is furniture too.** The living room's picture, wall
+  clock, trinket shelf, plant, floor lamp and sofa, the kitchen's jar shelf,
+  red pendant and bistro table, and the bedroom's twinkle lights, moon poster
+  and plum wardrobe are free pieces (`builtin` in `src/economy/house.js`,
+  `DEFAULT_PIECES`; drawn by `src/house/art-decor.jsx`): move them, take them
+  out (it sticks) and put them back from the sheet (they're listed first and go
+  back where they were). They don't count towards the 10. While one is still
+  where the room put it, the home screen draws it exactly where the room
+  always had it and hides it on narrow screens like before (faint while
+  decorating); moved, it shows everywhere. The window, counter, sink, fridge,
+  stove, hood, rug and the whole bathroom stay part of the room.
+  **Bookshelves and clocks**: Floating Shelves (550 🪙), Ladder Shelf (750 🪙),
+  Cube Shelf (950 🪙), Library Bookcase (10 💎), LED Clock (800 🪙), Sunburst
+  Clock (1000 🪙), Cuckoo Clock (1200 🪙, the bird comes out now and then) and
+  Grandfather Clock (8 💎, the pendulum swings); the clocks show the real time.
+  Also a Mushroom Lamp (650 🪙), Fiddle Leaf Fig (850 🪙), Boho Rug (600 🪙)
+  and Abstract Canvas (750 🪙). They're `track: false`: never a level's buy
+  mission, so the levels didn't change.
   `/house` is the full-screen version of the same sheet, with a tab per room.
 - **Feed him.** In the Kitchen the fridge holds silly button food: a browser
   cookie, a USB stick sandwich, an AA battery smoothie, hot glue hot dogs… Each
@@ -105,7 +123,8 @@ bands for each room).
   floor (`'floor'`), or swaps the bed / bedside lamp (never taken down).
 - `{ type: 'place', item, x, y, room? }` puts an owned piece in the room or moves
   it: the piece must fit the room, x and y must be finite numbers (clamped to
-  0-100, 1 decimal), one of each piece per room, at most `MAX_PIECES` (10).
+  0-100, 1 decimal), one of each piece per room, at most `MAX_PIECES` (10)
+  not counting the room's built-in pieces (`countPieces`).
 - `{ type: 'unplace', item, room? }` takes it out.
 While offline only a piece's last move is queued (one event per drop, never
 per pointer move; `samePiece` in `src/profile/store.js`). Wallets saved when
@@ -113,7 +132,12 @@ furniture sat in named spots are migrated by `normalize()`: each piece moves to
 where its spot was (`SPOT_AT`), and an old queued `decor` event for such a spot
 still replays (it lands there, or takes down what still sits exactly there).
 Wallets saved without `rooms` get defaults, and an old house bed moves to the
-bedroom. The server
+bedroom. A room saved before the built-in pieces (no `furnished: 1`) gets them
+once, at the room's old spots, except where the player's furniture used to
+hide that prop (`covers`); none of the player's pieces is dropped, and after
+that a piece taken out stays out. An old queued `decor` event for a spot also
+takes down the built-in piece that used to give way there (if it hasn't
+moved). The server
 validates purchases and needs exactly like outfits. Needs events carry the time
 they happened; the server never accepts one later than its own clock or earlier
 than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
@@ -149,8 +173,8 @@ Swipe (or use the dock at the bottom, or the left/right arrow keys) between
   perspective, shaft of light, dust, night tint from the real time. Each room
   fits the screen with no scrolling (sizes come from container units).
   What you decorated shows on top: wallpapers and floors repaint the chassis
-  (reusing `room.css`), furniture is drawn where it was placed and hides the default
-  prop it stands on; the Decorate sheet previews live, and while it is open the
+  (reusing `room.css`), furniture (including what the room comes furnished
+  with) is drawn where it was placed; the Decorate sheet previews live, and while it is open the
   furniture can be dragged around the room.
 - **Kitchen**: counter with sink, fridge, stove and hood, table. The food he owns
   is a sliding strip; **Buy food** opens the menu grid sheet.
