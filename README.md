@@ -508,16 +508,10 @@ so the browser and the server agree.
 | After level | Unlocks |
 | --- | --- |
 | 1 | Please Don't |
-| 20 | Tabby (play as him) |
-| 40 | Bella |
 | 50 | How I Met Your Cursor |
 | 59 / 89 / 129 | Jukebox / Robot Chef / Galaxy Projector go on sale (the buy missions of levels 60, 90 and 130) |
-| 70 | Old Backspace |
 | 100 | The Reason |
-| 110 | Lord 404 |
-| 150 | Karen Popup |
 | 194 to 199 | Cursor's Collection (Pointer Rug, Pointer Pendant, Loading Hourglass, Pointer Neon, Golden Cursor, Cursor's Wallpaper: the buy missions of levels 195 to 200, 6000 to 10000 🪙) |
-| 200 | Cursor |
 
 Locked story games show a padlock on their Games tile, and their page shows a
 locked card. The rules also refuse a story reward for a story that's still
@@ -526,8 +520,20 @@ locked. If you've already claimed part of a story, you keep it. Items with a
 padlock.
 
 **Characters** are the outfit slot `char` (the wardrobe's Character tab). Bobby
-is the default. The others have no price and a `level`, and you own them once
-you reach that level. Each one sets `data-char` on the avatar
+is the default. The others join you in the stories, not by level: each has an
+`unlock.claim`, the story part where you meet or beat them, and you own them
+once that part is finished (played, not skipped):
+
+| Character | Finish |
+| --- | --- |
+| Tabby | How I Met Your Cursor, chapter 1 (he joins the gang) |
+| Karen Popup | chapter 3 (beaten at the restaurant) |
+| Lord 404 | chapter 4 (beaten in the Glitchy Forest) |
+| Bella | chapter 5 (Operation: Marry Bella) |
+| Cursor | all six chapters |
+| Old Backspace | The Reason, episode 4 (The Forgotten Kingdom) |
+
+The part's results card says who joined. Each one sets `data-char` on the avatar
 (`src/app/avatar-chars.css`) and brings its own colours (the Color slot only
 paints Bobby). In the canvas games they show up as their colour.
 

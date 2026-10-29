@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Avatar from './Avatar';
 import Sheet from './Sheet';
 import { SLOTS, ITEMS, ITEM } from '@/economy/catalog';
-import { owns, canAfford } from '@/economy/rules';
+import { owns, canAfford, storyLocked } from '@/economy/rules';
 import { levelLocked } from '@/economy/levels';
 import { buy, equip } from '@/profile/store';
 import { CLOTHES } from '@/profile/undress';
@@ -48,6 +48,7 @@ export default function Wardrobe({ wallet, undressed = false, onPreview, onSay, 
   const stuck = (item) => undressed && (CLOTHES.includes(item.slot) || (item.slot === 'eyes' && item.id !== 'eyes-classic' && /shades|glasses|aviators|visor|monocle|3d/.test(item.id)));
   function choose(item) {
     if (stuck(item)) return onSay('My clothes are on the stand in the bathroom. Take me there.', 'annoyed');
+    if (!owns(wallet, item) && storyLocked(wallet, item)) return onSay(`Meet them in the story first: finish ${item.unlock.text}.`, 'smug');
     if (!owns(wallet, item) && levelLocked(wallet, item)) return onSay(`${lockLabel(item)} first.`, 'smug');
     if (!owns(wallet, item)) {
       if (trying[item.slot] === item.id) return untry(item.slot); // tap again: take it off
@@ -100,13 +101,13 @@ export default function Wardrobe({ wallet, undressed = false, onPreview, onSay, 
           {ITEMS.filter((i) => i.slot === slot).map((item) => {
             const have = owns(wallet, item);
             const on = (wallet.equipped[slot] ?? (slot === 'char' ? 'char-bobby' : null)) === item.id;
-            const lock = !have && levelLocked(wallet, item);
+            const lock = !have && (storyLocked(wallet, item) || levelLocked(wallet, item));
             return (
               <button key={item.id} className={`tile ${trying[slot] === item.id ? 'trying' : ''} ${lock ? 'locked' : ''}`} aria-pressed={on} onClick={() => choose(item)}>
                 {on && <span className="check">✓</span>}
                 <Avatar size={52} equipped={{ ...look, [slot]: item.id, ...(slot === 'color' ? { char: 'char-bobby' } : null) }} />
                 <span className="name">{item.name}</span>
-                <span className="cost">{lock ? <LockTag>{lockLabel(item)}</LockTag> : have ? (on ? (slot === 'char' ? 'Playing' : 'Wearing') : 'Owned') : price(item.price)}</span>
+                <span className="cost">{lock ? <LockTag>{item.unlock ? 'In the story' : lockLabel(item)}</LockTag> : have ? (on ? (slot === 'char' ? 'Playing' : 'Wearing') : 'Owned') : price(item.price)}</span>
               </button>
             );
           })}

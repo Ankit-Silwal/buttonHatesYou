@@ -588,8 +588,8 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   // unlocks: the stories, the friends, Cursor last
   assert.deepEqual(unlocksOf(1).map((u) => u.id), ['please-dont']);
   assert.ok(unlocksOf(50).some((u) => u.id === 'how-i-met-your-cursor') && unlocksOf(100).some((u) => u.id === 'the-reason'));
-  assert.deepEqual(unlocksOf(200).map((u) => u.id), ['char-cursor']);
-  assert.ok(unlocksOf(20).some((u) => u.id === 'char-tabby') && unlocksOf(40).some((u) => u.id === 'char-bella'));
+  assert.deepEqual(unlocksOf(200).map((u) => u.id), [], 'level 200 unlocks nothing now: Cursor comes from his story');
+  assert.ok(!unlocksOf(20).some((u) => u.kind === 'char'), 'characters come from the stories, not levels');
 
   // a brand new player clears level 1 for real: play, buy, care
   let w = normalize({ ...START, seed: 'lv' });
@@ -644,11 +644,12 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(applyEvent(lvAt(rich, 58), { type: 'buy', item: 'jukebox' }), null);
   assert.ok(applyEvent(lvAt(rich, 59), { type: 'buy', item: 'jukebox' }));
   assert.ok(applyEvent(lvAt(rich, 0), { type: 'buy', item: 'fireplace' }), 'the diamond pieces only cost diamonds');
-  assert.equal(applyEvent(lvAt(rich, 0), { type: 'equip', slot: 'char', item: 'char-tabby' }), null);
-  assert.equal(applyEvent(lvAt(rich, 19), { type: 'equip', slot: 'char', item: 'char-tabby' }), null);
-  assert.equal(applyEvent(lvAt(rich, 20), { type: 'equip', slot: 'char', item: 'char-tabby' }).equipped.char, 'char-tabby');
-  assert.equal(applyEvent(lvAt(rich, 199), { type: 'equip', slot: 'char', item: 'char-cursor' }), null);
-  assert.ok(applyEvent(lvAt(rich, 200), { type: 'equip', slot: 'char', item: 'char-cursor' }));
+  // characters: finish the story part where you meet them (levels don't matter)
+  assert.equal(applyEvent(lvAt(rich, 200), { type: 'equip', slot: 'char', item: 'char-tabby' }), null, 'not by level');
+  const met = { ...lvAt(rich, 50), claimed: ['cursor:1'] };
+  assert.equal(applyEvent(met, { type: 'equip', slot: 'char', item: 'char-tabby' }).equipped.char, 'char-tabby');
+  assert.equal(applyEvent(met, { type: 'equip', slot: 'char', item: 'char-cursor' }), null);
+  assert.ok(applyEvent({ ...met, claimed: ['cursor:1', 'cursor:6'] }, { type: 'equip', slot: 'char', item: 'char-cursor' }));
   assert.equal(applyEvent(lvAt(rich, 0), { type: 'buy', item: 'char-tabby' }), null, 'characters are not for sale');
   assert.ok(applyEvent(lvAt(rich, 0), { type: 'equip', slot: 'char', item: 'char-bobby' }));
   assert.equal(applyEvent(lvAt(rich, 0), { type: 'claim', claim: 'please-dont' }), null, "Please Don't opens after level 1");

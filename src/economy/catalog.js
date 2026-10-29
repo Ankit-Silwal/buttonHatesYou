@@ -21,12 +21,13 @@ export const ITEMS = [
   // their own colors, so the Color slot only paints Bobby. `look.char` is the
   // avatar's data-char (avatar-chars.css).
   { id: 'char-bobby', slot: 'char', name: 'Bobby', look: null },
-  { id: 'char-tabby', slot: 'char', name: 'Tabby', look: { char: 'tabby', c: '#5b9bd5', cd: '#3b77ad' }, level: 21 },
-  { id: 'char-bella', slot: 'char', name: 'Bella', look: { char: 'bella', c: '#f39ac0', cd: '#cc6f97' }, level: 41 },
-  { id: 'char-backspace', slot: 'char', name: 'Old Backspace', look: { char: 'backspace', c: '#b4b8c2', cd: '#7d818c' }, level: 71 },
-  { id: 'char-404', slot: 'char', name: 'Lord 404', look: { char: 'lord404', c: '#8a5cd6', cd: '#5b3a9c' }, level: 111 },
-  { id: 'char-karen', slot: 'char', name: 'Karen Popup', look: { char: 'karen', c: '#eef1f7', cd: '#a9b1c3' }, level: 151 },
-  { id: 'char-cursor', slot: 'char', name: 'Cursor', look: { char: 'cursor', c: '#ffffff', cd: '#b8bccb' }, level: 201 },
+  // friends join you in the stories: finish the part where you meet (or beat) them
+  { id: 'char-tabby', slot: 'char', name: 'Tabby', look: { char: 'tabby', c: '#5b9bd5', cd: '#3b77ad' }, unlock: { claim: 'cursor:1', text: 'chapter 1 of How I Met Your Cursor' } },
+  { id: 'char-bella', slot: 'char', name: 'Bella', look: { char: 'bella', c: '#f39ac0', cd: '#cc6f97' }, unlock: { claim: 'cursor:5', text: 'chapter 5 of How I Met Your Cursor' } },
+  { id: 'char-backspace', slot: 'char', name: 'Old Backspace', look: { char: 'backspace', c: '#b4b8c2', cd: '#7d818c' }, unlock: { claim: 'reason:4', text: 'episode 4 of The Reason' } },
+  { id: 'char-404', slot: 'char', name: 'Lord 404', look: { char: 'lord404', c: '#8a5cd6', cd: '#5b3a9c' }, unlock: { claim: 'cursor:4', text: 'chapter 4 of How I Met Your Cursor' } },
+  { id: 'char-karen', slot: 'char', name: 'Karen Popup', look: { char: 'karen', c: '#eef1f7', cd: '#a9b1c3' }, unlock: { claim: 'cursor:3', text: 'chapter 3 of How I Met Your Cursor' } },
+  { id: 'char-cursor', slot: 'char', name: 'Cursor', look: { char: 'cursor', c: '#ffffff', cd: '#b8bccb' }, unlock: { claim: 'cursor:6', text: 'all of How I Met Your Cursor' } },
 
   { id: 'color-tomato', slot: 'color', name: 'Tomato', look: { c: '#e2674f', cd: '#b84a36' } },
   { id: 'color-ocean', slot: 'color', name: 'Ocean', look: { c: '#5b9bd5', cd: '#3b77ad' }, price: { coins: 300 } },

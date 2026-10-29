@@ -606,3 +606,8 @@
 @media (prefers-reduced-motion: reduce) {
   .reason-menu::before, .reason-bobby::after, .ep.next, .reason-prompt, .reason-titlecard, .reason-titlecard.episode h2 { animation: none; }
 }
+
+/* a friend you can now play as (a character unlocked by this part) */
+.reason-card .joined { display: flex; align-items: center; gap: 12px; margin: 4px 0 8px; padding: 10px 14px; border-radius: 16px; background: rgba(255, 215, 106, 0.14); text-align: left; font-size: 14px; }
+.reason-card .joined .char { flex: none; margin-bottom: 10px; }
+.reason-card .joined b { display: block; font-size: 16px; color: #ffd76a; }
