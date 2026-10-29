@@ -1180,6 +1180,7 @@
 }
 .food-drag .art { width: 100%; height: 100%; }
 .food-drag.yes { transform: translate(-50%, -60%) scale(1.15) rotate(6deg); }
+.food-drag.in { transform: translate(-50%, -60%) scale(0.85) rotate(0); }
 .food-drag.no { transform: translate(-50%, -60%) scale(0.9) rotate(-14deg); opacity: 0.8; }
 
 /* hungry, with food right there: eyes wide, mouth wide open */

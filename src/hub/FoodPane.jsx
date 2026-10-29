@@ -26,8 +26,9 @@ function naah() {
 }
 
 // The kitchen: a real room with the button standing in it. What he owns is
-// in a strip under him: drag a food onto him (or tap it) to feed him. Hungry,
-// he opens wide for it; full, he leans away and says naah. The Buy food pill
+// in a strip under him: drag a food to his mouth to feed him. Hungry, he
+// opens wide as it comes close; full, he leans away, pulls a face and says
+// naah, and won't take it. The Buy food pill
 // opens the whole menu. When he's broke the cheapest food is free (FREE_FOOD), so
 // he first makes you admit you're poor, then hands it over with a Free tag. `view` is what the decorating sheet is trying out in this
 // room; `onDecorate` and `onBuy` open the sheets.
@@ -83,11 +84,14 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     clearTimeout(reactTimer.current);
     reactTimer.current = setTimeout(() => setReact(null), ms);
   };
-  const heroNear = (x, y) => {
+  // How close a point is to his mouth, in widths of him (Infinity off-screen).
+  const fromMouth = (x, y) => {
     const r = document.querySelector('.pane-food .hero')?.getBoundingClientRect();
-    if (!r) return false;
-    return Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)) < r.width * 0.8;
+    if (!r) return Infinity;
+    return Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height * 0.62)) / r.width;
   };
+  const NEAR = 0.85; // he notices it coming
+  const IN_MOUTH = 0.32; // dropped here, it's in his mouth
   function grab(e, f) {
     if (eating || needs.asleep) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -98,7 +102,8 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     if (!p) return;
     const moved = Math.hypot(e.clientX - p.x0, e.clientY - p.y0) > DRAG_PX;
     if (!moved && !drag) return;
-    setDrag({ f: p.f, x: e.clientX, y: e.clientY, near: heroNear(e.clientX, e.clientY) });
+    const d = fromMouth(e.clientX, e.clientY);
+    setDrag({ f: p.f, x: e.clientX, y: e.clientY, near: d < NEAR, mouth: d < IN_MOUTH });
   }
   function drop(e) {
     const p = press.current;
@@ -106,7 +111,20 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     if (!p) return;
     const wasDrag = !!drag;
     setDrag(null);
-    if (!wasDrag || heroNear(e.clientX, e.clientY)) offer(p.f);
+    if (!wasDrag) return nudge();
+    const d = fromMouth(e.clientX, e.clientY);
+    if (d < IN_MOUTH || (full && d < NEAR)) offer(p.f);
+  }
+
+  // A tap on a food: he wants it brought over, not waved at.
+  function nudge() {
+    if (needs.asleep) return say('Zzz…');
+    if (full) {
+      naah();
+      moment('naah', 1300);
+      return say(pick(NAAH));
+    }
+    say(pick(['Bring it here. To my mouth.', 'Closer. I am not coming to get it.', 'Food goes in the face. My face.']));
   }
 
   function offer(f) {
@@ -216,7 +234,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
           <Hint active={active && !eating && !drag} show={!needs.asleep && needs.hunger < 60} from={feedMe} to={feedMe === '.stock-item' ? '.hero' : undefined} />
           {drag &&
             createPortal(
-              <span className={`food-drag ${drag.near ? (full ? 'no' : 'yes') : ''}`} style={{ left: drag.x, top: drag.y }} aria-hidden="true">
+              <span className={`food-drag ${drag.near ? (full ? 'no' : drag.mouth ? 'yes in' : 'yes') : ''}`} style={{ left: drag.x, top: drag.y }} aria-hidden="true">
                 <Art id={drag.f.id} />
               </span>,
               document.body
