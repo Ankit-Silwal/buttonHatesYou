@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Wallet from './Wallet';
 import Avatar from './Avatar';
@@ -26,6 +26,7 @@ import '@/hub/flat.css';
 import { useNeeds, faceOf } from '@/profile/needs';
 import { useMimic } from '@/hub/mimic';
 import { roomOf } from '@/economy/house';
+import { placePiece, unplacePiece } from '@/profile/store';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -265,6 +266,21 @@ export default function Hub({ initial = 'home' }) {
     setPanel('decor');
   }, []);
   const tryingIn = (room) => (panel === 'decor' && decor === room ? decorView : null);
+  // While decorating, the room's furniture can be dragged around. A drop
+  // that can't be placed (a piece being previewed, not bought yet) moves the
+  // preview instead.
+  const [moved, setMoved] = useState(null);
+  const editor = useMemo(
+    () =>
+      decor && {
+        onMove: (item, x, y) => {
+          if (!placePiece(item, x, y, decor)) setMoved({ item, x, y, n: Date.now() });
+        },
+        onRemove: (item) => unplacePiece(item, decor),
+      },
+    [decor]
+  );
+  const editIn = (room) => (panel === 'decor' && decor === room ? editor : null);
   const houseOf = (room) => tryingIn(room)?.house ?? roomOf(wallet, room);
 
   const roomSay = useCallback((pane, text) => setQuip({ pane, text, n: Date.now() }), []);
@@ -316,6 +332,7 @@ export default function Hub({ initial = 'home' }) {
             sky={sky}
             house={houseOf('living')}
             preview={tryingIn('living')?.at}
+            edit={editIn('living')}
             equipped={equipped}
             mood={mood}
             sleepy={face.sleepy}
@@ -361,11 +378,11 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
+          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} edit={editIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
+          <SleepPane needs={needs} wallet={wallet} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} edit={editIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
@@ -409,7 +426,7 @@ export default function Hub({ initial = 'home' }) {
       {panel === 'buy' && <BuySheet wallet={wallet} onClose={close} />}
       {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
       {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
-      {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} onClose={close} />}
+      {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} moved={moved} onClose={close} />}
 
       <Loading done={ready && needs.ready} />
     </main>

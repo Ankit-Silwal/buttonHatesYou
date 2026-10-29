@@ -5,9 +5,9 @@ import Link from 'next/link';
 import Sheet from '@/components/Sheet';
 import { Art } from './art';
 import './decor.css';
-import { buy, decorate } from '@/profile/store';
+import { buy, decorate, placePiece, unplacePiece } from '@/profile/store';
 import { owns, canAfford } from '@/economy/rules';
-import { HOUSE_ITEMS, HOUSE_ITEM, ROOMS, SPOT, roomOf } from '@/economy/house';
+import { HOUSE_ITEMS, HOUSE_ITEM, ROOMS, MAX_PIECES, bandOf, fitsRoom, freeSpotFor, roomOf } from '@/economy/house';
 
 const TABS = [
   { id: 'wall', name: 'Walls', icon: '🖼️' },
@@ -21,33 +21,45 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 // The decorating sheet of one room: walls, floors and furniture that fit it.
 // Tap a thing to see it in the room (`onPreview` gets { house, at } to draw,
 // or null when nothing is being tried), then buy it, place it or take it down.
+// Furniture is free-placed (see house.js): a new piece drops at a free spot
+// and is then dragged around in the room itself; `moved` ({ item, x, y }) is
+// where the room last dropped the piece being previewed. The bed and the
+// bedside lamp keep their fixed spots.
 // The same sheet is used by every room on the home screen and by /house.
-export default function DecorSheet({ room, wallet, onPreview, onClose, fullLink = true }) {
+export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fullLink = true }) {
   const cfg = ROOMS[room];
   const cur = roomOf(wallet, room);
   const [tab, setTab] = useState('furniture');
   const [trying, setTrying] = useState(null);
-  const [spot, setSpot] = useState(null);
+  const [pos, setPos] = useState(null); // where a free piece being tried would go
   const [said, setSaid] = useState('');
   const timer = useRef(0);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const item = trying ? HOUSE_ITEM[trying] : null;
   const have = item ? owns(wallet, item) : false;
-  const spots = item?.kind === 'furniture' ? item.spots.filter((s) => cfg.spots.includes(s)) : [];
-  const placedAt = item?.kind === 'furniture' ? Object.keys(cur.place).find((s) => cur.place[s] === item.id) : null;
+  const free = !!item && !!bandOf(item); // a free-placed piece
+  const spot = item?.kind === 'furniture' && !free ? item.spots.find((s) => cfg.spots.includes(s)) : null; // the bed or the nightstand
+  const placed = free && cur.items.some((p) => p.item === item.id);
+  const full = free && !placed && cur.items.length >= MAX_PIECES;
+
+  // the room dragged the piece being tried somewhere (since this sheet opened)
+  const [opened] = useState(() => Date.now());
+  useEffect(() => {
+    if (moved && moved.item === trying && moved.n >= opened) setPos({ x: moved.x, y: moved.y });
+  }, [moved, trying, opened]);
 
   // What the room shows: the real room, plus whatever is being tried.
   const view = useMemo(() => {
     if (item && item.kind !== 'furniture' && cur[item.kind] !== item.id) return { house: { ...cur, [item.kind]: item.id }, at: item.kind };
-    if (item?.kind === 'furniture' && spot && cur.place[spot] !== item.id) {
-      const place = { ...cur.place };
-      for (const s of Object.keys(place)) if (place[s] === item.id) delete place[s];
-      place[spot] = item.id;
+    if (free && !placed && pos) return { house: { ...cur, items: [...cur.items, { item: item.id, ...pos }] }, at: item.id };
+    if (free && placed) return { house: cur, at: item.id };
+    if (spot && cur.place[spot] !== item.id) {
+      const place = { ...cur.place, [spot]: item.id };
       return { house: { ...cur, place }, at: spot };
     }
     return { house: cur, at: null };
-  }, [item, spot, cur]);
+  }, [item, free, placed, pos, spot, cur]);
 
   useEffect(() => {
     onPreview(trying ? view : null);
@@ -62,37 +74,37 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, fullLink 
 
   function cancel() {
     setTrying(null);
-    setSpot(null);
+    setPos(null);
   }
 
   function choose(it) {
     if (trying === it.id) return cancel();
     setTrying(it.id);
     setSaid('');
-    if (it.kind === 'furniture') {
-      const ok = it.spots.filter((s) => cfg.spots.includes(s));
-      const where = Object.keys(cur.place).find((s) => cur.place[s] === it.id);
-      setSpot(where ?? ok.find((s) => !cur.place[s]) ?? ok[0]);
-    }
+    setPos(bandOf(it) ? freeSpotFor(it, cur.items) : null);
   }
 
-  const target = () => (item.kind === 'furniture' ? spot : item.kind);
+  // Puts the piece being tried in the room. False when it can't go in.
+  function put() {
+    if (free) return !full && fitsRoom(item, room) && placePiece(item.id, pos.x, pos.y, room);
+    return decorate(spot ?? item.kind, item.id, room);
+  }
 
   function buyItem() {
     if (!buy(item.id)) return say("You're broke. Go play something.");
-    decorate(target(), item.id, room);
-    say(pick(['Bought and put up. Looks great.', 'Ooh. Fancy.', 'Finally, some taste in here.']));
+    if (!put()) say(full ? `Bought. But the room is full: ${MAX_PIECES} things, tops.` : 'Bought.');
+    else say(pick(['Bought and put up. Looks great.', 'Ooh. Fancy.', 'Finally, some taste in here.']));
     cancel();
   }
 
   function applyItem() {
-    decorate(target(), item.id, room);
+    put();
     say(pick(['There. Perfect.', 'Hmm. Acceptable.', 'Move it again and he screams.']));
     cancel();
   }
 
   function takeDown() {
-    decorate(placedAt, null, room);
+    unplacePiece(item.id, room);
     say('Back in the box it goes.');
     cancel();
   }
@@ -105,8 +117,7 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, fullLink 
       : null;
 
   const list = HOUSE_ITEMS.filter((i) => i.kind === tab && i.rooms.includes(room));
-  const isUse = (it) => (it.kind === 'furniture' ? Object.values(cur.place).includes(it.id) : cur[it.kind] === it.id);
-  const required = cfg.required.includes(spot); // the bed and its lamp can be swapped, not removed
+  const isUse = (it) => (it.kind !== 'furniture' ? cur[it.kind] === it.id : bandOf(it) ? cur.items.some((p) => p.item === it.id) : Object.values(cur.place).includes(it.id));
 
   return (
     <Sheet title={`Decorate · ${cfg.name}`} onClose={onClose} className="decor-sheet">
@@ -122,6 +133,11 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, fullLink 
             }}
           >
             <span aria-hidden="true">{t.icon}</span> {t.name}
+            {t.id === 'furniture' && (
+              <span className={`decor-count ${cur.items.length >= MAX_PIECES ? 'is-full' : ''}`} aria-label={`${cur.items.length} of ${MAX_PIECES} placed`}>
+                {cur.items.length}/{MAX_PIECES}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -165,19 +181,9 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, fullLink 
             <span className="try-tag">{have ? 'Your stuff' : 'Previewing'}</span>
             <b>{item.name}</b>
             <span className="note">
-              {item.kind === 'furniture' && have ? 'Pick a spot, then place it.' : have ? 'Shown in the room.' : 'Shown in the room. Nothing is charged until you buy.'}
+              {have ? 'Shown in the room.' : 'Shown in the room. Nothing is charged until you buy.'}
               {short && <span className="decor-short"> · {short}</span>}
             </span>
-            {spots.length > 1 && (
-              <div className="decor-spots" role="radiogroup" aria-label="Where it goes">
-                {spots.map((s) => (
-                  <button key={s} role="radio" aria-checked={spot === s} onClick={() => setSpot(s)}>
-                    {SPOT[s].name}
-                    {cur.place[s] && cur.place[s] !== item.id ? ' (swap)' : ''}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
           <div className="row">
             <button className="pill ghost" onClick={cancel}>
@@ -187,13 +193,15 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, fullLink 
               <button className="pill" onClick={buyItem} disabled={!canAfford(wallet, item)}>
                 Buy · {priceText(item.price)}
               </button>
-            ) : item.kind === 'furniture' && cur.place[spot] === item.id ? (
-              required ? null : (
-                <button className="pill alt" onClick={takeDown}>
-                  Take down
-                </button>
-              )
-            ) : item.kind !== 'furniture' && cur[item.kind] === item.id ? null : (
+            ) : placed ? (
+              <button className="pill alt" onClick={takeDown}>
+                Take down
+              </button>
+            ) : free ? (
+              <button className="pill" onClick={applyItem} disabled={full}>
+                {full ? `Room full · ${MAX_PIECES}/${MAX_PIECES}` : 'Place it'}
+              </button>
+            ) : (spot ? cur.place[spot] === item.id : cur[item.kind] === item.id) ? null : (
               <button className="pill" onClick={applyItem}>
                 {item.kind === 'furniture' ? 'Place it' : 'Use this'}
               </button>

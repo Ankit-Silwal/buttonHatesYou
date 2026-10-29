@@ -13,7 +13,7 @@ import Hint from './Hint';
 // groggy, for free). Whether the lamp is on comes straight from his needs,
 // so a reload mid-sleep shows the dark room. Paid energy boosts (they also
 // wake him) and potions are in sheets.
-export default function SleepPane({ needs, wallet, go, active, sky, view, quip, onDecorate, onWake, onPotions }) {
+export default function SleepPane({ needs, wallet, go, active, sky, view, edit, quip, onDecorate, onWake, onPotions }) {
   const face = faceOf(needs);
   const [line, setLine] = useState({ text: '', n: 0 });
   const filthy = !needs.asleep && (needs.dirt ?? 0) >= FILTHY_AT;
@@ -54,6 +54,7 @@ export default function SleepPane({ needs, wallet, go, active, sky, view, quip, 
       sky={sky}
       house={view?.house ?? roomOf(wallet, 'bedroom')}
       preview={view?.at}
+      edit={edit}
       equipped={wallet.equipped}
       mood={face.mood}
       sleepy={face.sleepy}
