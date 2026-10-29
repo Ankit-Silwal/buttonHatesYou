@@ -174,7 +174,7 @@
 .char[data-char='cursor'][data-char] .body {
   border-radius: 0;
   clip-path: polygon(22% 0, 22% 88%, 40% 71%, 54% 100%, 68% 93%, 54% 65%, 80% 65%);
-  background: linear-gradient(160deg, #ffffff 30%, #e4e6ee);
+  background: linear-gradient(160deg, color-mix(in oklab, var(--c), #fff 35%) 30%, var(--c) 75%, var(--cd));
   box-shadow: none;
 }
 .char[data-char='cursor'][data-char] .body::before { display: none; }
@@ -182,7 +182,7 @@
 .char[data-char='cursor'] .eyes { left: 38%; top: 34%; gap: calc(var(--s) * 0.06); }
 .char[data-char='cursor'] .eyes i { width: calc(var(--s) * 0.1); height: calc(var(--s) * 0.12); background: #1d1d24; }
 .char[data-char='cursor'] .eyes i::after { background: #fff; width: 34%; height: 34%; left: 22%; top: 18%; }
-.char[data-char='cursor'] .eyes i::before { background: #fff; }
+.char[data-char='cursor'] .eyes i::before { background: var(--c); }
 .char[data-char='cursor'] .brows { left: 38%; top: 25%; gap: calc(var(--s) * 0.04); }
 .char[data-char='cursor'] .brows i { width: calc(var(--s) * 0.1); }
 .char[data-char='cursor'] .mouth { left: 36%; top: 52%; width: calc(var(--s) * 0.12); }

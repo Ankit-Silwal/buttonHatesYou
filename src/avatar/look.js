@@ -4,7 +4,8 @@ import { ITEM, DEFAULT_LOOK, SLOTS } from '@/economy/catalog';
 // colors as CSS variables and one data-attribute per accessory. The CSS in
 // avatar.css draws the accessories from those attributes.
 // A character other than Bobby (the 'char' slot) brings its own shape
-// (data-char, avatar-chars.css) and its own colors, which win over the Color slot.
+// (data-char, avatar-chars.css) and its own colors; a Color item repaints
+// them too, except the default one (Tomato), which means "their own colour".
 export function lookProps(equipped = DEFAULT_LOOK) {
   const style = {};
   const data = {};
@@ -14,7 +15,8 @@ export function lookProps(equipped = DEFAULT_LOOK) {
     if (slot === 'char') {
       if (who) data['data-char'] = who.char;
     } else if (slot === 'color') {
-      const c = who ?? item.look;
+      const own = !equipped?.color || equipped.color === DEFAULT_LOOK.color;
+      const c = who && own ? who : item.look;
       style['--skin'] = c.c;
       style['--skin-dark'] = c.cd;
     } else if (item.look) {

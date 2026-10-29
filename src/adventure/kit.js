@@ -21,9 +21,11 @@ const SCARVES = { red: '#d8433a', sage: '#8fb08a', striped: '#efe6d2', rainbow: 
 // The outfit the player bought, as plain values a canvas can use.
 export function lookOf(equipped = DEFAULT_LOOK) {
   const get = (slot) => (ITEM[equipped?.[slot]] ?? ITEM[DEFAULT_LOOK[slot]]).look;
-  // a friend you play as (the 'char' slot) brings his own colors
+  // a friend you play as (the 'char' slot) brings his own colors, unless a
+  // Color item other than the default repaints him (as in avatar/look.js)
   const who = ITEM[equipped?.char]?.slot === 'char' ? ITEM[equipped.char].look : null;
-  const color = who ?? get('color');
+  const own = !equipped?.color || equipped.color === DEFAULT_LOOK.color;
+  const color = who && own ? who : get('color');
   // the outfit slot may be missing from older saves or defaults: never throw
   const outfit = (ITEM[equipped?.outfit] ?? ITEM[DEFAULT_LOOK?.outfit])?.look ?? null;
   return { color: color.c, dark: color.cd, eyes: get('eyes'), ears: get('ears'), scarf: get('scarf'), hat: get('hat'), outfit, char: who?.char ?? null };
