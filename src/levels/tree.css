@@ -1,0 +1,202 @@
+/* ---------- the Levels tab as a tree (LevelTree.jsx) ---------- */
+.lv-tree-card { position: relative; overflow: hidden; padding: 0 0 18px; }
+
+/* the sky: clouds over everything past the next big reward */
+.lv-sky {
+  position: relative;
+  z-index: 3;
+  height: 128px;
+  margin-bottom: -40px; /* the clouds swallow the top of the trunk */
+  background: linear-gradient(180deg, #bfe0f2 0%, rgba(214, 236, 248, 0) 100%);
+  pointer-events: none;
+}
+.lv-sky .cloud {
+  position: absolute;
+  height: 54px;
+  border-radius: 99px;
+  background: #ffffff;
+  box-shadow: inset 0 -8px 0 rgba(170, 196, 214, 0.45);
+  animation: cloudDrift 9s ease-in-out infinite alternate;
+}
+.lv-sky .cloud::before,
+.lv-sky .cloud::after { content: ''; position: absolute; border-radius: 50%; background: inherit; }
+.lv-sky .cloud::before { width: 56%; height: 150%; left: 14%; bottom: 20%; }
+.lv-sky .cloud::after { width: 40%; height: 120%; right: 12%; bottom: 25%; }
+.lv-sky .c1 { width: 46%; left: -6%; top: 46px; }
+.lv-sky .c2 { width: 52%; left: 28%; top: 62px; animation-delay: -3s; background: #f8fbfe; }
+.lv-sky .c3 { width: 44%; right: -8%; top: 40px; animation-delay: -6s; }
+.lv-sky .c4 { width: 38%; left: 8%; top: 88px; animation-delay: -1.5s; background: #eef5fa; z-index: 1; }
+.lv-sky-text {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 74px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 14px;
+  border-radius: 99px;
+  background: rgba(74, 52, 40, 0.88);
+  color: #fffaf2;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.lv-sky-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-weight: 700; color: #b07a1c; }
+
+/* the trunk runs up the middle; each level is a branch off it */
+.lv-tree {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 30px 0 0;
+  list-style: none;
+}
+.lv-tree::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: -18px;
+  width: 22px;
+  transform: translateX(-50%);
+  border-radius: 12px 12px 0 0;
+  background:
+    repeating-linear-gradient(176deg, transparent 0 14px, rgba(0, 0, 0, 0.18) 14px 16px),
+    linear-gradient(90deg, #5a3a22, #8a5a34 45%, #6a442a);
+}
+.lv-ground { height: 26px; margin: 0 16px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #8fc27a, #5f9a4e 70%, transparent 72%); }
+
+.lv-branch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 78px;
+}
+.lv-branch.left { flex-direction: row-reverse; justify-content: flex-start; padding-right: calc(50% + 34px); }
+.lv-branch.right { padding-left: calc(50% + 34px); }
+/* the branch from the trunk to the node */
+.lv-branch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 36px;
+  height: 7px;
+  border-radius: 4px;
+  background: #7a4e2e;
+}
+.lv-branch.left::before { right: calc(50% + 6px); transform: translateY(-50%) rotate(-14deg); transform-origin: 100% 50%; }
+.lv-branch.right::before { left: calc(50% + 6px); transform: translateY(-50%) rotate(14deg); transform-origin: 0 50%; }
+
+.lv-node {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #efe2cf);
+  box-shadow: inset 0 0 0 3px rgba(74, 52, 40, 0.12), 0 6px 12px -4px rgba(74, 52, 40, 0.45);
+  color: var(--ink-soft);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.lv-node:active { transform: scale(0.94); }
+.lv-node:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+.lv-branch.done .lv-node { background: radial-gradient(circle at 35% 30%, #7fdc8f, #3f9a55); color: #fff; }
+.lv-branch.now .lv-node {
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle at 35% 30%, #ffb46b, #e2674f);
+  color: #fff;
+  font-size: 22px;
+  box-shadow: 0 0 0 4px rgba(255, 180, 107, 0.35), 0 0 26px rgba(255, 140, 90, 0.55);
+  animation: nodeGlow 2.2s ease-in-out infinite alternate;
+}
+.lv-branch.big .lv-node { box-shadow: inset 0 0 0 3px #f0b440, 0 0 18px -2px rgba(240, 180, 64, 0.6); }
+.lv-branch.picked .lv-node { outline: 3px solid var(--mustard); outline-offset: 3px; }
+.lv-you { position: absolute; left: 50%; bottom: calc(100% - 10px); transform: translateX(-50%); pointer-events: none; }
+
+/* a little leaf cluster where each branch meets its node */
+.lv-leaf {
+  position: absolute;
+  top: calc(50% - 22px);
+  width: 22px;
+  height: 14px;
+  border-radius: 0 100% 0 100%;
+  background: #5aa45a;
+  box-shadow: 10px 8px 0 -2px #4b9550, -6px 10px 0 -3px #6cb86a;
+  pointer-events: none;
+}
+.lv-branch.left .lv-leaf { right: calc(50% + 20px); transform: scaleX(-1); }
+.lv-branch.right .lv-leaf { left: calc(50% + 20px); }
+.lv-branch.ahead .lv-leaf { background: #8fbf7f; box-shadow: 10px 8px 0 -2px #82b373, -6px 10px 0 -3px #9ccb8c; }
+
+.lv-prize { display: inline-flex; align-items: center; gap: 4px; margin: 0 10px; }
+.lv-branch.ahead .lv-prize { opacity: 0.75; }
+.lv-pay {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(74, 52, 40, 0.07);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.lv-pay.unlock { padding-left: 4px; background: rgba(240, 180, 64, 0.18); color: #8a5a10; }
+
+/* the level picked (the current one at first) */
+.lv-detail { margin-top: 14px; }
+.lv-detail-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.lv-detail-top h2 { margin: 0; font-size: 22px; }
+.lv-detail-state { color: var(--ink-soft); font-size: 13px; font-weight: 600; }
+.lv-detail-pay { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.lv-detail .lv-missions { margin-top: 12px; }
+
+/* hard quests */
+.lv-quests { margin-top: 14px; }
+.lv-quests h2 { margin: 0 0 10px; font-size: 18px; }
+.lv-quests ul { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lv-quest { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 18px; background: rgba(74, 52, 40, 0.05); }
+.lv-quest.ready { background: #fff3d9; box-shadow: inset 0 0 0 2px rgba(240, 180, 64, 0.65); }
+.lv-quest.claimed { opacity: 0.55; }
+.lv-quest-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: var(--tint, #c9a77e);
+  color: #fff;
+}
+.lv-quest-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.lv-quest-body b { font-size: 15px; }
+.lv-quest-body > span:not(.lv-track) { color: var(--ink-soft); font-size: 12px; }
+.lv-quest-body .lv-track { margin-top: 4px; }
+.lv-quest-end { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.lv-quest-end small { color: var(--ink-soft); font-size: 11px; }
+.lv-quest-pay { display: inline-flex; align-items: center; gap: 3px; color: #2f7fb0; font-size: 13px; font-weight: 700; }
+.pill.lv-claim { padding: 6px 14px; font-size: 13px; }
+
+@keyframes cloudDrift { from { transform: translateX(-10px); } to { transform: translateX(14px); } }
+@keyframes nodeGlow { from { box-shadow: 0 0 0 4px rgba(255, 180, 107, 0.3), 0 0 18px rgba(255, 140, 90, 0.4); } to { box-shadow: 0 0 0 7px rgba(255, 180, 107, 0.2), 0 0 30px rgba(255, 140, 90, 0.65); } }
+@media (max-width: 380px) {
+  .lv-branch.left { padding-right: calc(50% + 28px); }
+  .lv-branch.right { padding-left: calc(50% + 28px); }
+  .lv-pay { padding: 3px 8px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-sky .cloud, .lv-branch.now .lv-node { animation: none; }
+}
