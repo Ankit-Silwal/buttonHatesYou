@@ -1,5 +1,5 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
-import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, DRAINED, DRAINED_DIRT, FREE_FOOD, isBroke, roomOf } from './house';
+import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, DRAINED, DRAINED_DIRT, FREE_FOOD, isBroke, roomOf, MAX_PIECES, FIXED_SPOTS, SPOT_AT, SPOT_BAND, bandOf, fitsRoom, clampAt } from './house';
 import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
@@ -218,7 +218,18 @@ function applyLegacyReward(wallet, ev) {
                                        spot must exist there. The bedroom's bed and
                                        bedside lamp can be swapped, never taken
                                        down. (An old event for the 'bed' spot with
-                                       no room means the bedroom.)
+                                       no room means the bedroom.) Only the bed and
+                                       nightstand spots are still spots: an old event
+                                       for any other spot puts the piece where that
+                                       spot used to be (SPOT_AT), or takes down what
+                                       still sits exactly there
+   { id, type: 'place', item, x, y, room? }
+                                       put an owned piece of furniture anywhere in
+                                       its band of `room` (see house.js), or move it
+                                       there if it's already in; x and y are clamped
+                                       to 0-100. One of each piece per room, at most
+                                       MAX_PIECES pieces
+   { id, type: 'unplace', item, room? } took a free-placed piece out of the room
    Needs events carry `at`, when they happened (ms). Hunger and energy drift
    with the clock between events (see needs.js).
    { id, type: 'feed', item, at }      ate a food: from the pantry when there is one
@@ -251,7 +262,7 @@ const pay = (wallet, price) => ({
 // Wallets saved before the house existed have no `house` or `needs`.
 export function normalize(w) {
   if (!w || typeof w !== 'object') return START;
-  if (w.house?.place && w.rooms?.kitchen?.place && w.rooms.bedroom?.place && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
+  if (w.house?.place && Array.isArray(w.house.items) && w.rooms?.kitchen?.place && Array.isArray(w.rooms.kitchen.items) && w.rooms.bedroom?.place && Array.isArray(w.rooms.bedroom.items) && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
   return {
     ...START,
     ...w,
@@ -272,11 +283,67 @@ function houseOf(w) {
   const { bed, ...living } = { ...w.house?.place };
   const room = (id) => {
     const r = w.rooms?.[id];
-    return { ...DEFAULT_ROOMS[id], ...r, place: { ...DEFAULT_ROOMS[id].place, ...r?.place } };
+    return freeRoom(id, { ...DEFAULT_ROOMS[id], ...r, place: { ...DEFAULT_ROOMS[id].place, ...r?.place } });
   };
   const rooms = { kitchen: room('kitchen'), bedroom: room('bedroom') };
   if (!w.rooms && bed && Object.hasOwn(HOUSE_ITEM, bed)) rooms.bedroom.place.bed = bed;
-  return { house: { ...DEFAULT_HOUSE, ...w.house, place: living }, rooms };
+  return { house: freeRoom('living', { ...DEFAULT_HOUSE, ...w.house, place: living }), rooms };
+}
+
+// Before furniture was free-placed every piece sat in a named spot: those
+// pieces move to where their spot was (SPOT_AT), so nobody loses anything.
+// `place` keeps only the fixed spots (the bed and the nightstand); `items`
+// is cleaned up (known pieces that fit the room, one of each, numbers
+// clamped, at most MAX_PIECES).
+function freeRoom(id, r) {
+  const place = {};
+  const items = [];
+  const add = (itemId, at) => {
+    const item = own(HOUSE_ITEM, itemId);
+    const pos = item && at && fitsRoom(item, id) && clampAt(bandOf(item), at.x, at.y);
+    if (pos && items.length < MAX_PIECES && !items.some((p) => p.item === item.id)) items.push({ item: item.id, ...pos });
+  };
+  for (const p of Array.isArray(r.items) ? r.items : []) add(p?.item, p);
+  for (const [spot, item] of Object.entries(r.place ?? {})) {
+    if (FIXED_SPOTS.includes(spot)) {
+      if (ROOMS[id].spots.includes(spot)) place[spot] = item;
+    } else add(item, SPOT_AT[spot]);
+  }
+  return { ...r, place, items };
+}
+
+// The wallet with one room replaced.
+const putRoom = (wallet, id, next) => ({ ...wallet, ...(id === 'living' ? { house: next } : { rooms: { ...wallet.rooms, [id]: next } }) });
+
+// An old `decor` event for a spot that is free-placed now (see freeRoom): the
+// piece goes where the spot was, replacing whatever still sits exactly there.
+function applyOldSpot(wallet, id, here, ev) {
+  const at = SPOT_AT[ev.spot];
+  const band = SPOT_BAND[ev.spot];
+  let items = here.items.filter((p) => !(p.x === at.x && p.y === at.y && bandOf(HOUSE_ITEM[p.item]) === band));
+  if (ev.item != null) {
+    const item = own(HOUSE_ITEM, ev.item);
+    if (!item || !item.spots.includes(ev.spot) || !fitsRoom(item, id) || !owns(wallet, item)) return null;
+    items = [...items.filter((p) => p.item !== item.id), { item: item.id, ...at }];
+    if (items.length > MAX_PIECES) return null;
+  }
+  return putRoom(wallet, id, { ...here, items });
+}
+
+// 'place' and 'unplace' (free-placed furniture): the new wallet or null.
+function applyPieceEvent(wallet, ev) {
+  const id = ev.room ?? 'living';
+  const item = own(HOUSE_ITEM, ev.item);
+  if (!own(ROOMS, id) || !item) return null;
+  const here = roomOf(wallet, id);
+  const there = here.items.some((p) => p.item === item.id);
+  if (ev.type === 'unplace') return there ? putRoom(wallet, id, { ...here, items: here.items.filter((p) => p.item !== item.id) }) : null;
+  const at = fitsRoom(item, id) && owns(wallet, item) && clampAt(bandOf(item), ev.x, ev.y);
+  if (!at) return null;
+  const piece = { item: item.id, ...at };
+  const items = there ? here.items.map((p) => (p.item === item.id ? piece : p)) : [...here.items, piece];
+  if (items.length > MAX_PIECES) return null;
+  return putRoom(wallet, id, { ...here, items });
 }
 
 // The needs at the event's time. Time only moves forward: an event can't be
@@ -304,13 +371,14 @@ function applyHouseEvent(wallet, ev, now) {
     const cfg = own(ROOMS, id);
     if (!cfg) return null;
     const here = roomOf(wallet, id);
-    const put = (next) => ({ ...wallet, ...(id === 'living' ? { house: next } : { rooms: { ...wallet.rooms, [id]: next } }) });
+    const put = (next) => putRoom(wallet, id, next);
     if (ev.spot === 'wall' || ev.spot === 'floor') {
       const item = own(HOUSE_ITEM, ev.item);
       if (!item || item.kind !== ev.spot || !item.rooms.includes(id) || !owns(wallet, item)) return null;
       return put({ ...here, [ev.spot]: item.id });
     }
     if (!own(SPOT, ev.spot) || !cfg.spots.includes(ev.spot)) return null;
+    if (!FIXED_SPOTS.includes(ev.spot)) return applyOldSpot(wallet, id, here, ev);
     const place = { ...here.place };
     if (ev.item == null) {
       delete place[ev.spot];
@@ -323,6 +391,8 @@ function applyHouseEvent(wallet, ev, now) {
     if (!cfg.required.every((s) => place[s])) return null; // the bed and its lamp stay
     return put({ ...here, place });
   }
+
+  if (ev.type === 'place' || ev.type === 'unplace') return applyPieceEvent(wallet, ev);
 
   if (ev.type === 'stock') {
     const food = own(FOOD, ev.item);

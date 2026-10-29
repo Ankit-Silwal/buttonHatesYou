@@ -32,8 +32,9 @@ const byRank = (p, q) => rank(q) - rank(p);
 // Every achievement: the ones with a medal to claim up top (with Claim all),
 // then the rest by category, closest first. Which cards sit up top is decided
 // when the page opens (and after Claim all), so a card doesn't jump away from
-// under the finger the moment it's claimed.
-export default function Achievements() {
+// under the finger the moment it's claimed. `embedded`: a tab of the profile
+// page, which has its own top bar and title.
+export default function Achievements({ embedded = false }) {
   const profile = useProfile();
   const { wallet, ready } = profile;
   const [burst, setBurst] = useState(null); // { id, level, diamonds, n }
@@ -84,8 +85,10 @@ export default function Achievements() {
     </li>
   );
 
+  const Wrap = embedded ? 'div' : 'main';
   return (
-    <main className="arcade ach-page">
+    <Wrap className={`arcade ach-page ${embedded ? 'embedded' : ''}`}>
+      {!embedded && (
       <header className="hub-top">
         <div className="arcade-left">
           <Link href="/" className="chip home" aria-label="Back home">
@@ -95,11 +98,14 @@ export default function Achievements() {
         </div>
         <Account user={profile.user} ready={ready} />
       </header>
+      )}
 
-      <div className="arcade-head">
-        <Avatar size={64} equipped={wallet.equipped} mood={waiting ? 'annoyed' : 'smug'} className="has-legs" />
-        <h1>Achievements</h1>
-      </div>
+      {!embedded && (
+        <div className="arcade-head">
+          <Avatar size={64} equipped={wallet.equipped} mood={waiting ? 'annoyed' : 'smug'} className="has-legs" />
+          <h1>Achievements</h1>
+        </div>
+      )}
 
       {ready && (
         <section className="ach-overview" aria-label="Your progress">
@@ -160,7 +166,7 @@ export default function Achievements() {
 
       {chestOpen && <ChestDialog onClose={() => setChestOpen(false)} />}
       {haul && <Haul haul={haul} onClose={() => setHaul(null)} />}
-    </main>
+    </Wrap>
   );
 }
 

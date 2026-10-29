@@ -13,6 +13,7 @@ export const takeFocus = () => {
   return id;
 };
 
-// What a level-locked thing says on its tile: items are sold from their
-// level on; characters (and stories) come with clearing the level before.
-export const lockLabel = (item) => (item.slot === 'char' ? `Beat level ${item.level - 1}` : `Level ${item.level}`);
+// What a level-locked thing says on its tile. `level` is the level it is
+// available on, so it comes with clearing the one before (as the level
+// sheet's "Coming up" lists it).
+export const lockLabel = (item) => `Beat level ${item.level - 1}`;

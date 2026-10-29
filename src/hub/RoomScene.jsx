@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Avatar from '@/components/Avatar';
 import { Art, ART } from '@/house/art';
 import { skyOf } from '@/house/Room';
+import Pieces, { coveredSpots } from '@/house/Pieces';
 import { DEFAULT_HOUSE, DEFAULT_ROOMS, HOUSE_ITEM, ROOMS } from '@/economy/house';
 import { MOTES, Window, Frame, Clock, Shelf, Plant, Sofa, FloorLamp, Fridge, Counter, Stove, Hood, WallShelf, Table, Pendant, StringLights, Wardrobe, Poster, Mirror, Vanity, Towels, Duck } from './scene-art';
 import './scene.css';
@@ -18,36 +19,58 @@ export { skyOf };
 // on top. A row of pills (the `tray`) sits at the bottom, above the dock.
 //
 //   kind      'living' | 'kitchen' | 'bedroom' | 'bath'
-//   house     { wall, floor, place } to draw, including any preview
-//   preview   the spot (or 'wall' / 'floor') being previewed, for the outline
+//   house     { wall, floor, place, items } to draw, including any preview
+//   preview   what is being previewed, for the outline: 'wall' / 'floor', the
+//             'bed' / 'nightstand' spot, or a free-placed piece's item id
+//   edit      decorating: { onMove, onRemove } makes the furniture draggable (see Pieces)
 //   sky       'day' | 'dusk' | 'dawn' | 'night' (the real time of day)
 //   asleep    the room dims; in the bedroom he is tucked into bed
 //   lamp      { on, label, onToggle }: the bedside lamp is a real button
 //   hero      replaces the button (the bathroom drags him around)
 //   hud       a small meter on the scene;  extras: more scene children
 //   talking   his mouth flaps (he's repeating what you said)
+//   onPat     stroking him (dragging across him) instead of tapping
+//   pose      'tummy' (holding his hungry tummy) | 'fallen' (knocked over)
+//   hearts    a number that changes each time hearts should float up
 //   state     a word for CSS, e.g. 'showering' in the bathroom
-export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking }) {
+export default function RoomScene({ kind, sky, house, preview, asleep, equipped, mood, sleepy, dirty, grime, fx, eating, line, onPoke, onPat, lamp, hero, hud, extras, tray, state, sceneRef, showerRef, talking, pose, hearts, edit }) {
   const [pressed, setPressed] = useState(false);
   const cfg = ROOMS[kind];
   const defaults = kind === 'living' ? DEFAULT_HOUSE : DEFAULT_ROOMS[kind];
   const place = house?.place ?? {};
   const themedWall = !!house && house.wall !== defaults?.wall && !!HOUSE_ITEM[house.wall];
   const themedFloor = !!house && house.floor !== defaults?.floor && !!HOUSE_ITEM[house.floor];
-  const spots = cfg ? Object.keys(place).filter((s) => cfg.spots.includes(s) && ART[place[s]]) : [];
-  const has = spots.join(' ');
-  const bedId = kind === 'bedroom' ? place.bed : null;
+  const has = cfg ? coveredSpots(house?.items).join(' ') : '';
+  const bedId = kind === 'bedroom' && ART[place.bed] ? place.bed : null;
   const tucked = kind === 'bedroom' && !!asleep && !!bedId;
-  const lampId = kind === 'bedroom' ? place.nightstand : null;
+  const lampId = kind === 'bedroom' && ART[place.nightstand] ? place.nightstand : null;
   const winSky = kind === 'bedroom' && asleep ? 'night' : sky;
 
+  // A tap is a poke; dragging across him is a pat (one per stretch of
+  // stroking), and then the click that ends the stroke is not a poke.
+  const stroke = useRef(null); // { x, y, moved, pats }
+  function down(e) {
+    stroke.current = { x: e.clientX, y: e.clientY, moved: 0, pats: 0 };
+  }
+  function move(e) {
+    const s = stroke.current;
+    if (!s || !onPat) return;
+    s.moved += Math.hypot(e.clientX - s.x, e.clientY - s.y);
+    s.x = e.clientX;
+    s.y = e.clientY;
+    if (s.moved > 70 + s.pats * 220) {
+      s.pats++;
+      onPat();
+    }
+  }
   function poke() {
+    const patted = stroke.current?.pats;
+    stroke.current = null;
+    if (patted) return;
     setPressed(true);
     setTimeout(() => setPressed(false), 140);
     onPoke?.();
   }
-
-  const decor = spots.filter((s) => s !== 'bed' && s !== 'nightstand');
 
   return (
     <div className={`rs ${hud ? 'has-hud' : ''}`} data-kind={kind} data-sky={sky ?? undefined} data-asleep={asleep || undefined} data-tucked={tucked || undefined} data-bed={tucked ? bedId : undefined} data-fx={fx ?? undefined} data-has={has} data-state={state ?? undefined} style={bedId || lampId ? { '--bedw': ART[bedId]?.w, '--nsw': ART[lampId]?.w } : undefined}>
@@ -79,17 +102,14 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
         </div>
 
         {/* what the player decorated */}
-        <div className="rs-decor" aria-hidden="true">
+        <div className="rs-decor" aria-hidden={edit ? undefined : 'true'}>
           {kind === 'bedroom' && bedId && (
             <div className={`rs-bed ${preview === 'bed' ? 'is-preview' : ''}`} data-item={bedId} style={{ '--w': ART[bedId].w, aspectRatio: aspect(bedId) }}>
               <Art id={bedId} />
               {preview === 'bed' && <i className="preview-tag">Preview</i>}
             </div>
           )}
-          {decor.map((s) => (
-            <Piece key={s} spot={s} id={place[s]} preview={preview === s} />
-          ))}
-          {decor.map((s) => (ART[place[s]].glow ? <Glow key={s} spot={s} id={place[s]} /> : null))}
+          {cfg && <Pieces items={house?.items} preview={preview} edit={edit} />}
           {lampId && ART[lampId]?.glow && !asleep && <Glow spot="nightstand" id={lampId} />}
           {(preview === 'wall' || preview === 'floor') && <span className="preview-banner">Previewing the {preview}</span>}
         </div>
@@ -119,11 +139,22 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
               dirty={dirty}
               grime={grime}
               data-talking={talking || undefined}
+              data-pose={pose || undefined}
+              onPointerDown={down}
+              onPointerMove={(e) => e.buttons && move(e)}
+              onPointerLeave={() => !stroke.current?.pats && (stroke.current = null)}
               onClick={poke}
               aria-label="The button. It would rather you didn't."
             />
           )}
           {tucked && <i className="rs-blanket" />}
+          {hearts > 0 && (
+            <span className="hero-hearts" key={hearts} aria-hidden="true">
+              <i>♥</i>
+              <i>♥</i>
+              <i>♥</i>
+            </span>
+          )}
           {asleep && (
             <span className="hero-zz" aria-hidden="true">
               <i>z</i>
@@ -153,18 +184,7 @@ const aspect = (id) => {
   return `${w} / ${h}`;
 };
 
-// A bought piece in its spot, as its own drawing. The default prop that
-// shares the spot hides (see `data-has` in scene.css).
-function Piece({ spot, id, preview }) {
-  return (
-    <div className={`rs-spot ${preview ? 'is-preview' : ''}`} data-spot={spot} data-item={id} title={HOUSE_ITEM[id]?.name} style={{ '--w': ART[id].w, aspectRatio: aspect(id) }}>
-      <Art id={id} />
-      {preview && <i className="preview-tag">Preview</i>}
-    </div>
-  );
-}
-
-// Light from lamps, drawn above the dimmed room so it still glows at night.
+// Light from the bedside lamp, drawn above the dimmed room so it still glows at night.
 function Glow({ spot, id }) {
   const g = ART[id].glow;
   return (

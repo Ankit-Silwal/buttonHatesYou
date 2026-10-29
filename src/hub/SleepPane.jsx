@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import RoomScene from './RoomScene';
-import { NeedHud } from './NeedBar';
 import { sleep, wake } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { NEEDS, wakesAt, FILTHY_AT } from '@/economy/needs';
@@ -14,7 +13,7 @@ import Hint from './Hint';
 // groggy, for free). Whether the lamp is on comes straight from his needs,
 // so a reload mid-sleep shows the dark room. Paid energy boosts (they also
 // wake him) and potions are in sheets.
-export default function SleepPane({ needs, wallet, go, active, sky, view, quip, onDecorate, onWake, onPotions }) {
+export default function SleepPane({ needs, wallet, go, active, sky, view, edit, quip, onDecorate, onWake, onPotions }) {
   const face = faceOf(needs);
   const [line, setLine] = useState({ text: '', n: 0 });
   const filthy = !needs.asleep && (needs.dirt ?? 0) >= FILTHY_AT;
@@ -55,6 +54,7 @@ export default function SleepPane({ needs, wallet, go, active, sky, view, quip, 
       sky={sky}
       house={view?.house ?? roomOf(wallet, 'bedroom')}
       preview={view?.at}
+      edit={edit}
       equipped={wallet.equipped}
       mood={face.mood}
       sleepy={face.sleepy}
@@ -64,7 +64,7 @@ export default function SleepPane({ needs, wallet, go, active, sky, view, quip, 
       line={{ text, n: line.n }}
       lamp={lamp}
       onPoke={() => say(needs.energy < 40 ? 'Tap the lamp. I need a nap.' : 'Do not poke me. Tap the lamp if you must.')}
-      hud={<NeedHud kind="energy" icon={needs.asleep ? '💤' : '⚡'} label="Energy" value={needs.energy} note={note} />}
+      hud={note ? <p className="hud-note">{note}</p> : null}
       tray={
         <>
           <Hint active={active} show={lampHint} from={filthy ? '.pill.to-bath' : '.rs-lamp'} />

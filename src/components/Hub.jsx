@@ -1,15 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import Account from './Account';
 import Wallet from './Wallet';
+import Avatar from './Avatar';
 import Wardrobe from './Wardrobe';
 import Icon from './Icon';
 import Loading from './Loading';
-import EnergyChip from '@/house/EnergyChip';
-import HubPerks from '@/achievements/HubPerks';
 import LevelChip from '@/levels/LevelChip';
+import NeedRings from '@/hub/NeedRings';
+import { ChestButton } from '@/achievements/HubPerks';
+import Welcome from '@/profile/Welcome';
+import { useMe } from '@/profile/me';
+import { readyCount } from '@/economy/achievements';
 import RoomScene, { skyOf } from '@/hub/RoomScene';
 import DecorSheet from '@/house/DecorSheet';
 import GamesPane from '@/hub/GamesPane';
@@ -24,19 +27,25 @@ import '@/hub/flat.css';
 import { useNeeds, faceOf } from '@/profile/needs';
 import { useMimic } from '@/hub/mimic';
 import { roomOf } from '@/economy/house';
+import { placePiece, unplacePiece } from '@/profile/store';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+// A tap is a slap, as far as he's concerned.
 const POKES = [
+  ['Ow! Why would you do that?', 'sad'],
   ['Hey. HEY. Hands off.', 'annoyed'],
-  "I'm not a button in here. I'm a homeowner.",
-  ['Go play a game. Bother someone else.', 'annoyed'],
-  'That tickles. I hate that it tickles.',
+  ['That hurt. Physically and emotionally.', 'sad'],
   ["Poke me one more time and I'm calling Kevin.", 'angry'],
   ['This is a no-pressing zone.', 'angry'],
+  ['What did I ever do to you?', 'sad'],
   ['I can hear you breathing.', 'scared'],
-  'Nice outfit, right? You paid for it.',
 ];
+// Stroking him is allowed. Grudgingly.
+const PATS = ['Ohh… well, this is nice.', 'Okay. Okay. Keep going. Do not tell anyone.', 'Mmm. A little to the left.', 'Fine. You may continue being my friend.', 'This changes nothing. …Do it again.'];
+const SLAPS_TO_FALL = 6; // this many taps in SLAP_WINDOW_MS knocks him over
+const SLAP_WINDOW_MS = 3000;
+const FALL_MS = 2600;
 
 // The four panels, left to right. The button starts in the living room.
 const PANES = [
@@ -82,12 +91,12 @@ const savePane = (i) => {
   } catch {}
 };
 
-function greeting({ user, wallet }, face) {
+function greeting({ user, wallet }, face, name) {
   if (face.dirty === 2) return ["Do you smell that? That's me. Bathroom. Please.", 'sad'];
   if (face.mood === 'bored') return ["I'm hungry. And bored. Mostly hungry.", 'bored'];
   if (face.sleepy) return ['I did not sleep. Look at my eyes. LOOK at them.', 'tired'];
   if (wallet.coins >= 1000) return ["You're rich. Buy me something nice.", 'smug'];
-  if (user) return [`Oh no. ${user.name?.split(' ')[0] || 'You'}'s back.`, 'annoyed'];
+  if (name || user) return [`Oh no. ${name || user.name?.split(' ')[0]}'s back.`, 'annoyed'];
   return ["Oh. A visitor. Please don't press anything.", 'calm'];
 }
 
@@ -116,6 +125,7 @@ export default function Hub({ initial = 'home' }) {
   const [at, setAt] = useState(Math.max(0, indexOf(initial))); // the panel in view
   const [quip, setQuip] = useState(null); // a remark a sheet makes in a room: { pane, text, n }
   const pokes = useRef(0);
+  const me = useMe();
   const calmTimer = useRef(0);
   const pager = useRef(null);
 
@@ -141,7 +151,7 @@ export default function Hub({ initial = 'home' }) {
   useEffect(() => {
     if (!ready || !needs.ready || greeted.current) return;
     greeted.current = true;
-    say(...greeting(profile, face));
+    say(...greeting(profile, face, me?.name));
   }, [ready, needs.ready, profile, face, say]);
 
   // Open on the panel asked for, before the first paint. Only a Back
@@ -202,15 +212,44 @@ export default function Hub({ initial = 'home' }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [panel, go]);
 
+  // Tapping him is a slap: he's hurt and says so, and a flurry of slaps
+  // knocks him over. Stroking him makes him happy.
+  const slaps = useRef([]);
+  const [fallen, setFallen] = useState(false);
+  const [hearts, setHearts] = useState(0);
+  const fallTimer = useRef(0);
+  useEffect(() => () => clearTimeout(fallTimer.current), []);
+  const who = me?.name || 'you';
+
   function poke() {
+    if (fallen) return;
     pokes.current++;
     if (needs.asleep) return say('Zzz… *mumbles* …not the button…', 'sleep');
-    if (pokes.current % 7 === 0) return say('OKAY. Go earn some coins and leave me alone.', 'angry');
-    if (face.dirty && pokes.current % 2 === 1) return say(pick(MOANS.dirty), 'sad');
-    if (face.mood === 'bored' && pokes.current % 2 === 0) return say(pick(MOANS.bored), 'bored');
-    if (face.sleepy && pokes.current % 3 === 0) return say(pick(MOANS.sleepy), 'tired');
-    const p = pick(POKES);
-    typeof p === 'string' ? say(p, 'smug') : say(...p);
+    const now = Date.now();
+    slaps.current = [...slaps.current.filter((t) => now - t < SLAP_WINDOW_MS), now];
+    if (slaps.current.length >= SLAPS_TO_FALL) {
+      slaps.current = [];
+      setFallen(true);
+      say(`OW. I fell over. Happy now, ${who}?`, 'sad');
+      clearTimeout(fallTimer.current);
+      fallTimer.current = setTimeout(() => {
+        setFallen(false);
+        say('I am getting up. Slowly. With dignity.', 'annoyed');
+      }, FALL_MS);
+      return;
+    }
+    if (face.dirty && pokes.current % 3 === 1) return say(pick(MOANS.dirty), 'sad');
+    if (face.mood === 'bored' && pokes.current % 3 === 2) return say(pick(MOANS.bored), 'bored');
+    if (face.sleepy && pokes.current % 4 === 0) return say(pick(MOANS.sleepy), 'tired');
+    if (pokes.current % 4 === 0) return say(`Please don't slap me. You are a horrible person, ${who}.`, 'sad');
+    say(...pick(POKES));
+  }
+
+  function pat() {
+    if (fallen || needs.asleep) return;
+    slaps.current = [];
+    say(pick(PATS), 'happy');
+    setHearts((h) => h + 1);
   }
 
   const close = useCallback(() => {
@@ -228,6 +267,21 @@ export default function Hub({ initial = 'home' }) {
     setPanel('decor');
   }, []);
   const tryingIn = (room) => (panel === 'decor' && decor === room ? decorView : null);
+  // While decorating, the room's furniture can be dragged around. A drop
+  // that can't be placed (a piece being previewed, not bought yet) moves the
+  // preview instead.
+  const [moved, setMoved] = useState(null);
+  const editor = useMemo(
+    () =>
+      decor && {
+        onMove: (item, x, y) => {
+          if (!placePiece(item, x, y, decor)) setMoved({ item, x, y, n: Date.now() });
+        },
+        onRemove: (item) => unplacePiece(item, decor),
+      },
+    [decor]
+  );
+  const editIn = (room) => (panel === 'decor' && decor === room ? editor : null);
   const houseOf = (room) => tryingIn(room)?.house ?? roomOf(wallet, room);
 
   const roomSay = useCallback((pane, text) => setQuip({ pane, text, n: Date.now() }), []);
@@ -279,6 +333,7 @@ export default function Hub({ initial = 'home' }) {
             sky={sky}
             house={houseOf('living')}
             preview={tryingIn('living')?.at}
+            edit={editIn('living')}
             equipped={equipped}
             mood={mood}
             sleepy={face.sleepy}
@@ -287,9 +342,12 @@ export default function Hub({ initial = 'home' }) {
             asleep={needs.asleep}
             line={line}
             onPoke={poke}
+            onPat={pat}
+            hearts={hearts}
+            pose={fallen ? 'fallen' : needs.hunger < 25 && !needs.asleep ? 'tummy' : undefined}
             talking={talking}
             extras={
-              <button
+              me?.mic !== false && <button
                 type="button"
                 className={`mic-btn ${mimic.state}`}
                 onClick={mimic.toggle}
@@ -321,11 +379,11 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
+          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} edit={editIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
+          <SleepPane needs={needs} wallet={wallet} go={go} active={at === 3} sky={sky} view={tryingIn('bedroom')} edit={editIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
@@ -335,15 +393,20 @@ export default function Hub({ initial = 'home' }) {
 
       <header className="hub-top">
         <div className="hub-left">
+          <Link href={ready && readyCount(wallet) ? '/profile#achievements' : '/profile'} className="profile-btn" aria-label={`Profile${me?.name ? `: ${me.name}` : ''}`}>
+            <Avatar size={44} equipped={wallet.equipped} mood="smug" />
+            {ready && readyCount(wallet) > 0 && <span className="perk-badge">{readyCount(wallet)}</span>}
+          </Link>
           <Wallet profile={profile} compact />
           <LevelChip go={go} openWardrobe={() => setPanel('wardrobe')} openDecor={openDecor} openFood={() => setPanel('buy')} />
-          <EnergyChip go={go} compact />
-        </div>
-        <div className="hub-right">
-          <HubPerks compact />
-          <Account user={user} ready={ready} />
         </div>
       </header>
+
+      <NeedRings go={go} equipped={wallet.equipped}>
+        <ChestButton />
+      </NeedRings>
+
+      {ready && <Welcome equipped={wallet.equipped} onDone={(n) => say(`${n}. Great. I'll remember that. Unfortunately.`, 'annoyed')} />}
 
       {!panel && (
         <nav className="dock" aria-label="Panels">
@@ -365,7 +428,7 @@ export default function Hub({ initial = 'home' }) {
       {panel === 'buy' && <BuySheet wallet={wallet} onClose={close} />}
       {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
       {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
-      {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} onClose={close} />}
+      {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} moved={moved} onClose={close} />}
 
       <Loading done={ready && needs.ready} />
     </main>

@@ -58,8 +58,16 @@ blinks and pulls faces that match how he feels.
   machine, toaster, fruit bowl, spice shelf, pendant, table with stools and an
   island; the bedroom has a wardrobe, study desk, floor mirror, string lights
   and nightstands; plants, rugs, lamps and posters fit several rooms.
-  Spots: ceiling, two wall spots, a corner, floor left/right and a rug, plus
-  the kitchen's counter and the bedroom's bed and nightstand.
+  **Furniture goes anywhere.** While a room's Decorate sheet is open its pieces
+  can be dragged around the room with mouse, touch or pen (arrow keys move the
+  focused one, Delete takes it out); the selected piece gets a dashed outline and
+  a small × to take it out. Each kind of piece stays in its band: ceiling pieces
+  hang from the top, wall pieces stay on the wall, counter pieces on the
+  kitchen counter, floor pieces and rugs on the floor. Up to **10 pieces per
+  room** (the Furniture tab shows `7/10`); a new piece drops at a free spot.
+  Pieces further forward are drawn in front, and far enough forward they stand
+  in front of the button. The bedroom's bed and bedside lamp keep their fixed
+  spots (the lamp is how he goes to sleep).
   `/house` is the full-screen version of the same sheet, with a tab per room.
 - **Feed him.** In the Kitchen the fridge holds silly button food: a browser
   cookie, a USB stick sandwich, an AA battery smoothie, hot glue hot dogs… Each
@@ -84,14 +92,28 @@ blinks and pulls faces that match how he feels.
 
 Code: the catalog, rooms (`ROOMS`: their spots and required pieces) and foods are
 in `src/economy/house.js`, the needs math in `src/economy/needs.js`, and the
-wallet events (`decor`, `feed`, `sleep`, `wake`, `play`) in `applyHouseEvent` in
-`src/economy/rules.js`. A `decor` event is `{ spot, item, room? }` where `room` is
-`living` (the default, so events queued before the other rooms still work),
-`kitchen` or `bedroom`; the rules check the piece is owned, allowed in that room
-and that the spot exists there. The living room is `wallet.house` and the
-others are `wallet.rooms.kitchen / bedroom` (`{ wall, floor, place }`); wallets
-saved without `rooms` get defaults, and an old house bed moves to the bedroom
-(`normalize()`). The server
+wallet events (`decor`, `place`, `unplace`, `feed`, `sleep`, `wake`, `play`) in
+`applyHouseEvent` in `src/economy/rules.js`. `room` is `living` (the default, so
+events queued before the other rooms still work), `kitchen` or `bedroom`.
+A room is `{ wall, floor, place, items }`: the living room is `wallet.house`,
+the others `wallet.rooms.kitchen / bedroom`. `place` holds only the fixed spots
+(`bed`, `nightstand`); every other piece is in `items: [{ item, x, y }]`, with x
+and y in percent of the piece's band (its band comes from the spots it lists in
+the catalog, see `bandOf` in `house.js`; `Pieces.jsx` / `pieces.css` draw the
+bands for each room).
+- `{ type: 'decor', spot, item, room? }` puts up a wallpaper (`spot: 'wall'`), a
+  floor (`'floor'`), or swaps the bed / bedside lamp (never taken down).
+- `{ type: 'place', item, x, y, room? }` puts an owned piece in the room or moves
+  it: the piece must fit the room, x and y must be finite numbers (clamped to
+  0-100, 1 decimal), one of each piece per room, at most `MAX_PIECES` (10).
+- `{ type: 'unplace', item, room? }` takes it out.
+While offline only a piece's last move is queued (one event per drop, never
+per pointer move; `samePiece` in `src/profile/store.js`). Wallets saved when
+furniture sat in named spots are migrated by `normalize()`: each piece moves to
+where its spot was (`SPOT_AT`), and an old queued `decor` event for such a spot
+still replays (it lands there, or takes down what still sits exactly there).
+Wallets saved without `rooms` get defaults, and an old house bed moves to the
+bedroom. The server
 validates purchases and needs exactly like outfits. Needs events carry the time
 they happened; the server never accepts one later than its own clock or earlier
 than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
@@ -127,8 +149,9 @@ Swipe (or use the dock at the bottom, or the left/right arrow keys) between
   perspective, shaft of light, dust, night tint from the real time. Each room
   fits the screen with no scrolling (sizes come from container units).
   What you decorated shows on top: wallpapers and floors repaint the chassis
-  (reusing `room.css`), furniture is drawn in its spot and hides the default prop
-  there; the Decorate sheet previews live.
+  (reusing `room.css`), furniture is drawn where it was placed and hides the default
+  prop it stands on; the Decorate sheet previews live, and while it is open the
+  furniture can be dragged around the room.
 - **Kitchen**: counter with sink, fridge, stove and hood, table. The food he owns
   is a sliding strip; **Buy food** opens the menu grid sheet.
 - **Bedroom**: the bed and bedside lamp (the sleep switch). Lights out and the

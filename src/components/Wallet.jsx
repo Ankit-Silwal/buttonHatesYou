@@ -19,10 +19,10 @@ export default function Wallet({ profile, compact = false }) {
     return (
       <span className="chip wallet-chip" title={ready ? `${label}. ${hint}` : undefined} aria-label={`${wallet.coins} coins, ${wallet.diamonds} diamonds`}>
         <span>
-          <Icon glyph="🪙" size={14} /> <b key={wallet.coins}>{wallet.coins.toLocaleString('en-US')}</b>
+          <Icon glyph="🪙" size={28} /> <b key={wallet.coins}>{wallet.coins.toLocaleString('en-US')}</b>
         </span>
         <span className="gems">
-          <Icon glyph="💎" size={14} /> <b key={wallet.diamonds}>{wallet.diamonds.toLocaleString('en-US')}</b>
+          <Icon glyph="💎" size={28} /> <b key={wallet.diamonds}>{wallet.diamonds.toLocaleString('en-US')}</b>
         </span>
         {ready && status !== 'guest' && status !== 'synced' && <i className={`sync-dot ${status}`} aria-hidden="true" />}
       </span>

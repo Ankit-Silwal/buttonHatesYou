@@ -40,6 +40,10 @@ const SERVER_VIEW = Object.freeze({ ready: false, user: null, wallet: START, pen
 // Only the last change per outfit slot or house spot matters.
 const sameSlot = (a, b) =>
   a.type === b.type && ((a.type === 'equip' && a.slot === b.slot) || (a.type === 'decor' && a.spot === b.spot && (a.room ?? 'living') === (b.room ?? 'living')));
+// Only the last move of a free-placed piece matters, and taking it out
+// cancels its earlier moves (see 'place' / 'unplace' in economy/rules.js).
+const samePiece = (a, b) =>
+  (a.type === 'place' || (a.type === 'unplace' && b.type === 'unplace')) && a.item === b.item && (a.room ?? 'living') === (b.room ?? 'living');
 
 const uid = () => crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2);
 const online = () => typeof navigator === 'undefined' || navigator.onLine;
@@ -125,6 +129,7 @@ function record(ev) {
     // offline. Events already on their way to the server stay.
     data.outbox = data.outbox.filter((e) => e.inflight || !sameSlot(e, ev));
   }
+  if (ev.type === 'place' || ev.type === 'unplace') data.outbox = data.outbox.filter((e) => e.inflight || !samePiece(e, ev));
   data.outbox.push(event);
   commit();
   sync();
@@ -189,6 +194,9 @@ export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 
 // The house and the button's needs (see economy/house.js and needs.js).
 export const decorate = (spot, item, room = 'living') => tryRecord({ type: 'decor', spot, item, ...(room === 'living' ? {} : { room }) });
+// Free-placed furniture: put a piece at x, y (percent of its band) or move it there; take it out.
+export const placePiece = (item, x, y, room = 'living') => tryRecord({ type: 'place', item, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, ...(room === 'living' ? {} : { room }) });
+export const unplacePiece = (item, room = 'living') => tryRecord({ type: 'unplace', item, ...(room === 'living' ? {} : { room }) });
 export const feed = (item) => tryRecord({ type: 'feed', item, at: Date.now() });
 // Buys a food for the pantry (it is not eaten); feed() then eats from the stock.
 export const stockFood = (item) => tryRecord({ type: 'stock', item });

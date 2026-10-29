@@ -19,9 +19,9 @@ import './levels.css';
 // The home screen's panels, for the care missions' "Go" (see Hub.jsx).
 const PANE = { living: 1, kitchen: 2, bedroom: 3, bath: 4 };
 const CARE = {
-  feed: { glyph: '🍪', text: (n) => `Feed him ${n} ${n === 1 ? 'time' : 'times'}`, pane: PANE.kitchen },
-  nap: { glyph: '💤', text: (n) => `Put him to bed ${n === 1 ? 'once' : `${n} times`}`, pane: PANE.bedroom },
-  wash: { glyph: '🫧', text: (n) => `Wash him ${n === 1 ? 'once' : `${n} times`}`, pane: PANE.bath },
+  feed: { glyph: '🍪', text: (n) => `Feed him ${n} ${n === 1 ? 'time' : 'times'}`, where: 'in the Kitchen', pane: PANE.kitchen },
+  nap: { glyph: '💤', text: (n) => `Put him to bed ${n === 1 ? 'once' : `${n} times`}`, where: 'in the Bedroom', pane: PANE.bedroom },
+  wash: { glyph: '🫧', text: (n) => `Wash him ${n === 1 ? 'once' : `${n} times`}`, where: 'in the Bathroom', pane: PANE.bath },
 };
 const anyItem = (id) => ITEM[id] ?? HOUSE_ITEM[id];
 const fmt = (n) => n.toLocaleString('en-US');
@@ -94,7 +94,7 @@ function Mission({ m, equipped, onGo }) {
       </span>
     );
     title = c.text(m.need);
-    sub = 'Care';
+    sub = c.where;
     go = { pane: c.pane };
   }
   const pct = Math.round((100 * m.have) / m.need);
