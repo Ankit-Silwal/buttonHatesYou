@@ -5,7 +5,7 @@
 // coloured coin and gem. Anything not listed falls back to the emoji itself.
 
 // Layers: f fill, l line, b both, s solid.
-const GLYPHS = {
+export const GLYPHS = {
   bolt: ['#f0a81c', [['b', 'M13 2 L4 14 h7 l-1 8 l9 -12 h-7 z']]],
   food: ['#d9822b', [['b', 'M4 11 a8 6.5 0 0 1 16 0 z'], ['l', 'M3.5 14.5 h17'], ['b', 'M4.5 17.5 h15 a3 3 0 0 1 -3 3 h-9 a3 3 0 0 1 -3 -3 z'], ['s', 'M8.3 7.5 a0.7 0.7 0 1 0 1.4 0 a0.7 0.7 0 1 0 -1.4 0 z'], ['s', 'M12.3 6.5 a0.7 0.7 0 1 0 1.4 0 a0.7 0.7 0 1 0 -1.4 0 z'], ['s', 'M14.8 8.5 a0.7 0.7 0 1 0 1.4 0 a0.7 0.7 0 1 0 -1.4 0 z']]],
   sleep: ['#6f63d3', [['b', 'M20 14.5 A8.5 8.5 0 1 1 9.5 4 a6.5 6.5 0 0 0 10.5 10.5 z'], ['l', 'M15 2.5 h4.5 l-4.5 4.5 h4.5']]],
@@ -50,7 +50,7 @@ const GLYPHS = {
   restart: ['#5a6273', [['l', 'M20 12 a8 8 0 1 1 -2.4 -5.7'], ['s', 'M21 3 v6.5 h-6.5 z']]],
 };
 
-const BY_EMOJI = {
+export const BY_EMOJI = {
   '⚡': 'bolt',
   '🍔': 'food',
   '💤': 'sleep',

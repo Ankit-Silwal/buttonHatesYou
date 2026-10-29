@@ -1,39 +1,88 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Avatar from '@/components/Avatar';
 import Account from '@/components/Account';
 import Wallet from '@/components/Wallet';
+import Icon from '@/components/Icon';
 import { useProfile } from '@/profile/useProfile';
 import { claimAchievement } from '@/profile/store';
 import { ACHIEVEMENTS, ACHIEVEMENT_DIAMONDS, CATEGORIES, MEDALS, achievementStates } from '@/economy/achievements';
 import { isBigDay } from '@/economy/chest';
 import { ChestArt, ChestDialog, Streak, useChest } from './Chest';
+import Badge, { MedalArt } from './Badge';
 import './achievements.css';
 
 const fmt = (n) => Math.floor(n).toLocaleString('en-US');
 const LEVELS = ACHIEVEMENTS.reduce((n, a) => n + a.levels.length, 0);
+const Gem = ({ size = 15 }) => <Icon glyph="💎" size={size} className="gem" />;
 
-// Every achievement, by category: medals, progress to the next level, and a
-// Claim button when a level is ready. Claiming is by hand, one level at a
-// time, so there is always a moment of "ooh".
+// How far along the next level is, 0 to 100 (100 when all are claimed).
+function progress({ a, level, value, next }) {
+  if (!next) return 100;
+  const from = level ? a.levels[level - 1].at : 0;
+  return Math.max(0, Math.min(100, ((value - from) / (next.at - from)) * 100));
+}
+
+// Claimable first, then the closest to their next medal, finished ones last.
+const rank = (x) => (x.claimable ? 300 : x.next ? 100 + progress(x) : 0);
+const byRank = (p, q) => rank(q) - rank(p);
+
+// Every achievement: the ones with a medal to claim up top (with Claim all),
+// then the rest by category, closest first. Which cards sit up top is decided
+// when the page opens (and after Claim all), so a card doesn't jump away from
+// under the finger the moment it's claimed.
 export default function Achievements() {
   const profile = useProfile();
   const { wallet, ready } = profile;
   const [burst, setBurst] = useState(null); // { id, level, diamonds, n }
+  const [haul, setHaul] = useState(null); // Claim all: { diamonds, medals, list }
+  const [front, setFront] = useState(null); // ids shown up top
   const [chestOpen, setChestOpen] = useState(false);
   const bursts = useRef(0);
   const states = achievementStates(wallet);
   const claimed = states.reduce((n, x) => n + x.level, 0);
   const earned = states.reduce((n, x) => n + x.a.levels.slice(0, x.level).reduce((m, l) => m + l.diamonds, 0), 0);
   const waiting = states.reduce((n, x) => n + x.claimable, 0);
+  const pending = states.reduce((n, x) => n + x.a.levels.slice(x.level, x.level + x.claimable).reduce((m, l) => m + l.diamonds, 0), 0);
+
+  if (ready && !front) setFront(new Set(states.filter((x) => x.claimable).map((x) => x.a.id)));
+  const top = front ? states.filter((x) => front.has(x.a.id)).sort(byRank) : [];
 
   function claim(x) {
     const got = claimAchievement(x.a.id, x.level + 1);
     if (!got) return;
     setBurst({ id: x.a.id, level: x.level, diamonds: got.diamonds, n: ++bursts.current });
   }
+
+  // Every claimable level of every achievement, in order, one claim each.
+  function claimAll() {
+    let diamonds = 0;
+    let medals = 0;
+    const list = [];
+    for (const x of states) {
+      let got = 0;
+      for (let k = 1; k <= x.claimable; k++) {
+        const r = claimAchievement(x.a.id, x.level + k);
+        if (!r) break;
+        diamonds += r.diamonds;
+        got++;
+      }
+      if (got) list.push({ a: x.a, level: x.level + got });
+      medals += got;
+    }
+    if (!medals) return;
+    setBurst(null);
+    setFront(new Set());
+    setHaul({ diamonds, medals, list });
+  }
+
+  const card = (x, i) => (
+    <li key={x.a.id} style={{ '--i': Math.min(i, 10) }}>
+      <Card x={x} ready={ready} burst={burst?.id === x.a.id ? burst : null} onClaim={() => claim(x)} />
+    </li>
+  );
 
   return (
     <main className="arcade ach-page">
@@ -49,10 +98,7 @@ export default function Achievements() {
 
       <div className="arcade-head">
         <Avatar size={64} equipped={wallet.equipped} mood={waiting ? 'annoyed' : 'smug'} className="has-legs" />
-        <div>
-          <h1>Achievements</h1>
-          <p>Diamonds don&apos;t grow on trees. They grow on achievements. Hit a goal, then claim its medal for 💎.</p>
-        </div>
+        <h1>Achievements</h1>
       </div>
 
       {ready && (
@@ -69,7 +115,9 @@ export default function Achievements() {
               {earned}
               <small>/{ACHIEVEMENT_DIAMONDS}</small>
             </b>
-            <span>💎 earned</span>
+            <span>
+              <Gem size={13} /> earned
+            </span>
           </div>
           <div className={`ach-stat ${waiting ? 'hot' : ''}`}>
             <b>{waiting}</b>
@@ -79,25 +127,39 @@ export default function Achievements() {
         </section>
       )}
 
+      {top.length > 0 && (
+        <section className="shelf ach-ready" aria-labelledby="ach-ready">
+          <div className="shelf-head">
+            <h2 id="ach-ready">Ready to claim</h2>
+            {waiting > 0 && (
+              <button className="pill claim claim-all" onClick={claimAll}>
+                Claim all
+                <span className="claim-all-sum">
+                  +{pending} <Gem size={16} />
+                </span>
+              </button>
+            )}
+          </div>
+          <ul className="ach-grid">{top.map(card)}</ul>
+        </section>
+      )}
+
       {CATEGORIES.map((cat) => (
-        <section key={cat.id} className="shelf" aria-labelledby={`ach-${cat.id}`}>
+        <section key={cat.id} className={`shelf cat-${cat.id}`} aria-labelledby={`ach-${cat.id}`}>
           <div className="shelf-head">
             <h2 id={`ach-${cat.id}`}>{cat.name}</h2>
-            <p>{cat.blurb}</p>
           </div>
           <ul className="ach-grid">
             {states
-              .filter((x) => x.a.cat === cat.id)
-              .map((x, i) => (
-                <li key={x.a.id} style={{ '--i': Math.min(i, 10) }}>
-                  <Card x={x} ready={ready} burst={burst?.id === x.a.id ? burst : null} onClaim={() => claim(x)} />
-                </li>
-              ))}
+              .filter((x) => x.a.cat === cat.id && !front?.has(x.a.id))
+              .sort(byRank)
+              .map(card)}
           </ul>
         </section>
       ))}
 
       {chestOpen && <ChestDialog onClose={() => setChestOpen(false)} />}
+      {haul && <Haul haul={haul} onClose={() => setHaul(null)} />}
     </main>
   );
 }
@@ -116,10 +178,50 @@ function ChestTile({ onOpen }) {
   );
 }
 
-function Medal({ medal, state, level, pop }) {
+// What Claim all got, in one go: the diamonds, and the badges they came from.
+function Haul({ haul, onClose }) {
+  useEffect(() => {
+    const esc = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [onClose]);
+
+  const shown = haul.list.slice(0, 8);
   return (
-    <span className={`medal ${medal.id} ${state} ${pop ? 'pop' : ''}`} title={`${medal.name}: ${state === 'got' ? 'claimed' : state === 'ready' ? 'ready to claim' : `${fmt(level.at)} to go for ${level.diamonds} 💎`}`}>
-      <span className="medal-disc">★</span>
+    <div className="chest-dialog" role="dialog" aria-modal="true" aria-label="Medals claimed" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="chest-card ach-haul">
+        <span className="haul-rays" aria-hidden="true" />
+        <p className="kicker">{haul.medals === 1 ? '1 medal claimed' : `${haul.medals} medals claimed`}</p>
+        <div className="haul-gem" aria-hidden="true">
+          <Gem size={72} />
+          {Array.from({ length: 12 }, (_, i) => (
+            <i key={i} style={{ '--a': `${i * 30}deg`, '--d': `${70 + (i % 3) * 22}px`, '--n': i }} />
+          ))}
+        </div>
+        <h2 className="haul-sum" aria-live="polite">
+          +{haul.diamonds} <Gem size={26} />
+        </h2>
+        <ul className="haul-badges">
+          {shown.map((x, i) => (
+            <li key={x.a.id} style={{ '--i': i }} title={x.a.name}>
+              <Badge a={x.a} level={x.level} size={40} />
+            </li>
+          ))}
+          {haul.list.length > shown.length && <li className="haul-more">+{haul.list.length - shown.length}</li>}
+        </ul>
+        <button className="pill" onClick={onClose} autoFocus>
+          Nice
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Medal({ medal, state, level, pop }) {
+  const what = state === 'got' ? 'claimed' : state === 'ready' ? 'ready to claim' : `${fmt(level.at)} for ${level.diamonds} diamonds`;
+  return (
+    <span className={`medal ${medal.id} ${state} ${pop ? 'pop' : ''}`} title={`${medal.name}: ${what}`}>
+      <MedalArt medal={medal.id} state={state} />
     </span>
   );
 }
@@ -128,15 +230,14 @@ function Card({ x, ready, burst, onClaim }) {
   const { a, level, value, next, claimable } = x;
   const done = !next;
   const shown = next ?? a.levels[a.levels.length - 1];
-  const from = level ? a.levels[level - 1].at : 0;
-  const pct = done ? 100 : Math.max(0, Math.min(100, ((value - from) / (next.at - from)) * 100));
+  const pct = progress(x);
   const medal = MEDALS[Math.min(level, MEDALS.length - 1)];
 
   return (
-    <article className={`ach-card ${claimable ? 'ready' : ''} ${done ? 'done' : ''} ${burst ? 'claimed' : ''}`} key={burst?.n}>
+    <article className={`ach-card cat-${a.cat} ${claimable ? 'ready' : ''} ${done ? 'done' : ''} ${burst ? 'claimed' : ''}`} key={burst?.n}>
       <div className="ach-top">
-        <span className="ach-ico" aria-hidden="true">
-          {a.icon}
+        <span className="ach-ico">
+          <Badge a={a} level={level} />
         </span>
         <div className="ach-title">
           <b>{a.name}</b>
@@ -161,10 +262,10 @@ function Card({ x, ready, burst, onClaim }) {
 
       <div className="ach-foot">
         {done ? (
-          <span className="ach-reward done">✓ Complete</span>
+          <span className="ach-reward done">Complete</span>
         ) : (
           <span className="ach-reward">
-            <span className={`dot ${medal.id}`} /> {medal.name} · +{next.diamonds} 💎
+            <span className={`dot ${medal.id}`} /> {medal.name} · +{next.diamonds} <Gem size={14} />
           </span>
         )}
         {claimable > 0 && (
@@ -176,10 +277,12 @@ function Card({ x, ready, burst, onClaim }) {
 
       {burst && (
         <span className="ach-burst" aria-live="polite">
-          <span className="ach-plus">+{burst.diamonds} 💎</span>
+          <span className="ach-plus">
+            +{burst.diamonds} <Gem size={20} />
+          </span>
           {Array.from({ length: 10 }, (_, i) => (
             <i key={i} style={{ '--a': `${i * 36}deg`, '--d': `${60 + (i % 3) * 18}px` }}>
-              {i % 2 ? '💎' : '✦'}
+              {i % 2 ? <Gem size={14} /> : '✦'}
             </i>
           ))}
         </span>
