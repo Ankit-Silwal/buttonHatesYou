@@ -16,6 +16,7 @@ import SleepPane from '@/hub/SleepPane';
 import BathPane from '@/hub/BathPane';
 import BuySheet from '@/hub/BuySheet';
 import WakeSheet from '@/hub/WakeSheet';
+import PotionSheet from '@/hub/PotionSheet';
 import '@/hub/hub-panes.css';
 import '@/hub/flat.css';
 import { useNeeds, faceOf } from '@/profile/needs';
@@ -100,7 +101,7 @@ export default function Hub({ initial = 'home' }) {
   const { profile } = needs;
   const { wallet, user, ready } = profile;
   const face = faceOf(needs);
-  const [panel, setPanel] = useState(null); // null | 'wardrobe' | 'decor' | 'buy' | 'wake'
+  const [panel, setPanel] = useState(null); // null | 'wardrobe' | 'decor' | 'buy' | 'wake' | 'potions'
   const [decor, setDecor] = useState(null); // the room being decorated
   const [decorView, setDecorView] = useState(null); // { house, at }: what is being tried in it
   const [sky, setSky] = useState('day');
@@ -269,15 +270,15 @@ export default function Hub({ initial = 'home' }) {
         </section>
 
         <section className="pane pane-room pane-food" aria-label="Kitchen" inert={at !== 2}>
-          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} />
+          <FoodPane needs={needs} wallet={wallet} active={at === 2} sky={sky} view={tryingIn('kitchen')} quip={quip} onDecorate={() => openDecor('kitchen')} onBuy={() => setPanel('buy')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-sleep" aria-label="Bedroom" inert={at !== 3}>
-          <SleepPane needs={needs} wallet={wallet} go={go} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} />
+          <SleepPane needs={needs} wallet={wallet} go={go} sky={sky} view={tryingIn('bedroom')} quip={quip} onDecorate={() => openDecor('bedroom')} onWake={() => setPanel('wake')} onPotions={() => setPanel('potions')} />
         </section>
 
         <section className="pane pane-room pane-bath" aria-label="Bathroom" inert={at !== 4}>
-          <BathPane needs={needs} wallet={wallet} active={at === 4} sky={sky} />
+          <BathPane needs={needs} wallet={wallet} active={at === 4} sky={sky} onPotions={() => setPanel('potions')} />
         </section>
       </div>
 
@@ -311,6 +312,7 @@ export default function Hub({ initial = 'home' }) {
       {panel === 'wardrobe' && <Wardrobe wallet={wallet} onPreview={setPreview} onSay={say} onClose={close} />}
       {panel === 'buy' && <BuySheet wallet={wallet} onClose={close} />}
       {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
+      {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
       {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} onClose={close} />}
     </main>
   );

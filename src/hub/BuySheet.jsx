@@ -5,7 +5,7 @@ import Sheet from '@/components/Sheet';
 import { Art } from '@/house/art';
 import { stockFood } from '@/profile/store';
 import { canAfford, STOCK_MAX } from '@/economy/rules';
-import { FOODS } from '@/economy/house';
+import { FOODS, FREE_FOOD, isBroke } from '@/economy/house';
 
 const price = (p) => (p.diamonds ? `${p.diamonds} 💎` : `${p.coins} 🪙`);
 
@@ -29,7 +29,10 @@ export default function BuySheet({ wallet, onClose }) {
     <Sheet title="Buy food" onClose={onClose} className="shop-sheet">
       <div className="sheet-body">
         <p className="sheet-said" role="status">
-          {said || 'Tap a dish to put one in the fridge. Feed him from the strip in the Kitchen.'}
+          {said ||
+            (isBroke(wallet)
+              ? `Out of coins? ${FREE_FOOD.name}s are free: tap the one in the Kitchen strip.`
+              : 'Tap a dish to put one in the fridge. Feed him from the strip in the Kitchen.')}
         </p>
         <ul className="menu">
           {FOODS.map((f) => {

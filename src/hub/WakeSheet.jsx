@@ -8,7 +8,8 @@ import { WAKE_OPTIONS } from '@/economy/house';
 
 const price = (p) => (p.diamonds ? `${p.diamonds} 💎` : `${p.coins} 🪙`);
 
-// Paid ways to get him out of bed on the spot, with some energy back.
+// Paid energy boosts. Asleep, they get him out of bed on the spot; awake,
+// they keep him going without a nap. Either way he gets energy back.
 export default function WakeSheet({ wallet, asleep, onSay, onClose }) {
   const [said, setSaid] = useState('');
   const timer = useRef(0);
@@ -16,7 +17,7 @@ export default function WakeSheet({ wallet, asleep, onSay, onClose }) {
 
   function wakeWith(o) {
     if (!wake(o.id)) {
-      setSaid("You can't afford that. Let him sleep, or wake him with the lamp for free.");
+      setSaid(asleep ? "You can't afford that. Let him sleep, or wake him with the lamp for free." : "You can't afford that. A nap is free, though.");
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setSaid(''), 3600);
       return;
@@ -26,21 +27,24 @@ export default function WakeSheet({ wallet, asleep, onSay, onClose }) {
   }
 
   return (
-    <Sheet title="Wake-up options" onClose={onClose} className="shop-sheet wake-sheet">
+    <Sheet title={asleep ? 'Wake-up options' : 'Energy boosts'} onClose={onClose} className="shop-sheet wake-sheet">
       <div className="sheet-body">
         <p className="sheet-said" role="status">
-          {said || 'Waking him with the lamp is free but leaves him as sleepy as he was. These wake him on the spot and give some energy back.'}
+          {said ||
+            (asleep
+              ? 'Waking him with the lamp is free but leaves him as sleepy as he was. These wake him on the spot and give some energy back.'
+              : 'No time for a nap? These give him energy right now, no bed needed.')}
         </p>
         <ul className="menu wakes">
           {WAKE_OPTIONS.map((o) => (
             <li key={o.id}>
-              <button className="dish" onClick={() => wakeWith(o)} disabled={!asleep || !canAfford(wallet, o)} aria-label={`Wake him with ${o.name}`}>
+              <button className="dish" onClick={() => wakeWith(o)} disabled={!canAfford(wallet, o)} aria-label={asleep ? `Wake him with ${o.name}` : `Give him ${o.name}`}>
                 <span className="dish-art emoji" aria-hidden="true">
                   {o.icon}
                 </span>
                 <b>{o.name}</b>
                 <span className="dish-fx">⚡ +{o.energy}</span>
-                <span className="dish-cost">{asleep ? price(o.price) : 'he is awake'}</span>
+                <span className="dish-cost">{price(o.price)}</span>
               </button>
             </li>
           ))}
