@@ -44,3 +44,47 @@
   vertical-align: 2px;
 }
 .buybar .pill { white-space: nowrap; }
+
+/* the wardrobe's whole look: one chip per thing being tried on */
+.buybar .try-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.buybar .try-list .try-tag { margin-right: 2px; }
+.try-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 10px;
+  border-radius: 99px;
+  background: rgba(74, 52, 40, 0.08);
+  font-size: 13px;
+  font-weight: 600;
+}
+.try-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(74, 52, 40, 0.14);
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.buybar .try-list .note { font-size: 12px; }
+.tabs button.has-try { position: relative; }
+.tabs button.has-try::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--btn);
+}
+/* the wardrobe's bar: the chips get the whole width, the buttons sit below */
+.buybar:has(.try-list) { flex-wrap: wrap; }
+.buybar:has(.try-list) .try-list { flex: 1 1 100%; }
+.buybar:has(.try-list) .row { flex: 1 1 100%; justify-content: flex-end; }

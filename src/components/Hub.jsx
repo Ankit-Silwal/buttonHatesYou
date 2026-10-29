@@ -22,6 +22,7 @@ import BuySheet from '@/hub/BuySheet';
 import WakeSheet from '@/hub/WakeSheet';
 import PotionSheet from '@/hub/PotionSheet';
 import '@/hub/hub-panes.css';
+import '@/house/chip.css';
 import '@/hub/flat.css';
 import { useNeeds, faceOf } from '@/profile/needs';
 import { useMimic } from '@/hub/mimic';
