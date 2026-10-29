@@ -236,6 +236,7 @@ export const GAMES = [
       payout: { coins: true, rate: 15 },
       unit: 'points',
       quips: { goal: 'You chased me all that way for coins? Get a hobby.', fail: 'Clicked. Of course I got clicked.' },
+      notFor: { 'char-cursor': "Dodge my own clicks from the sky? A pointer can't do that. Switch character." },
     },
     {
       id: 'flap',
@@ -247,6 +248,7 @@ export const GAMES = [
       payout: { per: 10, base: 25, rate: 1.5 },
       unit: 'pipes',
       quips: { goal: 'I am going to be sick.', fail: 'Gravity is my friend now.' },
+      notFor: { 'char-cursor': "Wings? On an arrow? I'd just point at the ground. Switch character." },
     },
     {
       id: 'pop',
@@ -291,6 +293,7 @@ export const GAMES = [
       payout: { per: 2000, base: 25, rate: 150 },
       unit: 'meters',
       quips: { goal: 'Still not far enough from you.', fail: 'Gravity: 1. Me: also fine.' },
+      notFor: { 'char-cursor': "A pointer can't bounce. I land on my tip. Every time. Switch character." },
     },
     {
       id: 'whack',
@@ -313,6 +316,7 @@ export const GAMES = [
       payout: { per: 600, base: 25, rate: 40 },
       unit: 'meters',
       quips: { goal: 'You helped me escape you. Odd.', fail: 'Tripped. Do not look at me.' },
+      notFor: { 'char-cursor': "Run away from the cursor? I AM the cursor. Switch character." },
     },
     {
       id: 'stack',
@@ -324,6 +328,7 @@ export const GAMES = [
       payout: { per: 12, base: 25, rate: 3 },
       unit: 'floors',
       quips: { goal: 'My back hurts. All of our backs.', fail: 'A short tower for a short attention span.' },
+      notFor: { 'char-cursor': "Stack pointers? We'd poke holes in each other. Switch character." },
     },
     {
       id: 'slice',
@@ -335,6 +340,18 @@ export const GAMES = [
       payout: { per: 30, base: 25, rate: 8 },
       unit: 'slices',
       quips: { goal: 'You were aiming for me. I saw that.', fail: 'Ha. Missed me. Literally.' },
+    },
+    {
+      id: 'table-tennis',
+      name: 'Ping Pong Grudge',
+      emoji: '🏓',
+      color: '#cde3f7',
+      blurb: 'Table tennis against Karen Popup. She wants to speak to the manager about every point you win. Bring spin.',
+      howTo: 'Drag, or use ← →, to move your paddle. Hit it off the middle of the paddle, swipe as you hit for spin, smash the high ones. Karen gets 5 points and it is over.',
+      payout: { per: 5, base: 25, rate: 0.45 },
+      shapes: true, // draws every character in its own shape (src/adventure/cast.js), Cursor too
+      unit: 'points',
+      quips: { goal: 'Karen wants a refund. On ME.', fail: 'I got served. By a popup.' },
     },
     {
       id: 'redlight',
@@ -398,3 +415,8 @@ export const GAME = Object.fromEntries(GAMES.map((g) => [g.id, g]));
 
 // The games you can actually play (the same set as the Android app).
 export const PLAYABLE = GAMES.filter((g) => !g.retired);
+
+// Why the character he's playing as can't play `game` (in that character's
+// words), or null. A few games are built around a round button, so Cursor,
+// an arrow, sits those out (`notFor` on the game, by character item id).
+export const cantPlay = (game, equipped) => game?.notFor?.[equipped?.char ?? 'char-bobby'] ?? null;

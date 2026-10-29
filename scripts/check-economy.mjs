@@ -247,7 +247,7 @@ assert.ok(ACHIEVEMENT_DIAMONDS < itemDiamonds + movingDiamonds, 'even every meda
 assert.ok(itemDiamonds >= 57 && itemDiamonds <= 168, 'diamond items add up to ' + itemDiamonds);
 
 // Print the tables for the README
-const typical = { flap: [10, 20, 30], pop: [1000, 2000, 3000], catch: [25, 50, 75], simon: [5, 10, 15], hop: [2000, 4000, 6000], whack: [20, 40, 60], run: [600, 1200, 1800], stack: [12, 24, 36], slice: [30, 60, 90], redlight: [500, 1000, 1500], spam: [25, 50, 75], fizz: [5, 10, 15], pong: [20, 40, 60], tightrope: [400, 800, 1200] };
+const typical = { flap: [10, 20, 30], pop: [1000, 2000, 3000], catch: [25, 50, 75], simon: [5, 10, 15], hop: [2000, 4000, 6000], whack: [20, 40, 60], run: [600, 1200, 1800], stack: [12, 24, 36], slice: [30, 60, 90], redlight: [500, 1000, 1500], spam: [25, 50, 75], fizz: [5, 10, 15], pong: [20, 40, 60], tightrope: [400, 800, 1200], 'table-tennis': [5, 10, 15] };
 for (const g of GAMES.filter((g) => g.payout && !g.payout.coins))
   console.log(g.id.padEnd(6), typical[g.id].map((s) => `${s} ${g.unit} -> ${adventurePayout(g, s)}`).join(' | '));
 const coinPrices = ITEMS.filter((i) => i.price?.coins).map((i) => i.price.coins);
@@ -550,6 +550,8 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   const { HOUSE_ITEM } = await import('../src/economy/house.js');
   const { MAX_LEVEL, LEVELS, BUY_TRACK, rewardOf, levelState, levelsOf, unlocksOf, storyOpen, STORY_UNLOCKS } = L;
   const anyItem = (id) => ITEM[id] ?? HOUSE_ITEM[id];
+  // the play missions' rotation never changes (a new game would reshuffle everyone's missions)
+  assert.deepEqual(L.PLAY_GAMES, ['flap', 'whack', 'stack', 'pop', 'simon', 'hop', 'run', 'slice', 'button-run']);
   const lvAt = (w, n) => ({ ...normalize(w), lv: { n, at: {}, best: {} } });
 
   assert.equal(LEVELS.length, MAX_LEVEL);

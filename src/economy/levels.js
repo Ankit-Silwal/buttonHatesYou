@@ -17,7 +17,7 @@
 // Wallets from before levels get { n: 0, at: their counters now, best: {} }
 // the first time an event is applied, so on the browser and the server alike
 // the missions need new actions.
-import { ITEMS, GAMES, GAME } from './catalog';
+import { ITEMS, GAME } from './catalog';
 import { HOUSE_ITEMS } from './house';
 
 export const MAX_LEVEL = 200;
@@ -36,11 +36,11 @@ const STORY_OF_CLAIM = (c) =>
 /* ---------------- the missions ---------------- */
 
 // 1. Play: reach a score in one run of an Adventure game, in rotation.
+// The rotation is fixed: a game joining it would change every level's
+// mission for players already on their way (so Ping Pong Grudge, added
+// later, isn't in it).
 const ORDER = ['flap', 'whack', 'stack', 'pop', 'simon', 'hop', 'run', 'slice', 'button-run'];
-export const PLAY_GAMES = [
-  ...ORDER.filter((id) => GAME[id]?.payout && !GAME[id].retired),
-  ...GAMES.filter((g) => g.category === 'adventure' && g.payout && !g.retired && !ORDER.includes(g.id)).map((g) => g.id),
-];
+export const PLAY_GAMES = ORDER.filter((id) => GAME[id]?.payout && !GAME[id].retired);
 // How hard: from 0.4 of a pay tier at level 1 to 3 tiers (a great run) at 200.
 export const playFactor = (L) => 0.4 + (2.6 * (L - 1)) / (MAX_LEVEL - 1);
 const COIN_TIER = 50; // Button Run pays coins 1:1: its "tier" is 50 coins grabbed

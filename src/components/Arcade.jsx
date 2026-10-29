@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { GAME, PLAYABLE } from '@/economy/catalog';
+import { GAME, ITEM, PLAYABLE, cantPlay } from '@/economy/catalog';
 import { lookOf } from '@/adventure/kit';
 import { useFavorites } from '@/profile/favorites';
 import { PAINT, ART_W, ART_H } from './gameArt';
@@ -13,7 +13,7 @@ import LockTag from '@/levels/LockTag';
 
 // Menu order: the Adventure games, then the story games (Please Don't, the
 // original game, and the two long stories) together under Story mode.
-const ORDER = ['flap', 'whack', 'stack', 'pop', 'simon', 'hop', 'run', 'slice', 'button-run', 'please-dont', 'how-i-met-your-cursor', 'the-reason'];
+const ORDER = ['flap', 'whack', 'stack', 'pop', 'simon', 'hop', 'run', 'slice', 'button-run', 'table-tennis', 'please-dont', 'how-i-met-your-cursor', 'the-reason'];
 const MENU = [...ORDER.map((id) => GAME[id]).filter((g) => g && !g.retired), ...PLAYABLE.filter((g) => !ORDER.includes(g.id))];
 
 // Every game as a tile in one grid: the Games panel of the home screen (and
@@ -21,7 +21,8 @@ const MENU = [...ORDER.map((id) => GAME[id]).filter((g) => g && !g.retired), ...
 // starred; the rest keep the menu order, with the story games last.
 // `why(game)`: the reason he can't play it right now (too hungry, too tired,
 // asleep), or null. Those tiles are greyed out and don't open; tapping one
-// calls `onBlocked(reason)` instead.
+// calls `onBlocked(reason)` instead. So are the games the character he's
+// playing as can't play (cantPlay: Cursor and the round-button games).
 export function GameGrid({ equipped, why, onBlocked }) {
   const [favorites, toggle] = useFavorites();
   const { wallet, ready } = useProfile();
@@ -31,7 +32,7 @@ export function GameGrid({ equipped, why, onBlocked }) {
   const stories = MENU.filter((g) => !favorites.includes(g.id) && g.category === 'story');
   const tile = (g, i, on) => (
     <li key={g.id} style={{ '--i': Math.min(i, 10) }}>
-      <GameTile game={g} equipped={equipped} why={why?.(g)} onBlocked={onBlocked} favorite={on} locked={locked(g)} onStar={() => toggle(g.id)} />
+      <GameTile game={g} equipped={equipped} why={cantPlay(g, equipped) ?? why?.(g)} misfit={!!cantPlay(g, equipped)} onBlocked={onBlocked} favorite={on} locked={locked(g)} onStar={() => toggle(g.id)} />
     </li>
   );
 
@@ -60,7 +61,7 @@ export function GameGrid({ equipped, why, onBlocked }) {
 // One game: a picture of it and its name, with a star to pin it to the top.
 // A story game a level still locks shows a padlock and doesn't open; a game
 // he can't play right now (`why`) is greyed out and calls onBlocked instead.
-function GameTile({ game: g, equipped, why, onBlocked, favorite, locked, onStar }) {
+function GameTile({ game: g, equipped, why, misfit, onBlocked, favorite, locked, onStar }) {
   const stop = (e) => {
     if (!why) return;
     e.preventDefault();
@@ -74,6 +75,7 @@ function GameTile({ game: g, equipped, why, onBlocked, favorite, locked, onStar 
       </span>
       <span className="gtile-name">{g.name}</span>
       {locked && <LockTag className="gtile-lockpin">Beat level {STORY_UNLOCKS[g.id]}</LockTag>}
+      {misfit && !locked && <span className="lv-lock gtile-lockpin gtile-misfit">Not for {ITEM[equipped?.char]?.name ?? 'him'}</span>}
     </>
   );
   return (
