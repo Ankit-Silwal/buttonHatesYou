@@ -4,6 +4,7 @@ import Avatar from '@/components/Avatar';
 import { GameGrid } from '@/components/Arcade';
 import { faceOf, PLAY_MIN_HUNGER } from '@/profile/needs';
 import { PLAY_COST } from '@/economy/needs';
+import { useState } from 'react';
 import Hint from './Hint';
 
 // The left panel: every game, as a grid of tiles (like the Android app).
@@ -20,6 +21,14 @@ export default function GamesPane({ needs, equipped, go, active }) {
   else if (tired) note = 'Too tired to play.';
 
   const blocked = needs.asleep || hungry || tired;
+  // Per game (a story costs more energy than a quick game): why he can't, in his words.
+  const why = (g) => {
+    if (needs.asleep) return "Zzz… I'm asleep. Wake me up first.";
+    if (hungry) return "I'm too hungry to play. Feed me first.";
+    if (needs.energy < (PLAY_COST[g.category] ?? PLAY_COST.adventure)) return "I'm too tired for that one. Let me nap.";
+    return null;
+  };
+  const [nag, setNag] = useState(null); // { text, n }: he says why, with a shake
 
   return (
     <div className="arcade games-room">
@@ -27,7 +36,9 @@ export default function GamesPane({ needs, equipped, go, active }) {
         <Avatar size={58} equipped={equipped} mood={face.mood} sleepy={face.sleepy} className="has-legs" />
         <div>
           <h1>Games</h1>
-          <p>{note}</p>
+          <p className={nag ? 'gp-nag' : undefined} key={nag?.n ?? 0}>
+            {nag?.text ?? note}
+          </p>
           <Hint active={active} show={blocked} from=".gp-fix .pill" />
           {blocked && (
             <div className="gp-fix">
@@ -45,7 +56,7 @@ export default function GamesPane({ needs, equipped, go, active }) {
           )}
         </div>
       </div>
-      <GameGrid equipped={equipped} dim={blocked} />
+      <GameGrid equipped={equipped} why={why} onBlocked={(text) => setNag((m) => ({ text, n: (m?.n ?? 0) + 1 }))} />
     </div>
   );
 }

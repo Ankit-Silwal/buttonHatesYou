@@ -19,7 +19,10 @@ const MENU = [...ORDER.map((id) => GAME[id]).filter((g) => g && !g.retired), ...
 // Every game as a tile in one grid: the Games panel of the home screen (and
 // of /games). Starred games are pinned to the top, in the order they were
 // starred; the rest keep the menu order, with the story games last.
-export function GameGrid({ equipped, dim = false }) {
+// `why(game)`: the reason he can't play it right now (too hungry, too tired,
+// asleep), or null. Those tiles are greyed out and don't open; tapping one
+// calls `onBlocked(reason)` instead.
+export function GameGrid({ equipped, why, onBlocked }) {
   const [favorites, toggle] = useFavorites();
   const { wallet, ready } = useProfile();
   const locked = (g) => ready && !storyOpen(wallet, g.id); // story games open as levels are cleared
@@ -28,7 +31,7 @@ export function GameGrid({ equipped, dim = false }) {
   const stories = MENU.filter((g) => !favorites.includes(g.id) && g.category === 'story');
   const tile = (g, i, on) => (
     <li key={g.id} style={{ '--i': Math.min(i, 10) }}>
-      <GameTile game={g} equipped={equipped} dim={dim} favorite={on} locked={locked(g)} onStar={() => toggle(g.id)} />
+      <GameTile game={g} equipped={equipped} why={why?.(g)} onBlocked={onBlocked} favorite={on} locked={locked(g)} onStar={() => toggle(g.id)} />
     </li>
   );
 
@@ -55,25 +58,31 @@ export function GameGrid({ equipped, dim = false }) {
 }
 
 // One game: a picture of it and its name, with a star to pin it to the top.
-// A story game a level still locks shows a padlock and doesn't open.
-function GameTile({ game: g, equipped, dim, favorite, locked, onStar }) {
+// A story game a level still locks shows a padlock and doesn't open; a game
+// he can't play right now (`why`) is greyed out and calls onBlocked instead.
+function GameTile({ game: g, equipped, why, onBlocked, favorite, locked, onStar }) {
+  const stop = (e) => {
+    if (!why) return;
+    e.preventDefault();
+    onBlocked?.(why);
+  };
   const inner = (
     <>
       <span className="gtile-art" style={{ '--tint': g.color }}>
-        {PAINT[g.id] ? <Art id={g.id} equipped={equipped} /> : <GameIcon id={g.id} />}
+        {PAINT[g.id] ? <GameArt id={g.id} equipped={equipped} /> : <GameIcon id={g.id} />}
       </span>
       <span className="gtile-name">{g.name}</span>
       {locked && <LockTag className="gtile-lockpin">Beat level {STORY_UNLOCKS[g.id]}</LockTag>}
     </>
   );
   return (
-    <div className={`gtile ${dim ? 'dim' : ''} ${locked ? 'locked' : ''}`}>
+    <div className={`gtile ${why ? 'dim' : ''} ${locked ? 'locked' : ''}`}>
       {locked ? (
         <span className="gtile-link" role="link" aria-disabled="true" title={`Beat level ${STORY_UNLOCKS[g.id]} to unlock`}>
           {inner}
         </span>
       ) : (
-        <Link href={g.href} className="gtile-link" title={g.blurb}>
+        <Link href={g.href} className="gtile-link" title={why ?? g.blurb} aria-disabled={why ? true : undefined} onClick={stop}>
           {inner}
         </Link>
       )}
@@ -106,7 +115,7 @@ function Star({ on }) {
 }
 
 // A still picture from the game itself, redrawn when the outfit changes.
-function Art({ id, equipped }) {
+export function GameArt({ id, equipped }) {
   const ref = useRef(null);
   const key = JSON.stringify(equipped);
 
