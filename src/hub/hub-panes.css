@@ -232,7 +232,7 @@
 .pane-games .arcade.games-room {
   --ink: #4a3428;
   --ink-soft: #8a6f5e;
-  padding: 72px 14px 104px;
+  padding: 104px 14px 104px; /* clears the profile and wallet */
   background: linear-gradient(180deg, #f8eddc, #f7efe3 55%, #efddc6);
   color: var(--ink);
 }
