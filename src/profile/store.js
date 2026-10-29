@@ -180,6 +180,10 @@ export function buyChest() {
   return earn({ type: 'buychest', at: Date.now() }) ? got : null;
 }
 
+// Levels (see economy/levels.js). Clears the current level once its three
+// missions are done: what it paid ({ coins, diamonds, ready }), or null.
+export const levelUp = (level) => earn({ type: 'levelup', level });
+
 export const buy = (item) => tryRecord({ type: 'buy', item });
 export const equip = (slot, item) => tryRecord({ type: 'equip', slot, item });
 

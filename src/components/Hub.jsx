@@ -9,6 +9,7 @@ import Icon from './Icon';
 import Loading from './Loading';
 import EnergyChip from '@/house/EnergyChip';
 import HubPerks from '@/achievements/HubPerks';
+import LevelChip from '@/levels/LevelChip';
 import RoomScene, { skyOf } from '@/hub/RoomScene';
 import DecorSheet from '@/house/DecorSheet';
 import GamesPane from '@/hub/GamesPane';
@@ -335,6 +336,7 @@ export default function Hub({ initial = 'home' }) {
       <header className="hub-top">
         <div className="hub-left">
           <Wallet profile={profile} compact />
+          <LevelChip go={go} openWardrobe={() => setPanel('wardrobe')} openDecor={openDecor} openFood={() => setPanel('buy')} />
           <EnergyChip go={go} compact />
         </div>
         <div className="hub-right">

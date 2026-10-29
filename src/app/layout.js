@@ -2,6 +2,7 @@ import { Fredoka } from 'next/font/google';
 import './globals.css';
 import './avatar.css';
 import './avatar-more.css';
+import './avatar-chars.css';
 import './hub.css';
 import './reason.css';
 import './story.css';
