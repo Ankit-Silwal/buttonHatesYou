@@ -118,7 +118,6 @@ export const ACHIEVEMENTS = [
   /* ---------- Adventure ---------- */
   scoreAch('flap', 'Pipe Dreams', '🪽', [10, 20, 40]),
   scoreAch('pop', 'Family Feud', '🫧', [1000, 2000, 4000]),
-  scoreAch('catch', 'Stress Eater', '🍩', [25, 50, 100]),
   scoreAch('simon', 'Elephant Brain', '🎵', [5, 10, 20]),
   scoreAch('hop', 'Social Distancing', '☁️', [2000, 4000, 8000]),
   scoreAch('whack', 'Anger Management', '🔨', [20, 40, 80]),
@@ -148,7 +147,11 @@ export const ACHIEVEMENTS = [
   ach('streak', 'daily', '🔥', 'Streak Freak', (s) => s.bestStreak, (n) => `Open the chest ${n} days in a row`, [[3, 1], [7, 2], [30, 5]]),
 ];
 
-export const ACHIEVEMENT = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
+// Achievements of retired games: hidden, but kept so levels already claimed
+// still replay (on the server too).
+const RETIRED = [scoreAch('catch', 'Stress Eater', '🍩', [25, 50, 100])];
+
+export const ACHIEVEMENT = Object.fromEntries([...ACHIEVEMENTS, ...RETIRED].map((a) => [a.id, a]));
 
 // All the diamonds achievements can ever pay.
 export const ACHIEVEMENT_DIAMONDS = ACHIEVEMENTS.reduce((n, a) => n + a.levels.reduce((m, l) => m + l.diamonds, 0), 0);

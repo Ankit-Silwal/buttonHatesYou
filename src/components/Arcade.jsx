@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { GAMES, CATEGORIES } from '@/economy/catalog';
+import { PLAYABLE, CATEGORIES } from '@/economy/catalog';
 import { lookOf } from '@/adventure/kit';
 import { PAINT, ART_W, ART_H } from './gameArt';
 
@@ -21,7 +21,7 @@ export function Shelves({ equipped }) {
             <p>{cat.blurb}</p>
           </div>
           <ul className="games">
-            {GAMES.filter((g) => g.category === cat.id).map((g, i) => (
+            {PLAYABLE.filter((g) => g.category === cat.id).map((g, i) => (
               <li key={g.id} style={{ '--i': Math.min(i, 8) }}>
                 <GameCard game={g} equipped={equipped} />
               </li>

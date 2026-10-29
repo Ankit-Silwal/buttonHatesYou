@@ -159,19 +159,14 @@ loft/studio/graffiti walls. Items live in `src/economy/catalog.js` and
 `src/economy/house.js`; the CSS avatar is `src/app/avatar.css`, the in-game
 canvas one `src/adventure/kit.js`.
 
-## More Adventure games
+## Retired games
 
-Five more quick games (each one file in `src/adventure/games/`, listed in
-`GAMES` in `src/economy/catalog.js`):
-
-- **Freeze!** (`redlight`): run while the cursor looks away, stop when it turns.
-- **Inbox Zero** (`spam`): sort mail, spam left and real mail right.
-- **Shaken Not Stirred** (`fizz`): shake the soda and release in the green.
-- **Cursor Pong** (`pong`): the cursor is the ball, you are the paddle.
-- **Wobble Walk** (`tightrope`): lean against the wind on a tightrope.
-
-They pay like the other Adventure games (rising tiers, `rate` anti-cheat) and
-have no achievements of their own, so the diamond supply is unchanged.
+The arcade matches the Android app: Snack Attack, Freeze!, Inbox Zero, Shaken
+Not Stirred, Cursor Pong and Wobble Walk were taken out (and their source).
+Their catalog entries stay, marked `retired` (`RETIRED` in
+`src/economy/catalog.js`), so runs already in a wallet's history still replay,
+and the Stress Eater achievement stays hidden for the same reason. They are
+not listed and their pages 404. `PLAYABLE` is the list of games you can play.
 
 ## How I Met Your Cursor
 
@@ -240,7 +235,6 @@ Regret (`per` 10 pipes, `base` 25): 10 pipes pay 25, 15 pay 50, 20 pay 75,
 | --- | --- | --- | --- |
 | Flappy Regret | 10 pipes | 15 → 50 | 30 → 150 |
 | Pop Tantrum | 1000 points | 1500 → 50 | 3000 → 150 |
-| Snack Attack | 25 snacks | 40 → 55 | 75 → 150 |
 | Copy Me | 5 rounds | 8 → 55 | 15 → 150 |
 | Sky Hop | 2000 m | 3000 → 50 | 6000 → 150 |
 | Whack-a-Button | 20 bonks | 30 → 50 | 60 → 150 |
@@ -284,7 +278,7 @@ nothing, on the server too:
 The balance, with a typical run worth about 50 🪙: a cheap item (250 to 400)
 takes 5 to 8 runs, a mid one (450 to 600) about 10, the dearest coin items
 (700 to 950, or house items up to 3000) a few evenings, and diamond items real
-dedication: achievements pay 169 💎 in all (the story finales' diamonds moved
+dedication: achievements pay 163 💎 in all (the story finales' diamonds moved
 there), while the diamond outfits cost 36 💎 and the diamond house items 42.
 The rest goes on continues in Adventure (1, 2, then 3 💎 per crash in a run)
 and the odd Floppy Disk Waffle. A run costs 2 energy in the house's needs;
@@ -321,7 +315,6 @@ with a Claim button. The table lives in `src/economy/achievements.js`:
 | --- | --- | --- | --- | --- |
 | Pipe Dreams | pipes in Flappy Regret | 10 · 1 💎 | 20 · 2 💎 | 40 · 3 💎 |
 | Family Feud | points in Pop Tantrum | 1000 · 1 | 2000 · 2 | 4000 · 3 |
-| Stress Eater | snacks in Snack Attack | 25 · 1 | 50 · 2 | 100 · 3 |
 | Elephant Brain | rounds in Copy Me | 5 · 1 | 10 · 2 | 20 · 3 |
 | Social Distancing | meters in Sky Hop | 2000 · 1 | 4000 · 2 | 8000 · 3 |
 | Anger Management | bonks in Whack-a-Button | 20 · 1 | 40 · 2 | 80 · 3 |
@@ -343,7 +336,7 @@ with a Claim button. The table lives in `src/economy/achievements.js`:
 | Treasure Goblin | daily chests opened | 5 · 1 | 25 · 2 | 100 · 4 |
 | Streak Freak | chest streak (days in a row) | 3 · 1 | 7 · 2 | 30 · 5 |
 
-That is 23 achievements, 69 medals and 169 💎. Score medals sit at one, two
+That is 22 achievements, 66 medals and 163 💎. Score medals sit at one, two
 and four of the game's pay tiers, so a new player's first decent run (10
 pipes, say) is already a Bronze, and ten runs another. Please Don't has no
 achievement: it pays nothing, on purpose.
@@ -389,7 +382,6 @@ in whatever it's wearing:
 | Button Run | A 3D lane runner down a giant keyboard, with power-ups (magnet, wings, spring shoes, bubble wrap, incognito, x2) | 1 🪙 per coin grabbed (2 with x2) |
 | Flappy Regret | Tap to flap the button through pipes | 25 🪙 per 10 pipes, rising |
 | Pop Tantrum | Pop groups of same-colored buttons in 25 taps | 25 🪙 per 1000 points, rising |
-| Snack Attack | Catch falling snacks, dodge bombs | 25 🪙 per 25 snacks, rising |
 | Copy Me | Repeat the button's growing tune | 25 🪙 per 5 rounds, rising |
 | Sky Hop | Bounce up from cloud to cloud | 25 🪙 per 2000 meters, rising |
 | Whack-a-Button | Bonk clones, spare the ones holding a heart | 25 🪙 per 20 bonks, rising |
@@ -407,7 +399,7 @@ crash goes straight to the results. Space/Enter continues, Esc or "No thanks"
 (or the timer) declines. Without enough diamonds the button is disabled and
 points to Achievements. Each game's `revive()` (see `games/index.js`) puts it
 back in a fair state: Flappy clears the nearby pipes and hovers until the next
-tap; Pop adds 10 taps; Snack Attack gives a life back and clears the bombs;
+tap; Pop adds 10 taps;
 Copy Me replays the same tune; Sky Hop drops a wide rescue cloud; Whack adds
 15 s (the pace keeps rising); Run Away and Button Run clear the track ahead,
 stand the button back up and ease the speed back in; Tower of Regret drops the
