@@ -727,13 +727,18 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
 {
   const { levelsCleared, levelLocked } = await import('../src/economy/levels.js');
   const w = normalize(START);
-  const got = applyEvent(w, { type: 'code', code: ' isuckat coding ' });
+  const { isCode } = await import('../src/economy/codes.js');
+  assert.equal(isCode('ISUCKATCODING'), false, 'the old code is retired');
+  assert.ok(applyEvent(w, { type: 'code', code: 'ISUCKATCODING' }), 'but still replays for wallets that used it');
+  const got = applyEvent(w, { type: 'code', code: ' dsaisu seless ' });
   assert.ok(got, 'a code works however it is typed');
   assert.equal(got.coins, START.coins + 9_999_999);
   assert.equal(got.diamonds, START.diamonds + 9_999_999);
   assert.equal(levelsCleared(got), 200, 'and clears every level');
   assert.equal(levelLocked(got, { level: 200 }), false, 'so nothing is level-locked any more');
-  assert.equal(applyEvent(got, { type: 'code', code: 'ISUCKATCODING' }), null, 'once per wallet');
+  assert.equal(applyEvent(got, { type: 'code', code: 'DSAISUSELESS' }), null, 'once per wallet');
+  const old = applyEvent(w, { type: 'code', code: 'ISUCKATCODING' });
+  assert.equal(applyEvent(old, { type: 'code', code: 'DSAISUSELESS' }), null, 'the old and new code pay once between them');
   assert.equal(applyEvent(w, { type: 'code', code: 'NOPE' }), null, 'unknown code');
   assert.equal(applyEvent(w, { type: 'code', code: 42 }), null, 'junk code');
 }
