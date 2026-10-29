@@ -361,3 +361,14 @@
 
 /* the free food when he's broke (src/hub/FoodPane.jsx) */
 .stock-count.free { width: auto; padding: 0 6px; background: var(--good, #4e9f6b); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* broke: he wants to hear you say it before the free food */
+.stock-beg { display: flex; justify-content: center; padding: 6px 16px 2px; }
+.pill.beg { animation: begWobble 1.6s ease-in-out infinite; }
+@keyframes begWobble {
+  0%, 80%, 100% { transform: rotate(0); }
+  85% { transform: rotate(-3deg); }
+  90% { transform: rotate(3deg); }
+  95% { transform: rotate(-2deg); }
+}
+@media (prefers-reduced-motion: reduce) { .pill.beg { animation: none; } }

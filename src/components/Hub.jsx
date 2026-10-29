@@ -6,6 +6,7 @@ import Account from './Account';
 import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
 import Icon from './Icon';
+import Loading from './Loading';
 import EnergyChip from '@/house/EnergyChip';
 import HubPerks from '@/achievements/HubPerks';
 import RoomScene, { skyOf } from '@/hub/RoomScene';
@@ -314,6 +315,8 @@ export default function Hub({ initial = 'home' }) {
       {panel === 'wake' && <WakeSheet wallet={wallet} asleep={needs.asleep} onSay={(t) => roomSay('sleep', t)} onClose={close} />}
       {panel === 'potions' && <PotionSheet wallet={wallet} needs={needs} onSay={(t) => roomSay(PANES[at]?.id, t)} onClose={close} />}
       {panel === 'decor' && decor && <DecorSheet room={decor} wallet={wallet} onPreview={setDecorView} onClose={close} />}
+
+      <Loading done={ready && needs.ready} />
     </main>
   );
 }

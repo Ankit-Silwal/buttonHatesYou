@@ -15,7 +15,7 @@ const FULL = ["I'm stuffed. Absolutely stuffed.", 'One more bite and I pop.'];
 // The kitchen: a real room with the button standing in it. What he owns is
 // in a strip under him (tap a food to feed it, free); the Buy food pill opens
 // the whole menu. When he's broke the cheapest food is free (FREE_FOOD), so
-// it sits in the strip with a Free tag. `view` is what the decorating sheet is trying out in this
+// he first makes you admit you're poor, then hands it over with a Free tag. `view` is what the decorating sheet is trying out in this
 // room; `onDecorate` and `onBuy` open the sheets.
 export default function FoodPane({ needs, wallet, active, sky, view, quip, onDecorate, onBuy, onPotions }) {
   const face = faceOf(needs);
@@ -35,17 +35,26 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
   const say = (text) => setLine((l) => ({ text, n: l.n + 1 }));
   const stock = FOODS.filter((f) => (wallet.pantry?.[f.id] || 0) > 0);
   const broke = isBroke(wallet);
+  const [begged, setBegged] = useState(false); // said "I'm poor" while broke
+  useEffect(() => {
+    if (!broke) setBegged(false);
+  }, [broke]);
 
   // A fresh remark each time this panel comes into view.
   useEffect(() => {
     if (!active) return;
-    say(needs.asleep ? 'Zzz…' : needs.hunger < 25 ? pick(HUNGRY) : needs.hunger > 92 ? pick(FULL) : stock.length ? 'What is on the menu?' : 'The fridge is empty. Typical.');
+    say(needs.asleep ? 'Zzz…' : needs.hunger < 25 ? pick(HUNGRY) : needs.hunger > 92 ? pick(FULL) : broke && !begged ? 'No coins? Say it. Say "I’m poor."' : stock.length ? 'What is on the menu?' : 'The fridge is empty. Typical.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   useEffect(() => {
     if (quip?.pane === 'food') say(quip.text);
   }, [quip]);
+
+  function beg() {
+    setBegged(true);
+    say(`Wow. Okay. That was sad to watch. Here, a free ${FREE_FOOD.name}. Feed me.`);
+  }
 
   function eat(f) {
     if (needs.asleep) return say('Zzz… (he is asleep. Wake him up in the Bedroom first)');
@@ -111,6 +120,12 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
                 );
               })}
             </ul>
+          ) : broke && !begged ? (
+            <div className="stock-beg">
+              <button className="pill beg" onClick={beg} disabled={needs.asleep}>
+                <span className="ico">😔</span> I&apos;m poor
+              </button>
+            </div>
           ) : broke ? (
             <ul className="stock" aria-label="You're out of coins, so this one is free. Tap it to feed him.">
               <li>
