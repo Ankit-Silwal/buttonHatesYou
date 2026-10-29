@@ -168,8 +168,16 @@ export const FOODS = [
 ];
 export const FOOD = Object.fromEntries(FOODS.map((f) => [f.id, f]));
 
-// Ways to get him out of bed. Waking up by himself is free but leaves him as
-// groggy as he was; these wake him on the spot and give some energy back.
+// When he's broke (can't afford any food and the pantry is empty) the
+// cheapest food is on the house, so nobody is ever stuck hungry.
+export const FREE_FOOD = FOODS.filter((f) => f.price.coins).reduce((a, b) => (b.price.coins < a.price.coins ? b : a));
+export const isBroke = (wallet) =>
+  !FOODS.some((f) => (f.price.coins ?? 0) <= wallet.coins && (f.price.diamonds ?? 0) <= wallet.diamonds) &&
+  !Object.values(wallet.pantry ?? {}).some((n) => n > 0);
+
+// Energy boosts. Asleep, they get him out of bed on the spot (waking up by
+// himself is free but leaves him as groggy as he was); awake, they keep him
+// going without a nap. Either way they give some energy back.
 export const WAKE_OPTIONS = [
   { id: 'wake-splash', name: 'Cold Water Splash', icon: '💦', price: { coins: 25 }, energy: 6, quip: 'AAAH. COLD. I am awake. I hate you.' },
   { id: 'wake-alarm', name: 'Alarm Clock', icon: '⏰', price: { coins: 40 }, energy: 12, quip: 'BEEP BEEP BEEP. Fine. FINE. I am up.' },
@@ -177,3 +185,14 @@ export const WAKE_OPTIONS = [
   { id: 'wake-band', name: 'Marching Band', icon: '🥁', price: { diamonds: 1 }, energy: 40, quip: 'WHY IS THERE A TUBA IN MY HOUSE. I feel amazing.' },
 ];
 export const WAKE_OPTION = Object.fromEntries(WAKE_OPTIONS.map((w) => [w.id, w]));
+
+// Potions: bought and drunk in one go, they fill a need right up (or, for
+// dirt, empty it). `fill` lists what goes to 100: 'hunger', 'energy', and
+// 'clean' (dirt back to 0). Drinking one while he's asleep wakes him.
+export const POTIONS = [
+  { id: 'potion-hunger', name: 'Bottomless Tummy Tonic', icon: '🍔', color: '#e2674f', price: { coins: 200 }, fill: ['hunger'], quip: 'I am full. Forever. Do not show me food.' },
+  { id: 'potion-energy', name: 'Bottled Nap', icon: '⚡', color: '#f0a81c', price: { coins: 250 }, fill: ['energy'], quip: 'Eight hours of sleep in one gulp. I can see sounds.' },
+  { id: 'potion-clean', name: 'Liquid Shower', icon: '🫧', color: '#3fa7d6', price: { coins: 150 }, fill: ['clean'], quip: 'I drank a shower. I feel sparkly inside.' },
+  { id: 'potion-all', name: 'Factory Reset Elixir', icon: '✨', color: '#8a5cd6', price: { diamonds: 2 }, fill: ['hunger', 'energy', 'clean'], quip: 'Fully restored. Same grudge, though.' },
+];
+export const POTION = Object.fromEntries(POTIONS.map((p) => [p.id, p]));

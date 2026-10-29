@@ -11,8 +11,9 @@ import { roomOf } from '@/economy/house';
 // The bedroom: a dim teen room with the bedside lamp on. Turn the lamp off
 // and he gets into bed and sleeps; turn it on again and he wakes (still
 // groggy, for free). Whether the lamp is on comes straight from his needs,
-// so a reload mid-sleep shows the dark room. A paid wake-up is in a sheet.
-export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecorate, onWake }) {
+// so a reload mid-sleep shows the dark room. Paid energy boosts (they also
+// wake him) and potions are in sheets.
+export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecorate, onWake, onPotions }) {
   const face = faceOf(needs);
   const [line, setLine] = useState({ text: '', n: 0 });
   const filthy = !needs.asleep && (needs.dirt ?? 0) >= FILTHY_AT;
@@ -71,14 +72,17 @@ export default function SleepPane({ needs, wallet, go, sky, view, quip, onDecora
         <>
           <p className="rs-hint">{needs.asleep ? 'The lamp is off. Tap it to turn it on and wake him.' : '💡 Tap the lamp to switch it off. He will go to sleep.'}</p>
           <div className="rs-pills">
-            <button className="pill" onClick={onWake} disabled={!needs.asleep} style={{ '--i': 0 }}>
-              <span className="ico">⏰</span> Wake-up options
+            <button className="pill" onClick={onWake} style={{ '--i': 0 }}>
+              <span className="ico">⏰</span> {needs.asleep ? 'Wake-up options' : 'Energy boosts'}
             </button>
-            <button className="pill house-btn" onClick={onDecorate} style={{ '--i': 1 }}>
+            <button className="pill alt" onClick={onPotions} style={{ '--i': 1 }}>
+              <span className="ico">🧪</span> Potions
+            </button>
+            <button className="pill house-btn" onClick={onDecorate} style={{ '--i': 2 }}>
               <span className="ico">🛋️</span> Decorate
             </button>
             {filthy && (
-              <button className="pill" onClick={() => go?.(4)} style={{ '--i': 2 }}>
+              <button className="pill" onClick={() => go?.(4)} style={{ '--i': 3 }}>
                 <span className="ico">🛁</span> Bathroom
               </button>
             )}

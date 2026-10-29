@@ -25,7 +25,7 @@ const DONE_LINES = ['Squeaky clean. I smell like a meadow.', 'Fresh. Do not touc
 
 // The bathroom: drag the soap over him to scrub, then drag him into the
 // shower to rinse. Washing is what makes him fit to go to bed again.
-export default function BathPane({ needs, wallet, active, sky }) {
+export default function BathPane({ needs, wallet, active, sky, onPotions }) {
   const face = faceOf(needs);
   const [scrub, setScrub] = useState(0); // 0..1 how lathered he is
   const [phase, setPhase] = useState('idle'); // idle | lather | shower | clean
@@ -249,6 +249,9 @@ export default function BathPane({ needs, wallet, active, sky }) {
             </button>
             <button className="pill" onClick={startShower} disabled={phase !== 'lather'} style={{ '--i': 1 }}>
               <span className="ico">🚿</span> Turn on the shower
+            </button>
+            <button className="pill house-btn" onClick={onPotions} style={{ '--i': 2 }}>
+              <span className="ico">🧪</span> Potions
             </button>
           </div>
         </>

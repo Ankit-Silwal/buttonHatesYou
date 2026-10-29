@@ -148,6 +148,24 @@ Coming back with the browser Back button restores the panel he left (kept in
   20 (`PLAY_MIN_HUNGER`). Hungry (under 25) makes him look bored; under 40
   energy gives him dark circles.
 
+## Energy boosts, potions and free food
+
+- **Energy boosts work awake too.** The Bedroom's Wake-up options (Cold Water
+  Splash, Alarm Clock, Espresso Shot, Marching Band) become **Energy boosts**
+  while he's awake: same price, same energy, no nap needed. Asleep, they
+  still wake him. It's the same `wake` event with an `item`; the rules just
+  no longer require him to be asleep.
+- **Potions** (`POTIONS` in `src/economy/house.js`, the 🧪 Potions pill in the
+  Kitchen, Bedroom and Bathroom) are bought and drunk on the spot and fill a
+  need right up: Bottomless Tummy Tonic (hunger, 200 🪙), Bottled Nap
+  (energy, 250 🪙), Liquid Shower (clean, 150 🪙) and the Factory Reset
+  Elixir (all three, 2 💎). Event: `{ type: 'potion', item, at }`; drinking
+  one wakes him.
+- **Free food when broke.** If you can't afford any food and the fridge is
+  empty, the cheapest food (`FREE_FOOD`, the Browser Cookie) is free: it
+  shows in the Kitchen strip with a Free tag. The server checks `isBroke`
+  too, so it's only free while you really are broke.
+
 ## Getting dirty, and the Bathroom
 
 A third need, **dirt**, creeps up with time (slowly) and with every game he

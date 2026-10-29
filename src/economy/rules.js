@@ -1,5 +1,5 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
-import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, roomOf } from './house';
+import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, FREE_FOOD, isBroke, roomOf } from './house';
 import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
@@ -208,12 +208,16 @@ function applyLegacyReward(wallet, ev) {
    Needs events carry `at`, when they happened (ms). Hunger and energy drift
    with the clock between events (see needs.js).
    { id, type: 'feed', item, at }      ate a food: from the pantry when there is one
-                                       (free), otherwise bought and eaten in one go
+                                       (free), otherwise bought and eaten in one go;
+                                       when he's broke (isBroke) FREE_FOOD is free
    { id, type: 'stock', item }         bought a food for the pantry (not eaten): pays
                                        its price, pantry[item] + 1 (at most STOCK_MAX)
    { id, type: 'sleep', at }           went to bed
    { id, type: 'wake', at, item? }     got up; `item` (a WAKE_OPTIONS id) is a paid
-                                       wake-up that also gives some energy back
+                                       energy boost: it wakes him if he's asleep,
+                                       and works while he's awake too
+   { id, type: 'potion', item, at }    bought and drank a POTIONS potion: fills
+                                       its needs to 100 (dirt to 0); wakes him
    { id, type: 'play', kind, at }      started a game: costs PLAY_COST[kind] energy
                                        and adds PLAY_DIRT[kind] dirt
    { id, type: 'wash', at }            soaped and showered: no more dirt
@@ -314,11 +318,37 @@ function applyHouseEvent(wallet, ev, now) {
     const food = own(FOOD, ev.item);
     const needs = food && needsFor(wallet, ev, now);
     const free = food ? num(wallet.pantry[food.id]) : 0; // snacks from the daily chest go first
-    if (!needs || needs.asleep || (!free && !canAfford(wallet, food))) return null;
+    const charity = !free && food === FREE_FOOD && isBroke(wallet); // broke: the cheapest one is free
+    if (!needs || needs.asleep || (!free && !charity && !canAfford(wallet, food))) return null;
     return {
-      ...(free ? { ...wallet, pantry: { ...wallet.pantry, [food.id]: free - 1 } } : pay(wallet, food.price)),
+      ...(free ? { ...wallet, pantry: { ...wallet.pantry, [food.id]: free - 1 } } : charity ? wallet : pay(wallet, food.price)),
       stats: { ...wallet.stats, eaten: num(wallet.stats.eaten) + 1 },
       needs: { ...needs, hunger: r2(Math.min(100, needs.hunger + food.hunger)), energy: r2(Math.min(100, needs.energy + food.energy)) },
+    };
+  }
+
+  // A paid energy boost: wakes him if he's asleep, or keeps him going if not.
+  if (ev.type === 'wake' && ev.item != null) {
+    const opt = own(WAKE_OPTION, ev.item);
+    const needs = opt && needsFor(wallet, ev, now);
+    if (!needs || !canAfford(wallet, opt)) return null;
+    return { ...pay(wallet, opt.price), needs: { ...needs, asleep: false, energy: r2(Math.min(100, needs.energy + opt.energy)) } };
+  }
+
+  if (ev.type === 'potion') {
+    const potion = own(POTION, ev.item);
+    const needs = potion && needsFor(wallet, ev, now);
+    if (!needs || !canAfford(wallet, potion)) return null;
+    const fill = potion.fill;
+    return {
+      ...pay(wallet, potion.price),
+      needs: {
+        ...needs,
+        asleep: false,
+        hunger: fill.includes('hunger') ? 100 : needs.hunger,
+        energy: fill.includes('energy') ? 100 : needs.energy,
+        dirt: fill.includes('clean') ? 0 : needs.dirt,
+      },
     };
   }
 
@@ -327,11 +357,6 @@ function applyHouseEvent(wallet, ev, now) {
     if (!needs || needs.asleep === (ev.type === 'sleep')) return null;
     if (ev.type === 'sleep' && needs.dirt >= FILTHY_AT) return null; // clean first
     const naps = num(wallet.stats.naps) + (ev.type === 'sleep' ? 1 : 0);
-    if (ev.type === 'wake' && ev.item != null) {
-      const opt = own(WAKE_OPTION, ev.item);
-      if (!opt || !canAfford(wallet, opt)) return null;
-      return { ...pay(wallet, opt.price), needs: { ...needs, asleep: false, energy: r2(Math.min(100, needs.energy + opt.energy)) } };
-    }
     return { ...wallet, needs: { ...needs, asleep: ev.type === 'sleep' }, stats: { ...wallet.stats, naps } };
   }
 
@@ -404,7 +429,7 @@ function countRun(stats, game, score, coins) {
   };
 }
 
-const TIMED = new Set(['run', 'feed', 'sleep', 'wake', 'play', 'wash', 'chest']);
+const TIMED = new Set(['run', 'feed', 'sleep', 'wake', 'potion', 'play', 'wash', 'chest']);
 
 // When a timed event happened, as far as stats go: capped at `now`, or null
 // when it has no time or (on the server, which passes a real `now`) is too

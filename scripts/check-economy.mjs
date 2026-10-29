@@ -245,7 +245,8 @@ for (const g of GAMES.filter((g) => g.payout && !g.payout.coins))
 const coinPrices = ITEMS.filter((i) => i.price?.coins).map((i) => i.price.coins);
 console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coinPrices));
 
-// Playing needs a fed tummy; a paid wake-up wakes him and gives energy back
+// Playing needs a fed tummy; a paid energy boost wakes him (or keeps him
+// going while awake) and gives energy back
 {
   const T0 = Date.UTC(2026, 9, 28, 12);
   const base = normalize({ ...START, coins: 100, needs: { hunger: 10, energy: 90, asleep: false, at: T0 } });
@@ -253,7 +254,10 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   const fed = { ...base, needs: { ...base.needs, hunger: 50 } };
   assert.ok(applyEvent(fed, { type: 'play', kind: 'adventure', at: T0 }));
   const asleep = { ...fed, needs: { ...fed.needs, energy: 30, asleep: true } };
-  assert.equal(applyEvent(fed, { type: 'wake', item: 'wake-alarm', at: T0 }), null, 'awake: nothing to wake');
+  const boosted = applyEvent({ ...fed, needs: { ...fed.needs, energy: 30 } }, { type: 'wake', item: 'wake-alarm', at: T0 });
+  assert.equal(boosted.needs.asleep, false, 'awake: a boost works without a nap');
+  assert.equal(boosted.needs.energy, 42);
+  assert.equal(boosted.coins, 60);
   const up = applyEvent(asleep, { type: 'wake', item: 'wake-alarm', at: T0 });
   assert.equal(up.needs.asleep, false);
   assert.equal(up.needs.energy, 42);
@@ -261,6 +265,26 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(applyEvent(asleep, { type: 'wake', item: 'nope', at: T0 }), null, 'unknown wake option');
   assert.equal(applyEvent({ ...asleep, coins: 0 }, { type: 'wake', item: 'wake-alarm', at: T0 }), null, 'cannot afford');
   assert.equal(applyEvent(asleep, { type: 'wake', at: T0 }).needs.energy, 30, 'free wake gives nothing');
+
+  // potions fill needs right up, and wake him
+  const worn = { ...fed, coins: 1000, diamonds: 5, needs: { ...fed.needs, hunger: 20, energy: 10, dirt: 60 } };
+  const p1 = applyEvent(worn, { type: 'potion', item: 'potion-energy', at: T0 });
+  assert.deepEqual([p1.needs.hunger, p1.needs.energy, p1.needs.dirt, p1.coins], [20, 100, 60, 750]);
+  assert.equal(applyEvent(worn, { type: 'potion', item: 'potion-clean', at: T0 }).needs.dirt, 0);
+  assert.equal(applyEvent(worn, { type: 'potion', item: 'potion-hunger', at: T0 }).needs.hunger, 100);
+  const p4 = applyEvent({ ...worn, needs: { ...worn.needs, asleep: true } }, { type: 'potion', item: 'potion-all', at: T0 });
+  assert.deepEqual([p4.needs.hunger, p4.needs.energy, p4.needs.dirt, p4.needs.asleep, p4.diamonds], [100, 100, 0, false, 3]);
+  assert.equal(applyEvent({ ...worn, coins: 100 }, { type: 'potion', item: 'potion-energy', at: T0 }), null, 'cannot afford a potion');
+  assert.equal(applyEvent(worn, { type: 'potion', item: 'nope', at: T0 }), null, 'unknown potion');
+
+  // broke: the cheapest food is free, nothing else is
+  const broke = { ...worn, coins: 5, diamonds: 0, pantry: {} };
+  const ate = applyEvent(broke, { type: 'feed', item: 'food-cookie', at: T0 });
+  assert.equal(ate.coins, 5, 'free cookie when broke');
+  assert.equal(ate.needs.hunger, 30);
+  assert.equal(applyEvent(broke, { type: 'feed', item: 'food-usb', at: T0 }), null, 'only the cheapest food is free');
+  assert.equal(applyEvent({ ...broke, coins: 20 }, { type: 'feed', item: 'food-cookie', at: T0 }).coins, 5, 'not broke: pays');
+  assert.equal(applyEvent({ ...broke, pantry: { 'food-usb': 1 } }, { type: 'feed', item: 'food-cookie', at: T0 }), null, 'has food in the pantry: eat that');
 
   // games kick up dirt; a filthy button refuses to sleep until he is washed
   let gw = applyEvent(fed, { type: 'play', kind: 'adventure', at: T0 });

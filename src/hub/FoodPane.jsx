@@ -6,7 +6,7 @@ import RoomScene from './RoomScene';
 import { NeedHud } from './NeedBar';
 import { feed } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
-import { FOODS, roomOf } from '@/economy/house';
+import { FOODS, FREE_FOOD, isBroke, roomOf } from '@/economy/house';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const HUNGRY = ['I could eat a keyboard.', 'My tummy is making dial-up noises.', 'Feed me. Please. Do not tell anyone I said please.'];
@@ -14,9 +14,10 @@ const FULL = ["I'm stuffed. Absolutely stuffed.", 'One more bite and I pop.'];
 
 // The kitchen: a real room with the button standing in it. What he owns is
 // in a strip under him (tap a food to feed it, free); the Buy food pill opens
-// the whole menu. `view` is what the decorating sheet is trying out in this
+// the whole menu. When he's broke the cheapest food is free (FREE_FOOD), so
+// it sits in the strip with a Free tag. `view` is what the decorating sheet is trying out in this
 // room; `onDecorate` and `onBuy` open the sheets.
-export default function FoodPane({ needs, wallet, active, sky, view, quip, onDecorate, onBuy }) {
+export default function FoodPane({ needs, wallet, active, sky, view, quip, onDecorate, onBuy, onPotions }) {
   const face = faceOf(needs);
   const [eating, setEating] = useState(null); // { id, n }
   const [fx, setFx] = useState(null);
@@ -33,6 +34,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
 
   const say = (text) => setLine((l) => ({ text, n: l.n + 1 }));
   const stock = FOODS.filter((f) => (wallet.pantry?.[f.id] || 0) > 0);
+  const broke = isBroke(wallet);
 
   // A fresh remark each time this panel comes into view.
   useEffect(() => {
@@ -47,7 +49,8 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
 
   function eat(f) {
     if (needs.asleep) return say('Zzz… (he is asleep. Wake him up in the Bedroom first)');
-    if ((wallet.pantry?.[f.id] || 0) < 1) return say('None of those left. Buy some more?');
+    const charity = broke && f.id === FREE_FOOD.id;
+    if (!charity && (wallet.pantry?.[f.id] || 0) < 1) return say('None of those left. Buy some more?');
     if (!feed(f.id)) return say('Something went wrong. Try again.');
     setEating({ id: f.id, n: Date.now() });
     setFx(null);
@@ -55,7 +58,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       setEating(null);
-      say(f.quip);
+      say(charity ? `Free food? For me? ...I still hate you. ${f.quip}` : f.quip);
       if (f.fx) {
         setFx(f.fx);
         clearTimeout(fxTimer.current);
@@ -108,6 +111,18 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
                 );
               })}
             </ul>
+          ) : broke ? (
+            <ul className="stock" aria-label="You're out of coins, so this one is free. Tap it to feed him.">
+              <li>
+                <button className="stock-item" onClick={() => eat(FREE_FOOD)} disabled={!!eating || needs.asleep} aria-label={`Feed ${FREE_FOOD.name}, free because you're out of coins`}>
+                  <Art id={FREE_FOOD.id} />
+                  <small>{FREE_FOOD.name}</small>
+                  <span className="stock-count free" aria-hidden="true">
+                    Free
+                  </span>
+                </button>
+              </li>
+            </ul>
           ) : (
             <p className="stock-empty">Fridge is empty: buy some food</p>
           )}
@@ -115,7 +130,10 @@ export default function FoodPane({ needs, wallet, active, sky, view, quip, onDec
             <button className="pill" onClick={onBuy} style={{ '--i': 0 }}>
               <span className="ico">🛒</span> Buy food
             </button>
-            <button className="pill house-btn" onClick={onDecorate} style={{ '--i': 1 }}>
+            <button className="pill alt" onClick={onPotions} style={{ '--i': 1 }}>
+              <span className="ico">🧪</span> Potions
+            </button>
+            <button className="pill house-btn" onClick={onDecorate} style={{ '--i': 2 }}>
               <span className="ico">🛋️</span> Decorate
             </button>
           </div>
