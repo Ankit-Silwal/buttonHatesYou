@@ -4,14 +4,16 @@ import { useEffect, useRef, useState } from 'react';
 import Sheet from '@/components/Sheet';
 import { drink } from '@/profile/store';
 import { canAfford } from '@/economy/rules';
-import { POTIONS } from '@/economy/house';
+import { POTIONS, DRAINED, DRAINED_DIRT } from '@/economy/house';
 
 const price = (p) => (p.diamonds ? `${p.diamonds} 💎` : `${p.coins} 🪙`);
 const LABEL = { hunger: '🍔 Full', energy: '⚡ Full', clean: '🫧 Spotless' };
+const DRAIN_LABEL = { hunger: '🍔 Starving', energy: '💤 Exhausted', clean: '💩 Filthy' };
 
-// Is there anything for this potion to fill?
+// Is there anything for this potion to fill (or drain)?
 const useful = (p, n) =>
-  p.fill.some((k) => (k === 'clean' ? (n.dirt ?? 0) > 0.5 : n[k] < 99.5));
+  (p.fill ?? []).some((k) => (k === 'clean' ? (n.dirt ?? 0) > 0.5 : n[k] < 99.5)) ||
+  (p.drain ?? []).some((k) => (k === 'clean' ? (n.dirt ?? 0) < DRAINED_DIRT : n[k] > DRAINED));
 
 // Potions: bought and drunk on the spot, each fills a need right up (the
 // Fill Everything Elixir fills them all). Drinking one wakes him if he was asleep.
@@ -32,7 +34,7 @@ export default function PotionSheet({ wallet, needs, onSay, onClose }) {
     <Sheet title="Potions" onClose={onClose} className="shop-sheet potion-sheet">
       <div className="sheet-body">
         <p className="sheet-said" role="status">
-          {said || 'Each one fills a need right up, no waiting. Drinking one wakes him if he is asleep.'}
+          {said || 'Drink up. Some of these are good for him.'}
         </p>
         <ul className="menu potions">
           {POTIONS.filter((p) => !p.retired).map((p) => {
@@ -44,8 +46,8 @@ export default function PotionSheet({ wallet, needs, onSay, onClose }) {
                     <Bottle color={p.color} />
                   </span>
                   <b>{p.name}</b>
-                  <span className="dish-fx">{p.fill.map((k) => LABEL[k]).join(' ')}</span>
-                  <span className="dish-cost">{worth ? price(p.price) : 'Already full'}</span>
+                  <span className="dish-fx">{p.fill ? p.fill.map((k) => LABEL[k]).join(' ') : p.drain.map((k) => DRAIN_LABEL[k]).join(' ')}</span>
+                  <span className="dish-cost">{worth ? price(p.price) : p.fill ? 'Already full' : 'Already there'}</span>
                 </button>
               </li>
             );

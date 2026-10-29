@@ -159,6 +159,9 @@ Coming back with the browser Back button restores the panel he left (kept in
   Kitchen and Bedroom) are bought and drunk on the spot and fill a need
   right up: Bottomless Tummy Tonic (hunger, 200 🪙), Bottled Nap (energy,
   250 🪙) and the Fill Everything Elixir (hunger, energy and clean, 2 💎).
+  Three nasty ones do the opposite and cost more: Instant Munchies (hunger
+  to 10, 900 🪙), Liquid Yawn (energy to 10, 1000 🪙) and Mud Smoothie
+  (dirt to 90, 900 🪙), handy when a level wants him fed, napped or washed.
   Liquid Shower (clean) is retired: the bathroom has its shower. Event:
   `{ type: 'potion', item, at }`; drinking one wakes him.
 - **Free food when broke.** If you can't afford any food and the fridge is
