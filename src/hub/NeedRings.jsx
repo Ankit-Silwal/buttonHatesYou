@@ -19,7 +19,8 @@ const tone = (v) => (v >= 60 ? 'good' : v >= 30 ? 'warn' : 'bad');
 export default function NeedRings({ go, equipped, children }) {
   const n = useNeeds();
   if (!n.ready) return null;
-  const skin = (ITEM[equipped?.color] ?? ITEM[DEFAULT_LOOK.color]).look;
+  // his face's colour: a character's own (Tabby is blue), else the paint he wears
+  const skin = ITEM[equipped?.char]?.look?.c ? ITEM[equipped.char].look : (ITEM[equipped?.color] ?? ITEM[DEFAULT_LOOK.color]).look;
   const rings = [
     { id: 'hunger', label: 'Hunger', glyph: '🍔', v: n.hunger, pane: 2 },
     { id: 'energy', label: n.asleep ? 'Asleep' : 'Energy', glyph: n.asleep ? '💤' : '⚡', v: n.energy, pane: 3, asleep: n.asleep },

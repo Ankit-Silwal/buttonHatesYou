@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useProfile } from './useProfile';
 import { useMe, setMe } from './me';
 import { useWorn } from './undress';
+import { voiceOf } from '@/avatar/voices';
 import { readyCount } from '@/economy/achievements';
 import { isCode, usedCode } from '@/economy/codes';
 import { redeemCode } from './store';
@@ -136,6 +137,7 @@ function MeTab({ profile, me }) {
           </button>
         </h1>
       )}
+      {wallet.equipped?.char && wallet.equipped.char !== 'char-bobby' && <p className="pf-as">Playing as {voiceOf(wallet.equipped).name}</p>}
       <div className="pf-id">
         <span>Player ID</span>
         <code>{me.id}</code>
