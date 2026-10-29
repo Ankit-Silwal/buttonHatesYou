@@ -111,3 +111,20 @@
 /* out of the way while a sheet is open (decorating needs the whole room) */
 .hub[data-panel] .need-rings { display: none; }
 .hub[data-panel='decor'] .rs-line { visibility: hidden; }
+
+/* the Games room: no need rings here, and his "can't play" line shakes */
+.hub[data-at='games'] .need-rings { display: none; }
+.gp-nag { color: var(--neon, #ff7a5c); font-weight: 600; animation: gpNag 0.45s ease-in-out; }
+.gtile.dim .gtile-link { cursor: not-allowed; }
+@keyframes gpNag {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gp-nag { animation: none; }
+}
+.gtile.dim .gtile-art { filter: grayscale(0.85) brightness(0.95); opacity: 0.6; }
+.gtile.dim .gtile-name { opacity: 0.55; }

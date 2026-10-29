@@ -13,7 +13,10 @@ import { Sound } from '@/game/sound';
 import { W, H, lookOf } from './kit';
 import { CREATE } from './games';
 import { ReadyLine } from '@/achievements/Chest';
-import { GameGlyph, gameTint } from '@/components/GameIcon';
+import GameIcon from '@/components/GameIcon';
+import { GameArt } from '@/components/Arcade';
+import { PAINT } from '@/components/gameArt';
+import Icon from '@/components/Icon';
 import { getMe } from '@/profile/me';
 
 const SAVE_KEY = 'buttonHatesYou.adventure.v1';
@@ -90,24 +93,24 @@ export default function AdventureGame({ id }) {
       <header className="adv-top">
         <div className="row">
           <Link href="/games" className="chip home" aria-label="All games">
-            🎮
+            <Icon glyph="🎮" size={22} tint="currentColor" />
           </Link>
           {mode !== 'play' && <Wallet profile={profile} />}
         </div>
-        <button className="chip icon" aria-label="Sound on/off" onClick={toggleMute}>
-          {save.muted ? '🔇' : '🔊'}
+        <button className={`chip icon adv-sound ${save.muted ? 'off' : ''}`} aria-label={save.muted ? 'Sound off' : 'Sound on'} aria-pressed={!save.muted} onClick={toggleMute}>
+          <Icon glyph="🔊" size={22} tint="currentColor" />
         </button>
       </header>
 
       {mode === 'play' && (
-        <Stage key={run} id={id} equipped={profile.wallet.equipped} diamonds={profile.wallet.diamonds} onOver={finish} />
+        <Stage key={run} id={id} equipped={profile.wallet.equipped} diamonds={profile.wallet.diamonds} onOver={finish} onRestart={start} />
       )}
 
       {mode === 'title' && (
         <div className="adv-overlay">
           <div className="adv-card">
-            <span className="adv-emoji adv-icon" style={{ '--tint': gameTint(id) }} aria-hidden="true">
-              <GameGlyph id={id} size={56} />
+            <span className="adv-art" aria-hidden="true">
+              {PAINT[id] ? <GameArt id={id} equipped={profile.wallet.equipped} /> : <GameIcon id={id} />}
             </span>
             <h1>{meta.name}</h1>
             <p>{meta.blurb}</p>
@@ -167,7 +170,7 @@ function nextTier({ payout: p, unit }, { score, coins }) {
 }
 
 /* ---------- the canvas and its loop ---------- */
-function Stage({ id, equipped, diamonds, onOver }) {
+function Stage({ id, equipped, diamonds, onOver, onRestart }) {
   const wrap = useRef(null);
   const canvas = useRef(null);
   const latest = useRef(onOver);
@@ -382,7 +385,7 @@ function Stage({ id, equipped, diamonds, onOver }) {
       <canvas ref={canvas} />
       {!offer && (
         <button className="chip icon adv-pause" aria-label="Pause" onClick={() => setPaused(true)}>
-          ⏸
+          <i className="pause-bars" aria-hidden="true" />
         </button>
       )}
       {offer && (
@@ -399,9 +402,17 @@ function Stage({ id, equipped, diamonds, onOver }) {
           <div className="adv-card">
             <h2>Paused</h2>
             <p>The button is enjoying the break.</p>
-            <button className="pill big" onClick={() => setPaused(false)} autoFocus>
-              Resume
-            </button>
+            <div className="adv-menu">
+              <button className="pill big" onClick={() => setPaused(false)} autoFocus>
+                <Icon glyph="▶" size={18} tint="currentColor" /> Resume
+              </button>
+              <button className="pill alt" onClick={onRestart}>
+                <Icon glyph="↻" size={18} tint="currentColor" /> Restart
+              </button>
+              <Link href="/games" className="pill ghost">
+                Quit
+              </Link>
+            </div>
           </div>
         </div>
       )}

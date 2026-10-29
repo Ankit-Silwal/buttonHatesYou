@@ -321,3 +321,39 @@
   color: #fff;
 }
 .adv-emoji.adv-icon::after { opacity: 0.4; }
+
+/* ---------- the title card's picture: the same art as the game's tile ---------- */
+.adv-art {
+  position: relative;
+  display: block;
+  width: 150px;
+  aspect-ratio: 1;
+  margin: 0 auto 4px;
+  overflow: hidden;
+  border-radius: 30px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 14px 26px -10px rgba(40, 20, 10, 0.45);
+}
+.adv-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.adv-art .game-icon { position: absolute; inset: 0; border-radius: inherit; }
+
+/* sound off: the speaker gets a slash */
+.adv-sound { position: relative; }
+.adv-sound.off { opacity: 0.7; }
+.adv-sound.off::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* the pause button's two bars */
+.pause-bars { display: block; width: 14px; height: 16px; border-left: 4.5px solid currentColor; border-right: 4.5px solid currentColor; box-sizing: border-box; }
+
+/* Paused: Resume, Restart, Quit */
+.adv-menu { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: min(100%, 260px); margin: 6px auto 0; }
+.adv-menu .pill { justify-content: center; gap: 8px; }
