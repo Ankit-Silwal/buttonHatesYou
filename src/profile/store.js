@@ -1,6 +1,7 @@
 import { START, applyEvent, replay, normalize, chestFor, nextBoughtChest } from '@/economy/rules';
 import { legacyReplay } from '@/economy/legacy';
 import { newlyReady } from '@/economy/achievements';
+import { codeChest } from '@/economy/codes';
 import { chestLoot } from '@/economy/chest';
 
 // The player's profile, offline first.
@@ -191,7 +192,11 @@ export const levelUp = (level) => earn({ type: 'levelup', level });
 // Pays diamonds to count the current level's play mission as done.
 export const skipPlay = (level) => tryRecord({ type: 'skipplay', level });
 // A code from Profile → Settings (see economy/codes.js): what it paid, or null.
-export const redeemCode = (code) => earn({ type: 'code', code });
+export function redeemCode(code) {
+  const chest = codeChest(getProfile().wallet, code); // a chest code: what's inside, for the opening
+  const got = earn({ type: 'code', code });
+  return got && { ...got, chest };
+}
 // A finished hard quest (economy/quests.js): what it paid, or null.
 export const claimQuest = (quest) => earn({ type: 'quest', quest });
 

@@ -192,13 +192,11 @@ function coinLootList(loot) {
 }
 
 // The chest you buy with coins. Buying decides everything (see boughtChest in
-// economy/chest.js); then it takes BUY_CHEST.taps taps to open, and each tap
-// may bump it up a rarity, exactly as the path says. `got` is that outcome.
+// economy/chest.js); then ChestOpener takes the taps.
 function CoinChest({ onBack, onClose }) {
   const { wallet } = useProfile();
   const [got, setGot] = useState(null); // { path, rarity, loot }
-  const [taps, setTaps] = useState(0);
-  const [open, setOpen] = useState(false);
+  const [n, setN] = useState(0); // a new opener for each chest
   const [error, setError] = useState(false);
   const price = BUY_CHEST.price.coins;
   const afford = wallet.coins >= price;
@@ -208,27 +206,66 @@ function CoinChest({ onBack, onClose }) {
     if (!res) return setError(true);
     setError(false);
     setGot(res);
-    setTaps(0);
-    setOpen(false);
+    setN((k) => k + 1);
   }
 
+  if (got) return <ChestOpener key={n} got={got} onClose={onClose} again={{ label: `Again · 🪙 ${price}`, disabled: !afford, onClick: purchase }} />;
+
+  return (
+    <div className="chest-card coin-chest r-common closed">
+      <p className="kicker">Coin chest</p>
+      <span className="chest-hit" aria-hidden="true">
+        <ChestArt state="closed" rarity="common" />
+      </span>
+      <h2>Pay to be disappointed</h2>
+      <p className="chest-odds" aria-label="Odds">
+        {RARITIES.map((r) => (
+          <span key={r} className={`r-${r}`}>
+            {RARITY[r].name} <b>{RARITY[r].odds}</b>
+          </span>
+        ))}
+      </p>
+      <div className="coin-chest-actions">
+        <button className="pill ghost" onClick={onBack}>
+          Back
+        </button>
+        <button className="pill" onClick={purchase} disabled={!afford}>
+          Buy · 🪙 {price}
+        </button>
+      </div>
+      {(!afford || error) && <p className="chest-note">You have {wallet.coins} 🪙. He's thrilled you're broke.</p>}
+    </div>
+  );
+}
+
+// Opening a chest whose contents are already decided (`got`: { path,
+// rarity, loot }, from buying one or from a chest code): BUY_CHEST.taps
+// taps, each may bump it up a rarity exactly as the path says, and it grows
+// with its rarity. A hand presses it until it's open. `again`: an optional
+// { label, disabled, onClick } next to Nice.
+export function ChestOpener({ got, onClose, again }) {
+  const [taps, setTaps] = useState(0);
+  const [open, setOpen] = useState(false);
+
   function tap() {
-    if (!got || open || taps >= BUY_CHEST.taps) return;
+    if (open || taps >= BUY_CHEST.taps) return;
     const n = taps + 1;
     setTaps(n);
     if (n === BUY_CHEST.taps) setTimeout(() => setOpen(true), 450);
   }
 
-  const rarity = !got ? 'common' : taps ? got.path[taps - 1] : 'common';
-  const bumped = got && taps > 0 && rarity !== (taps > 1 ? got.path[taps - 2] : 'common');
+  const rarity = taps ? got.path[taps - 1] : 'common';
+  const bumped = taps > 0 && rarity !== (taps > 1 ? got.path[taps - 2] : 'common');
   const items = open ? coinLootList(got.loot) : [];
 
   return (
     <div className={`chest-card coin-chest r-${rarity} ${open ? 'open' : 'closed'}`}>
-      <p className="kicker">{got ? RARITY[rarity].name : 'Coin chest'}</p>
-      <button className="chest-hit" onClick={tap} disabled={!got || open || taps >= BUY_CHEST.taps} aria-label={got ? `Tap the chest (${taps} of ${BUY_CHEST.taps})` : 'A coin chest'}>
+      <p className="kicker">{RARITY[rarity].name}</p>
+      <button className={`chest-hit grow-${rarity}`} onClick={tap} disabled={open || taps >= BUY_CHEST.taps} aria-label={`Tap the chest (${taps} of ${BUY_CHEST.taps})`}>
         {/* a new key each tap restarts the shake */}
-        <ChestArt key={taps} state={open ? 'open' : taps ? 'tapped' : 'closed'} rarity={rarity} />
+        <span className="chest-grow">
+          <ChestArt key={taps} state={open ? 'open' : taps ? 'tapped' : 'closed'} rarity={rarity} />
+        </span>
         {bumped && !open && (
           <span key={`b${taps}`} className="rarity-burst" aria-hidden="true">
             {Array.from({ length: 10 }, (_, i) => (
@@ -236,6 +273,7 @@ function CoinChest({ onBack, onClose }) {
             ))}
           </span>
         )}
+        {!open && taps < BUY_CHEST.taps && <TapHand key={`h${taps}`} />}
         {open && (
           <span className="chest-fly" aria-hidden="true">
             {[...items, ...items].map((it, i) => (
@@ -261,12 +299,14 @@ function CoinChest({ onBack, onClose }) {
             <button className="pill ghost" onClick={onClose}>
               Nice
             </button>
-            <button className="pill" onClick={purchase} disabled={!afford}>
-              Again · 🪙 {price}
-            </button>
+            {again && (
+              <button className="pill" onClick={again.onClick} disabled={again.disabled}>
+                {again.label}
+              </button>
+            )}
           </div>
         </>
-      ) : got ? (
+      ) : (
         <>
           <h2 aria-live="polite">{taps === 0 ? 'Tap it.' : taps < BUY_CHEST.taps ? (bumped ? RARITY[rarity].up : 'Harder.') : 'Here it comes…'}</h2>
           <span className="tap-dots" aria-label={`${taps} of ${BUY_CHEST.taps} taps`}>
@@ -275,32 +315,30 @@ function CoinChest({ onBack, onClose }) {
             ))}
           </span>
         </>
-      ) : (
-        <>
-          <h2>Pay to be disappointed</h2>
-          <p className="chest-odds" aria-label="Odds">
-            {RARITIES.map((r) => (
-              <span key={r} className={`r-${r}`}>
-                {RARITY[r].name} <b>{RARITY[r].odds}</b>
-              </span>
-            ))}
-          </p>
-          <div className="coin-chest-actions">
-            <button className="pill ghost" onClick={onBack}>
-              Back
-            </button>
-            <button className="pill" onClick={purchase} disabled={!afford}>
-              Buy · 🪙 {price}
-            </button>
-          </div>
-          {(!afford || error) && <p className="chest-note">You have {wallet.coins} 🪙. He's thrilled you're broke.</p>}
-        </>
       )}
     </div>
   );
 }
 
-// The "Achievement ready!" line under a run's or a story part's payout.
+// A finger pressing the chest, over and over, until it's open.
+function TapHand() {
+  return (
+    <span className="tap-hand" aria-hidden="true">
+      <svg viewBox="0 0 32 40" width="38" height="48">
+        <path
+          d="M11 3.5a3 3 0 0 1 6 0V17l1.2-.3a3 3 0 0 1 3.4 1.6 3 3 0 0 1 4 1.7l.2.4a3 3 0 0 1 3.6 2.4l.6 4.6c.6 4.6-1 8.4-4 10.6-1.6 1.2-3.7 1.6-6.3 1.6h-2.4c-3 0-5.4-1.3-7-3.8L3.5 26a3 3 0 0 1 4.6-3.8L11 25z"
+          fill="#fffaf2"
+          stroke="#4a3428"
+          strokeWidth="2.2"
+          strokeLinejoin="round"
+        />
+        <path d="M17 17v6M21.6 18.3v4.7M25.8 20.4v3.6" fill="none" stroke="#4a3428" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+      <i />
+    </span>
+  );
+}
+
 export function ReadyLine({ ready }) {
   if (!ready?.length) return null;
   const names = ready.map((a) => a.name);

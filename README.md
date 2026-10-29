@@ -553,7 +553,9 @@ any other (case and spaces don't matter). `DSAISUSELESS` gives 9,999,999
 coins and diamonds and clears every level. (It replaced `ISUCKATCODING`,
 which is retired: refused when typed, still replayed for wallets that used
 it, and the two pay once between them.) The table ships to the browser,
-so anyone reading the source can find the codes.
+so anyone reading the source can find the codes. `COMMON`, `RARE`, `EPIC` and
+`LEGENDARY` each give a free chest of that rarity (`forcedChest` in
+`src/economy/chest.js`), opened with the usual five taps.
 
 ## Adventure games
 

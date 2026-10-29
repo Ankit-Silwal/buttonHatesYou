@@ -99,7 +99,22 @@ export function boughtChest(seed, n, owned = []) {
     return RARITIES[level];
   });
   const rarity = RARITIES[level];
-  const [cRoll, sRoll, fRoll, dRoll, iRoll] = rolls.slice(BUY_CHEST.taps);
+  return { path, rarity, loot: lootOf(rarity, rolls.slice(BUY_CHEST.taps), owned) };
+}
+
+// A chest of a set rarity (a chest code, see codes.js): the same five taps,
+// climbing evenly to that rarity by the last one, and the same loot as a
+// bought chest of it. `n`: how many of these the wallet has opened.
+export function forcedChest(seed, n, owned = [], rarity = 'common') {
+  const r = rng(hash(`${typeof seed === 'string' ? seed : ''}:codechest:${n}`));
+  const rolls = Array.from({ length: 5 }, r);
+  const top = Math.max(0, RARITIES.indexOf(rarity));
+  const path = Array.from({ length: BUY_CHEST.taps }, (_, i) => RARITIES[Math.floor((top * (i + 1)) / BUY_CHEST.taps)]);
+  return { path, rarity: RARITIES[top], loot: lootOf(RARITIES[top], rolls, owned) };
+}
+
+// What a chest of `rarity` holds, from five rolls.
+function lootOf(rarity, [cRoll, sRoll, fRoll, dRoll, iRoll], owned) {
   const [lo, hi] = BUY_CHEST.coins[rarity];
   const loot = { coins: Math.min(hi, lo + Math.floor((cRoll * (hi - lo + 5)) / 5) * 5), diamonds: 0, food: null, item: null };
   if (sRoll < (BUY_CHEST.snack[rarity] ?? 0)) loot.food = SNACKS[Math.floor(fRoll * SNACKS.length)].id;
@@ -110,5 +125,5 @@ export function boughtChest(seed, n, owned = []) {
     if (left.length) Object.assign(loot, { diamonds: BUY_CHEST.legendaryDiamonds, item: left[Math.floor(iRoll * left.length)].id });
     else Object.assign(loot, BUY_CHEST.jackpot);
   }
-  return { path, rarity, loot };
+  return loot;
 }
