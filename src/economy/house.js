@@ -169,6 +169,38 @@ const RAW = [
   { id: 'popcorn-machine', kind: 'furniture', name: 'Popcorn Machine', spots: ['floor-left', 'floor-right'], price: { diamonds: 200 }, rooms: KIT, moving: true },
   { id: 'raincloud', kind: 'furniture', name: 'Pet Raincloud', spots: ['ceiling'], price: { diamonds: 240 }, rooms: BED, moving: true },
 
+  // Built-in pieces: what each room comes furnished with (DEFAULT_PIECES
+  // below). Free and always owned, so they can be moved, taken out and put
+  // back like anything else; `builtin` pieces don't count towards MAX_PIECES.
+  // Drawn by art-decor.jsx.
+  { id: 'frame-meadow', kind: 'furniture', name: 'Meadow Painting', spots: ['wall-left', 'wall-right'], builtin: true, rooms: ALL },
+  { id: 'clock-oak', kind: 'furniture', name: 'Oak Wall Clock', spots: ['wall-right', 'wall-left'], builtin: true, rooms: ALL },
+  { id: 'shelf-trinkets', kind: 'furniture', name: 'Trinket Shelf', spots: ['wall-right', 'wall-left'], builtin: true, rooms: LB },
+  { id: 'plant-leafy', kind: 'furniture', name: 'Leafy Plant', spots: ['floor-left', 'corner', 'floor-right'], builtin: true, rooms: ALL },
+  { id: 'lamp-floor', kind: 'furniture', name: 'Floor Lamp', spots: ['corner', 'floor-left', 'floor-right'], builtin: true, rooms: LB },
+  { id: 'sofa-teal', kind: 'furniture', name: 'Teal Sofa', spots: ['floor-right', 'floor-left'], builtin: true, rooms: LB },
+  { id: 'shelf-jars', kind: 'furniture', name: 'Jar Shelf', spots: ['wall-right', 'wall-left'], builtin: true, rooms: KIT },
+  { id: 'pendant-red', kind: 'furniture', name: 'Red Pendant', spots: ['ceiling'], builtin: true, rooms: ALL },
+  { id: 'table-bistro', kind: 'furniture', name: 'Bistro Table', spots: ['floor-right', 'floor-left'], builtin: true, rooms: KIT },
+  { id: 'lights-twinkle', kind: 'furniture', name: 'Twinkle Lights', spots: ['ceiling'], builtin: true, rooms: LB },
+  { id: 'poster-moon', kind: 'furniture', name: 'Moon Poster', spots: ['wall-left', 'wall-right'], builtin: true, rooms: LB },
+  { id: 'wardrobe-plum', kind: 'furniture', name: 'Plum Wardrobe', spots: ['floor-right', 'floor-left'], builtin: true, rooms: BED },
+
+  // Bookshelves, clocks and everyday decor (art-decor.jsx). `track: false`:
+  // kept out of the levels' buy missions, so the levels stay as they were.
+  { id: 'shelf-floating', kind: 'furniture', name: 'Floating Shelves', spots: ['wall-left', 'wall-right'], price: { coins: 550 }, track: false, rooms: ALL },
+  { id: 'shelf-ladder', kind: 'furniture', name: 'Ladder Shelf', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 750 }, track: false, rooms: LB },
+  { id: 'shelf-cube', kind: 'furniture', name: 'Cube Shelf', spots: ['floor-left', 'floor-right'], price: { coins: 950 }, track: false, rooms: LB },
+  { id: 'bookcase-library', kind: 'furniture', name: 'Library Bookcase', spots: ['floor-left', 'floor-right'], price: { diamonds: 10 }, track: false, rooms: LB },
+  { id: 'clock-digital', kind: 'furniture', name: 'LED Clock', spots: ['wall-left', 'wall-right'], price: { coins: 800 }, track: false, rooms: ALL },
+  { id: 'clock-sunburst', kind: 'furniture', name: 'Sunburst Clock', spots: ['wall-left', 'wall-right'], price: { coins: 1000 }, track: false, rooms: ALL },
+  { id: 'clock-cuckoo', kind: 'furniture', name: 'Cuckoo Clock', spots: ['wall-left', 'wall-right'], price: { coins: 1200 }, track: false, rooms: ALL },
+  { id: 'clock-grandfather', kind: 'furniture', name: 'Grandfather Clock', spots: ['corner', 'floor-left', 'floor-right'], price: { diamonds: 8 }, track: false, rooms: LB },
+  { id: 'lamp-mushroom', kind: 'furniture', name: 'Mushroom Lamp', spots: ['floor-left', 'floor-right'], price: { coins: 650 }, track: false, rooms: ALL },
+  { id: 'plant-fiddle', kind: 'furniture', name: 'Fiddle Leaf Fig', spots: ['corner', 'floor-left', 'floor-right'], price: { coins: 850 }, track: false, rooms: ALL },
+  { id: 'rug-boho', kind: 'furniture', name: 'Boho Rug', spots: ['rug'], price: { coins: 600 }, track: false, rooms: ALL },
+  { id: 'art-abstract', kind: 'furniture', name: 'Abstract Canvas', spots: ['wall-left', 'wall-right'], price: { coins: 750 }, track: false, rooms: ALL },
+
   // Cursor's Collection: the last levels' buy missions (195 to 200)
   { id: 'cursor-rug', kind: 'furniture', name: 'Pointer Rug', spots: ['rug'], price: { coins: 6000 }, level: 195, rooms: ALL },
   { id: 'cursor-pendant', kind: 'furniture', name: 'Pointer Pendant', spots: ['ceiling'], price: { coins: 6500 }, level: 196, rooms: ALL },
@@ -186,16 +218,53 @@ export const HOUSE_ITEM = Object.fromEntries(HOUSE_ITEMS.map((i) => [i.id, i]));
 // were other rooms); the others are in wallet.rooms.
 // `place` only holds the fixed spots (FIXED_SPOTS: the bed and the
 // nightstand); every other piece is free-placed, in `items` (see below).
-const NONE = Object.freeze([]);
+//
+// Every room also comes furnished with its built-in pieces (DEFAULT_PIECES),
+// placed where the room used to draw them. `furnished` marks a room that has
+// had them: a room saved before they existed gets them once, on normalize()
+// in rules.js, and after that taking one out sticks.
+// `covers`: the old spot names whose furniture used to hide the piece (see
+// coveredSpots), so a room migrated with something already there doesn't
+// get the piece on top of it, and an old queued `decor` event for that spot
+// still replaces it.
+export const FURNISHED = 1;
+const piece = (item, x, y, covers) => Object.freeze({ item, x, y, covers: Object.freeze(covers) });
+export const DEFAULT_PIECES = Object.freeze({
+  living: Object.freeze([
+    piece('frame-meadow', 73.6, 6.3, ['wall-left']),
+    piece('clock-oak', 91.4, 5.9, ['wall-right']),
+    piece('shelf-trinkets', 87.8, 48.9, ['wall-right']),
+    piece('plant-leafy', 6.4, 1.9, ['floor-left', 'corner']),
+    piece('lamp-floor', 72.9, 0.6, ['corner']),
+    piece('sofa-teal', 86.3, 3.8, ['floor-right']),
+  ]),
+  kitchen: Object.freeze([
+    piece('shelf-jars', 77.1, 26.8, ['wall-right']),
+    piece('pendant-red', 66, 0, ['ceiling']),
+    piece('table-bistro', 65.5, 10.4, ['floor-right']),
+  ]),
+  bedroom: Object.freeze([
+    piece('lights-twinkle', 50, 0, ['ceiling']),
+    piece('poster-moon', 37.4, 4.6, ['wall-left']),
+    piece('wardrobe-plum', 94.3, 1.9, ['floor-right']),
+  ]),
+});
+// A room's built-in pieces as `items` entries.
+export const defaultItems = (room) => (DEFAULT_PIECES[room] ?? []).map(({ item, x, y }) => ({ item, x, y }));
+// Whether a piece sits exactly where the room put it to start with.
+export const atHome = (room, p) => (DEFAULT_PIECES[room] ?? []).some((d) => d.item === p.item && d.x === p.x && d.y === p.y);
+
+const frozenItems = (room) => Object.freeze(defaultItems(room).map((p) => Object.freeze(p)));
 export const DEFAULT_HOUSE = Object.freeze({
   wall: 'wall-cozy',
   floor: 'floor-oak',
   place: Object.freeze({}),
-  items: NONE,
+  items: frozenItems('living'),
+  furnished: FURNISHED,
 });
 export const DEFAULT_ROOMS = Object.freeze({
-  kitchen: Object.freeze({ wall: 'wall-kitchen-tile', floor: 'floor-kitchen-checker', place: Object.freeze({}), items: NONE }),
-  bedroom: Object.freeze({ wall: 'wall-bedroom-blue', floor: 'floor-oak', place: Object.freeze({ bed: 'bed-basic', nightstand: 'lamp-bedside' }), items: NONE }),
+  kitchen: Object.freeze({ wall: 'wall-kitchen-tile', floor: 'floor-kitchen-checker', place: Object.freeze({}), items: frozenItems('kitchen'), furnished: FURNISHED }),
+  bedroom: Object.freeze({ wall: 'wall-bedroom-blue', floor: 'floor-oak', place: Object.freeze({ bed: 'bed-basic', nightstand: 'lamp-bedside' }), items: frozenItems('bedroom'), furnished: FURNISHED }),
 });
 
 // A room's wallpaper, floor and furniture out of a wallet.
@@ -214,6 +283,9 @@ export const roomOf = (wallet, room) => (room === 'living' ? wallet.house : wall
    The renderers (src/house/Pieces.jsx) draw each band from the room's own
    geometry, so the same numbers look right at any size. */
 export const MAX_PIECES = 10;
+// How many pieces count towards MAX_PIECES: the built-in ones don't (a room
+// comes with them, and taking them out shouldn't be what makes room).
+export const countPieces = (items) => (items ?? []).filter((p) => !HOUSE_ITEM[p?.item]?.builtin).length;
 export const FIXED_SPOTS = ['bed', 'nightstand'];
 export const BANDS = ['rug', 'ceiling', 'wall', 'counter', 'floor']; // back to front
 export const SPOT_BAND = { ceiling: 'ceiling', 'wall-left': 'wall', 'wall-right': 'wall', counter: 'counter', corner: 'floor', 'floor-left': 'floor', 'floor-right': 'floor', rug: 'rug' };
@@ -248,6 +320,20 @@ export function clampAt(band, x, y) {
   if (!FLAT.has(band) && (typeof y !== 'number' || !Number.isFinite(y))) return null;
   const c = (v) => Math.round(Math.min(100, Math.max(0, v)) * 10) / 10;
   return { x: c(x), y: FLAT.has(band) ? 0 : c(y) };
+}
+
+// Which of the old named spots some furniture stands in (the room used to
+// hide its own prop there; see `covers` in DEFAULT_PIECES and data-has in
+// RoomScene).
+export function coveredSpots(items) {
+  const out = new Set();
+  for (const p of items ?? []) {
+    const band = bandOf(HOUSE_ITEM[p?.item]);
+    if (band === 'ceiling' || band === 'rug' || band === 'counter') out.add(band);
+    if (band === 'wall') out.add(p.x < 52 ? 'wall-left' : 'wall-right');
+    if (band === 'floor' && p.y < 45) out.add(p.x >= 88 ? 'corner' : p.x < 40 ? 'floor-left' : p.x > 60 ? 'floor-right' : 'floor-mid');
+  }
+  return [...out];
 }
 
 // A free spot for a piece being added: its old spot if nobody is near it,

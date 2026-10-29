@@ -344,16 +344,49 @@
 .rw-valance { position: absolute; left: -10%; right: -10%; top: -12px; height: 18%; border-radius: 6px 6px 14px 14px; background: repeating-linear-gradient(90deg, #e2674f 0 12px, #fffaf2 12px 24px); box-shadow: 0 4px 6px -2px rgba(90, 40, 20, 0.35); }
 .r-window[data-dress='night'] .rw-curtain { background: repeating-linear-gradient(90deg, #6a5aa8 0 8px, #594a96 8px 14px); }
 
-/* ---------- living room ---------- */
-.r-frame { right: clamp(70px, 19cqw, 280px); top: max(var(--wt), calc(var(--hs) * -2)); width: calc(var(--hs) * 0.62); }
-.r-clock { right: clamp(10px, 5cqw, 90px); top: max(var(--wt), calc(var(--hs) * -2.05)); width: calc(var(--hs) * 0.42); }
-.r-shelf { right: clamp(10px, 4cqw, 80px); top: calc(var(--hs) * -1.4); width: calc(var(--hs) * 0.95); }
-.r-plant { left: clamp(6px, 2cqw, 60px); bottom: calc(var(--hs) * -0.17); width: calc(var(--hs) * 0.5); }
-.r-sofa { --sr: clamp(6px, 2.5cqw, 50px); --sw: min(calc(var(--hs) * 1.25), 36cqw); right: var(--sr); bottom: calc(var(--hs) * -0.2); width: var(--sw); }
-.r-lampstand { right: calc(clamp(6px, 2.5cqw, 50px) + min(calc(var(--hs) * 1.25), 36cqw) + 4px); bottom: calc(var(--hs) * -0.14); width: calc(var(--hs) * 0.28); }
-@container rs (max-width: 700px) { .r-shelf, .r-frame { display: none; } }
-@container rs (max-width: 560px) { .r-lampstand { display: none; } }
-@container rs (max-width: 520px) { .r-clock { display: none; } }
+/* ---------- the pieces each room comes furnished with ----------
+   They are furniture (DEFAULT_PIECES in house.js, art-decor.jsx), but while
+   one is still where the room put it (`data-home`) it is drawn exactly where
+   the room used to draw it, at every size, and hides where the room used to
+   leave it out (narrow screens), except while decorating. Moved, it is a
+   piece like any other. Positions are in the bands' coordinates (pieces.css):
+   the wall band starts 64px down, the floor band at --hz + --hs * 0.14. */
+.rs-scene .pz-piece[data-builtin]:not(.is-drag):not(.is-front) .art { filter: drop-shadow(0 4px 4px rgba(90, 55, 30, 0.2)); }
+.rs-scene .pz-piece[data-home][data-item='frame-meadow'] { --pw: calc(var(--hs) * 0.62); left: calc(100% - clamp(70px, 19cqw, 280px) - var(--pw) / 2); top: calc(max(72px, var(--hz) - var(--hs) * 2) - 64px) !important; }
+.rs-scene .pz-piece[data-home][data-item='clock-oak'] { --pw: calc(var(--hs) * 0.42); left: calc(100% - clamp(10px, 5cqw, 90px) - var(--pw) / 2); top: calc(max(72px, var(--hz) - var(--hs) * 2.05) - 64px) !important; }
+.rs-scene .pz-piece[data-home][data-item='shelf-trinkets'] { --pw: calc(var(--hs) * 0.95); left: calc(100% - clamp(10px, 4cqw, 80px) - var(--pw) / 2); top: calc(var(--hz) - var(--hs) * 1.4 - 64px) !important; }
+.rs-scene .pz-piece[data-home][data-item='plant-leafy'] { --pw: calc(var(--hs) * 0.5); left: calc(clamp(6px, 2cqw, 60px) + var(--pw) / 2); top: calc(var(--hs) * 0.03) !important; }
+.rs-scene .pz-piece[data-home][data-item='sofa-teal'] { --pw: min(calc(var(--hs) * 1.25), 36cqw); left: calc(100% - clamp(6px, 2.5cqw, 50px) - var(--pw) / 2); top: calc(var(--hs) * 0.06) !important; }
+.rs-scene .pz-piece[data-home][data-item='lamp-floor'] { --pw: calc(var(--hs) * 0.28); left: calc(100% - clamp(6px, 2.5cqw, 50px) - min(calc(var(--hs) * 1.25), 36cqw) - 4px - var(--pw) / 2); top: 0 !important; }
+.rs-scene .pz-piece[data-home][data-item='shelf-jars'] { --pw: calc(var(--hs) * 0.8); left: calc(var(--cs) + var(--cw) * 0.84); top: calc(max(72px, var(--hz) - var(--hs) * 1.55) - 64px) !important; }
+.rs-scene .pz-piece[data-home][data-item='pendant-red'] { --pw: calc(var(--hs) * 0.4); left: 66%; }
+.rs-scene .pz-piece[data-home][data-item='table-bistro'] { --pw: var(--tw); left: calc(100% - var(--sr) - var(--sw) - 3cqw - var(--pw) / 2); top: calc(var(--hs) * 0.16) !important; }
+.rs-scene .pz-piece[data-home][data-item='poster-moon'] { --pw: calc(var(--hs) * 0.8); left: var(--nx); top: calc(max(72px, var(--hz) - var(--hs) * 2.05) - 64px) !important; }
+.rs-scene .pz-piece[data-home][data-item='wardrobe-plum'] { --pw: calc(min(calc(var(--hs) * 1.95), calc(var(--hz) - 96px)) * 100 / 190); left: calc(100% - max(8px, 2cqw) - var(--pw) / 2); top: calc(var(--hs) * 0.03) !important; }
+/* the twinkle lights span the ceiling wherever they go, and glow in the dark */
+.rs-scene .pz-piece[data-item='lights-twinkle'] { --pw: min(100cqw, calc(var(--hs) * 5)); top: 58px !important; height: calc(var(--hs) * 0.4); aspect-ratio: auto !important; z-index: 6; }
+/* hidden where the room used to leave them out; while decorating they show
+   faintly, to be dragged somewhere they fit (or left there) */
+@container rs (max-width: 899.98px) {
+  .rs .pz:not([data-edit]) .pz-piece[data-home][data-item='table-bistro'] { display: none; }
+  .rs .pz[data-edit] .pz-piece[data-home][data-item='table-bistro']:not(.is-sel) { opacity: 0.5; }
+}
+@container rs (max-width: 759.98px) {
+  .rs .pz:not([data-edit]) .pz-piece[data-home]:is([data-item='poster-moon'], [data-item='wardrobe-plum']) { display: none; }
+  .rs .pz[data-edit] .pz-piece[data-home]:is([data-item='poster-moon'], [data-item='wardrobe-plum']):not(.is-sel) { opacity: 0.5; }
+}
+@container rs (max-width: 700px) {
+  .rs .pz:not([data-edit]) .pz-piece[data-home]:is([data-item='frame-meadow'], [data-item='shelf-trinkets'], [data-item='shelf-jars']) { display: none; }
+  .rs .pz[data-edit] .pz-piece[data-home]:is([data-item='frame-meadow'], [data-item='shelf-trinkets'], [data-item='shelf-jars']):not(.is-sel) { opacity: 0.5; }
+}
+@container rs (max-width: 560px) {
+  .rs .pz:not([data-edit]) .pz-piece[data-home][data-item='lamp-floor'] { display: none; }
+  .rs .pz[data-edit] .pz-piece[data-home][data-item='lamp-floor']:not(.is-sel) { opacity: 0.5; }
+}
+@container rs (max-width: 520px) {
+  .rs .pz:not([data-edit]) .pz-piece[data-home][data-item='clock-oak'] { display: none; }
+  .rs .pz[data-edit] .pz-piece[data-home][data-item='clock-oak']:not(.is-sel) { opacity: 0.5; }
+}
 
 /* ---------- kitchen ---------- */
 .rs[data-kind='kitchen'] .rs-scene {
@@ -383,15 +416,9 @@
   height: calc(var(--hs) * 0.85);
   aspect-ratio: 1.05 / 1;
 }
-.k-shelf { left: calc(var(--cs) + var(--cw) * 0.84); transform: translateX(-50%); top: max(var(--wt), calc(var(--hs) * -1.55)); width: calc(var(--hs) * 0.8); }
 .k-hood { right: var(--sr); bottom: calc(var(--hs) * 1.1); width: var(--sw); }
 .k-stove { right: var(--sr); bottom: calc(var(--hs) * -0.15); width: var(--sw); }
 .k-stove .steam { animation: rsSteam 3s ease-in-out infinite; }
-.k-table { right: calc(var(--sr) + var(--sw) + 3cqw); bottom: calc(var(--hs) * -0.3); width: var(--tw); display: none; }
-.k-pendant { left: 66%; top: calc(var(--hz) * -1); width: calc(var(--hs) * 0.4); transform: translateX(-50%); }
-.k-pendant .bulb-lit { animation: rsFlick 4s ease-in-out infinite alternate; }
-@container rs (min-width: 900px) { .k-table { display: block; } }
-@container rs (max-width: 700px) { .k-shelf { display: none; } }
 @container rs (max-width: 560px) { .k-counter .doors i:nth-child(n + 4) { display: none; } }
 
 /* ---------- bedroom ---------- */
@@ -405,12 +432,6 @@
 }
 .rs[data-kind='bedroom'] .r-window { left: 66%; transform: translateX(-50%); top: max(var(--wt), calc(var(--hs) * -2.25)); height: calc(var(--hs) * 0.9); aspect-ratio: 0.8; z-index: 1; }
 .rs[data-kind='bedroom'][data-asleep] .r-window { z-index: 6; } /* the one thing still lit */
-.b-lights { left: 50%; top: calc(58px - var(--hz)); width: min(100cqw, calc(var(--hs) * 5)); height: calc(var(--hs) * 0.4); transform: translateX(-50%); }
-.b-lights .bulb { animation: rsTwinkle 2.4s ease-in-out infinite alternate; }
-.b-lights { z-index: 6; } /* they glow, even in the dark */
-.b-poster { left: var(--nx); transform: translateX(-50%); top: max(var(--wt), calc(var(--hs) * -2.05)); width: calc(var(--hs) * 0.8); display: none; }
-.b-wardrobe { right: max(8px, 2cqw); bottom: calc(var(--hs) * -0.17); height: min(calc(var(--hs) * 1.95), calc(var(--hz) - 96px)); aspect-ratio: 100 / 190; width: auto; display: none; }
-@container rs (min-width: 760px) { .b-poster, .b-wardrobe { display: block; } }
 .rs-warm {
   z-index: 6 !important;
   left: var(--nx);
@@ -548,16 +569,8 @@
 .glow-spot[data-item='tv-retro'] .glow { animation: rsTv 0.9s steps(2) infinite; }
 .rs[data-asleep] .rs-spot:is([data-item='lights-fairy'], [data-item='neon-sign'], [data-item='lamp-lava'], [data-item='disco-ball'], [data-item='led-strip'], [data-item='desk-gaming'], [data-item='string-lights']) { z-index: 6; }
 
-/* the default prop that shares a spot gives way to what the player put there */
-.rs[data-has~='wall-left'] .r-frame,
-.rs[data-has~='wall-left'] .b-poster,
-.rs[data-has~='wall-right'] :is(.r-clock, .r-shelf, .k-shelf),
-.rs[data-has~='floor-left'] .r-plant,
-.rs[data-has~='corner'] .r-plant,
-.rs[data-has~='corner'] .r-lampstand,
-.rs[data-has~='floor-right'] :is(.r-sofa, .k-table, .b-wardrobe),
-.rs[data-has~='rug'] .rs-rug,
-.rs[data-has~='ceiling'] :is(.k-pendant, .b-lights) { display: none; }
+/* the room's own rug gives way to a rug the player put down */
+.rs[data-has~='rug'] .rs-rug { display: none; }
 
 /* preview of a thing being tried: a dashed outline and a tag */
 .rs-spot.is-preview, .rs-bed.is-preview, .rs-lamp.is-preview { z-index: 9; }

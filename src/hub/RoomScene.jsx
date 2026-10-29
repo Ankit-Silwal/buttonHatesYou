@@ -6,7 +6,7 @@ import { Art, ART } from '@/house/art';
 import { skyOf } from '@/house/Room';
 import Pieces, { coveredSpots } from '@/house/Pieces';
 import { DEFAULT_HOUSE, DEFAULT_ROOMS, HOUSE_ITEM, ROOMS } from '@/economy/house';
-import { MOTES, Window, Frame, Clock, Shelf, Plant, Sofa, FloorLamp, Fridge, Counter, Stove, Hood, WallShelf, Table, Pendant, StringLights, Wardrobe, Poster, Mirror, Vanity, Towels, Duck } from './scene-art';
+import { MOTES, Window, Fridge, Counter, Stove, Hood, Mirror, Vanity, Towels, Duck } from './scene-art';
 import './scene.css';
 
 export { skyOf };
@@ -14,9 +14,11 @@ export { skyOf };
 // The one chassis all four rooms stand on: the wall with its wainscot, a
 // window onto the real time of day, the floor in perspective, a shaft of
 // light, dust motes, a vignette, the button on the floor with his contact
-// shadow and a speech bubble above him. Each `kind` adds its own hand-drawn
-// props; what the player decorated (wallpaper, floor, furniture) is layered
-// on top. A row of pills (the `tray`) sits at the bottom, above the dock.
+// shadow and a speech bubble above him. Each `kind` adds its own fixtures
+// (the window, the kitchen's counter and stove, the bathroom...); what the
+// player decorated (wallpaper, floor, furniture, including the pieces each
+// room comes furnished with, see DEFAULT_PIECES in house.js) is layered on
+// top. A row of pills (the `tray`) sits at the bottom, above the dock.
 //
 //   kind      'living' | 'kitchen' | 'bedroom' | 'bath'
 //   house     { wall, floor, place, items } to draw, including any preview
@@ -110,7 +112,7 @@ export default function RoomScene({ kind, sky, house, preview, asleep, equipped,
               {preview === 'bed' && <i className="preview-tag">Preview</i>}
             </div>
           )}
-          {cfg && <Pieces items={house?.items} preview={preview} edit={edit} />}
+          {cfg && <Pieces items={house?.items} preview={preview} edit={edit} room={kind} />}
           {lampId && ART[lampId]?.glow && !asleep && <Glow spot="nightstand" id={lampId} />}
           {(preview === 'wall' || preview === 'floor') && <span className="preview-banner">Previewing the {preview}</span>}
         </div>
@@ -203,19 +205,14 @@ function Glow({ spot, id }) {
   );
 }
 
-/* ---------------------------- the rooms' own props --------------------------- */
+/* ---------------------------- the rooms' own fixtures --------------------------- */
+// (the clocks, shelves, sofa, plants, lamps... are furniture now: Pieces)
 
 function LivingProps({ sky }) {
   return (
     <>
       <i className="rs-rug" />
       <Window sky={sky} />
-      <Frame />
-      <Clock />
-      <Shelf />
-      <Plant />
-      <FloorLamp />
-      <Sofa />
       <i className="rs-lampglow" />
     </>
   );
@@ -226,13 +223,10 @@ function KitchenProps({ sky }) {
     <>
       <i className="rs-rug" />
       <Window sky={sky} dress="valance" />
-      <WallShelf />
-      <Pendant />
       <Fridge />
       <Counter />
       <Hood />
       <Stove />
-      <Table />
       <i className="rs-lampglow" />
     </>
   );
@@ -242,10 +236,7 @@ function BedroomProps({ sky }) {
   return (
     <>
       <i className="rs-rug" />
-      <StringLights />
       <Window sky={sky} dress="night" />
-      <Poster />
-      <Wardrobe />
       <i className="rs-warm" />
       <i className="rs-moonlight" />
     </>

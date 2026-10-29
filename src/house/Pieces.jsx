@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Art, ART } from './art';
-import { BANDS, HOUSE_ITEM, bandOf } from '@/economy/house';
+import { BANDS, HOUSE_ITEM, bandOf, atHome, coveredSpots } from '@/economy/house';
 import './pieces.css';
 
 // A room's free-placed furniture (`items: [{ item, x, y }]`, see house.js),
@@ -19,7 +19,10 @@ import './pieces.css';
 //             selected one gets a × to take it out. One onMove per drag, at
 //             the drop.
 //   lit       false hides the lamps' glow
-export default function Pieces({ items, preview, edit, lit = true }) {
+//   room      the room's id: a built-in piece still where the room put it is
+//             marked `data-home` (the home screen draws those exactly where
+//             the room used to draw its own props, see scene.css)
+export default function Pieces({ items, preview, edit, lit = true, room }) {
   const bands = useRef({});
   const drag = useRef(null);
   const [live, setLive] = useState(null); // { item, x, y } while dragging (and until the drop lands)
@@ -59,8 +62,14 @@ export default function Pieces({ items, preview, edit, lit = true }) {
     if (!r) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    // keep the grab point under the finger: offset from the piece's anchor
-    drag.current = { item: p.item, r, id: e.pointerId, sx: e.clientX, sy: e.clientY, dx: e.clientX - (r.left + (r.width * p.x) / 100), dy: e.clientY - (r.top + (r.height * p.y) / 100), moved: false, x: p.x, y: p.y };
+    // keep the grab point under the finger: offset from the piece's anchor,
+    // as drawn (a piece at the edge, or a built-in one at home, may be drawn
+    // a little off its numbers), so it doesn't jump when the drag starts
+    const box = e.currentTarget.getBoundingClientRect();
+    const ax = box.left + box.width / 2;
+    const ay = band === 'floor' || band === 'counter' ? box.bottom : box.top;
+    const pct = (v, a, n) => (n > 0 ? Math.min(100, Math.max(0, ((v - a) / n) * 100)) : 0);
+    drag.current = { item: p.item, r, id: e.pointerId, sx: e.clientX, sy: e.clientY, dx: e.clientX - ax, dy: e.clientY - ay, moved: false, x: pct(ax, r.left, r.width), y: pct(ay, r.top, r.height) };
     setSel(p.item);
   }
 
@@ -115,6 +124,8 @@ export default function Pieces({ items, preview, edit, lit = true }) {
                   className={`pz-piece ${preview === p.item ? 'is-preview' : ''} ${sel === p.item ? 'is-sel' : ''} ${dragging ? 'is-drag' : ''} ${band === 'floor' && p.y >= FRONT ? 'is-front' : ''}`}
                   data-item={p.item}
                   data-band={band}
+                  data-home={room && atHome(room, p) ? '' : undefined}
+                  data-builtin={HOUSE_ITEM[p.item].builtin ? '' : undefined}
                   style={style}
                   title={edit ? undefined : name}
                   {...(edit
@@ -161,16 +172,6 @@ const aspect = (id) => {
   return `${w} / ${h}`;
 };
 
-// Which of the room's built-in props the furniture covers, as the old spot
-// names (for `data-has`, which hides a default prop when something stands
-// where it is).
-export function coveredSpots(items) {
-  const out = new Set();
-  for (const p of items ?? []) {
-    const band = bandOf(HOUSE_ITEM[p.item]);
-    if (band === 'ceiling' || band === 'rug' || band === 'counter') out.add(band);
-    if (band === 'wall') out.add(p.x < 52 ? 'wall-left' : 'wall-right');
-    if (band === 'floor' && p.y < 45) out.add(p.x >= 88 ? 'corner' : p.x < 40 ? 'floor-left' : p.x > 60 ? 'floor-right' : 'floor-mid');
-  }
-  return [...out];
-}
+// Which of the old named spots the furniture stands in (for `data-has`,
+// which hides the room's rug when another one lies there).
+export { coveredSpots };

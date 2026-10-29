@@ -7,7 +7,7 @@ import { Art } from './art';
 import './decor.css';
 import { buy, decorate, placePiece, unplacePiece } from '@/profile/store';
 import { owns, canAfford } from '@/economy/rules';
-import { HOUSE_ITEMS, HOUSE_ITEM, ROOMS, MAX_PIECES, bandOf, fitsRoom, freeSpotFor, roomOf } from '@/economy/house';
+import { HOUSE_ITEMS, HOUSE_ITEM, ROOMS, MAX_PIECES, DEFAULT_PIECES, bandOf, fitsRoom, freeSpotFor, roomOf, countPieces } from '@/economy/house';
 import { levelLocked } from '@/economy/levels';
 import { takeFocus, lockLabel } from '@/levels/focus';
 import LockTag from '@/levels/LockTag';
@@ -49,7 +49,8 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
   const free = !!item && !!bandOf(item); // a free-placed piece
   const spot = item?.kind === 'furniture' && !free ? item.spots.find((s) => cfg.spots.includes(s)) : null; // the bed or the nightstand
   const placed = free && cur.items.some((p) => p.item === item.id);
-  const full = free && !placed && cur.items.length >= MAX_PIECES;
+  const count = countPieces(cur.items); // the room's built-in pieces don't count
+  const full = free && !placed && !item.builtin && count >= MAX_PIECES;
 
   // the room dragged the piece being tried somewhere (since this sheet opened)
   const [opened] = useState(() => Date.now());
@@ -89,7 +90,9 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
     if (trying === it.id) return cancel();
     setTrying(it.id);
     setSaid('');
-    setPos(bandOf(it) ? freeSpotFor(it, cur.items) : null);
+    // a built-in piece put back goes home, where the room had it
+    const home = DEFAULT_PIECES[room]?.find((d) => d.item === it.id);
+    setPos(bandOf(it) ? (home ? { x: home.x, y: home.y } : freeSpotFor(it, cur.items)) : null);
   }
 
   useEffect(() => {
@@ -131,7 +134,8 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
         : `need ${item.price.coins - wallet.coins} more 🪙`
       : null;
 
-  const list = HOUSE_ITEMS.filter((i) => i.kind === tab && i.rooms.includes(room));
+  // what the room comes furnished with first, so it is easy to put back
+  const list = HOUSE_ITEMS.filter((i) => i.kind === tab && i.rooms.includes(room)).sort((a, b) => !!b.builtin - !!a.builtin);
   const isUse = (it) => (it.kind !== 'furniture' ? cur[it.kind] === it.id : bandOf(it) ? cur.items.some((p) => p.item === it.id) : Object.values(cur.place).includes(it.id));
 
   return (
@@ -149,8 +153,8 @@ export default function DecorSheet({ room, wallet, onPreview, onClose, moved, fu
           >
             <span aria-hidden="true">{t.icon}</span> {t.name}
             {t.id === 'furniture' && (
-              <span className={`decor-count ${cur.items.length >= MAX_PIECES ? 'is-full' : ''}`} aria-label={`${cur.items.length} of ${MAX_PIECES} placed`}>
-                {cur.items.length}/{MAX_PIECES}
+              <span className={`decor-count ${count >= MAX_PIECES ? 'is-full' : ''}`} aria-label={`${count} of ${MAX_PIECES} placed`}>
+                {count}/{MAX_PIECES}
               </span>
             )}
           </button>

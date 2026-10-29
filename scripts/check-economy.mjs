@@ -316,9 +316,13 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
 
 /* ---------- the rooms: each has its own wall, floor and furniture ---------- */
 {
-  const { ROOMS, ROOM_IDS, DEFAULT_ROOMS, DEFAULT_HOUSE, HOUSE_ITEM, roomOf, MAX_PIECES, SPOT_AT, bandOf, fitsRoom, freeSpotFor } = await import('../src/economy/house.js');
+  const { owns } = await import('../src/economy/rules.js');
+  const { ROOMS, ROOM_IDS, DEFAULT_ROOMS, DEFAULT_HOUSE, HOUSE_ITEM, roomOf, MAX_PIECES, SPOT_AT, SPOT_BAND, bandOf, fitsRoom, freeSpotFor, DEFAULT_PIECES, defaultItems, countPieces, FURNISHED } = await import('../src/economy/house.js');
+  // a room's pieces, leaving out the ones it comes furnished with
+  const mine = (items) => items.filter((p) => !HOUSE_ITEM[p.item].builtin);
+  const builtins = (items) => items.filter((p) => HOUSE_ITEM[p.item].builtin).map((p) => p.item);
   const { readFileSync } = await import('node:fs');
-  const artSrc = ['art.jsx', 'art-more.jsx', 'art-moving.jsx'].map((f) => readFileSync(new URL(`../src/house/${f}`, import.meta.url), 'utf8')).join('\n');
+  const artSrc = ['art.jsx', 'art-more.jsx', 'art-moving.jsx', 'art-decor.jsx'].map((f) => readFileSync(new URL(`../src/house/${f}`, import.meta.url), 'utf8')).join('\n');
 
   // the catalog is consistent: every piece fits a spot of every room it names, and has a picture
   for (const i of HOUSE_ITEMS) {
@@ -346,7 +350,7 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   // a wallet saved before the other rooms: nothing breaks, and its bed moves to the bedroom
   const saved = { coins: 50, diamonds: 0, owned: ['bed-cozy', 'plant-cactus', 'wall-mint'], equipped: START.equipped, house: { wall: 'wall-mint', floor: 'floor-oak', place: { bed: 'bed-cozy', 'floor-left': 'plant-cactus' } } };
   const mig = normalize(saved);
-  assert.deepEqual(mig.house, { wall: 'wall-mint', floor: 'floor-oak', place: {}, items: [{ item: 'plant-cactus', ...SPOT_AT['floor-left'] }] }, 'its spots turn into free-placed pieces');
+  assert.deepEqual(mig.house, { wall: 'wall-mint', floor: 'floor-oak', place: {}, items: [{ item: 'plant-cactus', ...SPOT_AT['floor-left'] }, ...defaultItems('living').filter((p) => p.item !== 'plant-leafy')], furnished: FURNISHED }, 'its spots turn into free-placed pieces, and the built-in pieces come in, but not the plant the cactus used to hide');
   assert.deepEqual(mig.rooms.bedroom.place, { bed: 'bed-cozy', nightstand: 'lamp-bedside' });
   assert.deepEqual(mig.rooms.kitchen, DEFAULT_ROOMS.kitchen);
   assert.equal(normalize(mig), mig, 'normalizing twice changes nothing');
@@ -378,7 +382,8 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.ok(['living', 'kitchen', 'bedroom'].every((r) => at(rugs, r, 'rug-round')));
   // only one of a piece in a room
   const two = applyEvent(applyEvent(own, { type: 'decor', spot: 'floor-left', item: 'plant-cactus' }), { type: 'decor', spot: 'floor-right', item: 'plant-cactus' });
-  assert.deepEqual(two.house.items, [{ item: 'plant-cactus', ...SPOT_AT['floor-right'] }]);
+  assert.deepEqual(mine(two.house.items), [{ item: 'plant-cactus', ...SPOT_AT['floor-right'] }]);
+  assert.deepEqual(builtins(two.house.items), ['frame-meadow', 'clock-oak', 'shelf-trinkets', 'lamp-floor'], 'an old spot event replaces the built-in piece that used to give way there (the plant, then the sofa)');
 
   // wallpaper and floors: allowed in the rooms they name
   assert.equal(applyEvent(own, { type: 'decor', room: 'kitchen', spot: 'wall', item: 'wall-kitchen-sage' }).rooms.kitchen.wall, 'wall-kitchen-sage');
@@ -421,14 +426,14 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(bandOf(HOUSE_ITEM['toaster']), 'counter');
   const p = (w, item, x, y, room) => applyEvent(w, { type: 'place', item, x, y, ...(room ? { room } : {}) });
   let f = p(own, 'plant-cactus', 37.26, 55);
-  assert.deepEqual(f.house.items, [{ item: 'plant-cactus', x: 37.3, y: 55 }], 'placed, rounded');
+  assert.deepEqual(mine(f.house.items), [{ item: 'plant-cactus', x: 37.3, y: 55 }], 'placed, rounded');
   f = p(f, 'plant-cactus', 120, -5);
-  assert.deepEqual(f.house.items, [{ item: 'plant-cactus', x: 100, y: 0 }], 'moved, clamped, still one of it');
+  assert.deepEqual(mine(f.house.items), [{ item: 'plant-cactus', x: 100, y: 0 }], 'moved, clamped, still one of it');
   assert.equal(p(own, 'plant-cactus', NaN, 5), null, 'NaN');
   assert.equal(p(own, 'plant-cactus', Infinity, 5), null, 'Infinity');
   assert.equal(p(own, 'plant-cactus', '10', 5), null, 'strings');
   assert.equal(p(own, 'plant-cactus', 10), null, 'a floor piece needs y');
-  assert.deepEqual(p(own, 'toaster', 40, 'junk', 'kitchen').rooms.kitchen.items, [{ item: 'toaster', x: 40, y: 0 }], 'on the counter y does not count');
+  assert.deepEqual(mine(p(own, 'toaster', 40, 'junk', 'kitchen').rooms.kitchen.items), [{ item: 'toaster', x: 40, y: 0 }], 'on the counter y does not count');
   assert.equal(p(own, 'toaster', 40, 0), null, 'no counter in the living room');
   assert.equal(p(rich, 'plant-cactus', 10, 10), null, 'not owned');
   assert.equal(p(own, 'wall-mint', 10, 10), null, 'a wallpaper is not a piece');
@@ -438,16 +443,17 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(p(own, 'nope', 10, 10), null);
   assert.equal(p(own, 'toaster', 10, 10, 'bedroom'), null, 'a toaster is for the kitchen');
   // unplace
-  assert.deepEqual(applyEvent(f, { type: 'unplace', item: 'plant-cactus' }).house.items, []);
+  assert.deepEqual(applyEvent(f, { type: 'unplace', item: 'plant-cactus' }).house.items, defaultItems('living'));
   assert.equal(applyEvent(own, { type: 'unplace', item: 'plant-cactus' }), null, 'nothing to take out');
   assert.equal(applyEvent(f, { type: 'unplace', item: 'plant-cactus', room: 'kitchen' }), null, 'other rooms are separate');
   // at most MAX_PIECES in a room
   assert.equal(MAX_PIECES, 10);
-  const lb = HOUSE_ITEMS.filter((i) => i.kind === 'furniture' && i.level == null && fitsRoom(i, 'living')).map((i) => i.id); // (level-locked pieces can't be bought yet)
+  const lb = HOUSE_ITEMS.filter((i) => i.kind === 'furniture' && i.level == null && !i.builtin && fitsRoom(i, 'living')).map((i) => i.id); // (level-locked pieces can't be bought yet)
   assert.ok(lb.length > MAX_PIECES + 1);
   let full = buyAll({ ...rich, coins: 1e9, diamonds: 1e6 }, ...lb);
   for (const id of lb.slice(0, MAX_PIECES)) full = p(full, id, 50, 50);
-  assert.equal(full.house.items.length, MAX_PIECES);
+  assert.equal(countPieces(full.house.items), MAX_PIECES);
+  assert.equal(full.house.items.length, MAX_PIECES + DEFAULT_PIECES.living.length, 'the built-in pieces are there too, and do not count');
   assert.equal(p(full, lb[MAX_PIECES], 50, 50), null, 'the room is full');
   assert.ok(p(full, lb[0], 10, 10), 'moving a piece in a full room is fine');
   const extra = lb.slice(MAX_PIECES).find((id) => HOUSE_ITEM[id].spots.includes('ceiling') || HOUSE_ITEM[id].spots.includes('rug'));
@@ -469,16 +475,94 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
       bedroom: { place: { bed: 'bed-cozy', rug: 'rug-round' } },
     },
   });
-  assert.deepEqual(old.house.items, [{ item: 'rug-round', ...SPOT_AT.rug }]);
-  assert.deepEqual(old.rooms.kitchen.items, [{ item: 'toaster', x: 5, y: 0 }], 'saved positions win over the old spot');
+  assert.deepEqual(mine(old.house.items), [{ item: 'rug-round', ...SPOT_AT.rug }]);
+  assert.deepEqual(mine(old.rooms.kitchen.items), [{ item: 'toaster', x: 5, y: 0 }], 'saved positions win over the old spot');
   assert.deepEqual(old.rooms.bedroom.place, { bed: 'bed-cozy', nightstand: 'lamp-bedside' });
-  assert.deepEqual(old.rooms.bedroom.items, [{ item: 'rug-round', ...SPOT_AT.rug }]);
+  assert.deepEqual(mine(old.rooms.bedroom.items), [{ item: 'rug-round', ...SPOT_AT.rug }]);
   assert.equal(normalize(old), old);
   // old queued spot events still replay on a migrated wallet, and the old take-down works
   const replayed = replay(rich, [{ type: 'buy', item: 'rug-round' }, { type: 'decor', room: 'kitchen', spot: 'rug', item: 'rug-round' }, { type: 'place', room: 'kitchen', item: 'rug-round', x: 20, y: 30 }]);
-  assert.deepEqual(replayed.rooms.kitchen.items, [{ item: 'rug-round', x: 20, y: 30 }]);
+  assert.deepEqual(mine(replayed.rooms.kitchen.items), [{ item: 'rug-round', x: 20, y: 30 }]);
   const down = replay(rich, [{ type: 'buy', item: 'rug-round' }, { type: 'decor', spot: 'rug', item: 'rug-round' }, { type: 'decor', spot: 'rug', item: null }]);
-  assert.deepEqual(down.house.items, []);
+  assert.deepEqual(mine(down.house.items), []);
+
+  /* ---------- the built-in pieces every room comes furnished with ---------- */
+  for (const r of ROOM_IDS) {
+    for (const d of DEFAULT_PIECES[r]) {
+      const i = HOUSE_ITEM[d.item];
+      assert.ok(i?.builtin && !i.price && i.kind === 'furniture' && fitsRoom(i, r), `${d.item} is a free piece that fits ${r}`);
+      assert.ok(owns(START, i), `${d.item} is always owned`);
+      assert.ok(d.covers.length && d.covers.every((s) => ROOMS[r].spots.includes(s)), `${d.item} covers spots of ${r}`);
+      // (an old queued spot event takes down what sits exactly on the spot: only ever the piece that gave way there)
+      for (const [s, sa] of Object.entries(SPOT_AT)) if (SPOT_BAND[s] === bandOf(i) && sa.x === d.x && sa.y === d.y) assert.ok(d.covers.includes(s), `${d.item} is not on the ${s} spot`);
+    }
+    assert.deepEqual(roomOf(START, r).items, defaultItems(r), `a new player's ${r} is furnished`);
+    assert.equal(roomOf(START, r).furnished, FURNISHED);
+  }
+  for (const i of HOUSE_ITEMS.filter((i) => i.builtin)) assert.ok(Object.values(DEFAULT_PIECES).some((ds) => ds.some((d) => d.item === i.id)), `${i.id} is in some room to start with`);
+  assert.equal(normalize(START), START, 'a new wallet is already normalized');
+
+  // moved, taken out and put back like any piece, and none of it is undone by normalize()
+  let bi = applyEvent(START, { type: 'place', item: 'clock-oak', x: 20, y: 40 });
+  assert.deepEqual(at(bi, 'living', 'clock-oak'), { item: 'clock-oak', x: 20, y: 40 }, 'a built-in piece moves');
+  bi = applyEvent(bi, { type: 'unplace', item: 'sofa-teal' });
+  assert.equal(at(bi, 'living', 'sofa-teal'), undefined, 'and comes out');
+  const reloaded = normalize(JSON.parse(JSON.stringify(bi)));
+  assert.deepEqual(reloaded.house, bi.house, 'taken out stays out after a reload');
+  assert.equal(at(normalize(reloaded), 'living', 'sofa-teal'), undefined);
+  assert.deepEqual(at(applyEvent(bi, { type: 'place', item: 'sofa-teal', x: 86.3, y: 3.8 }), 'living', 'sofa-teal'), { item: 'sofa-teal', x: 86.3, y: 3.8 }, 'and goes back');
+  const bare = replay(START, DEFAULT_PIECES.living.map((d) => ({ type: 'unplace', item: d.item })));
+  assert.deepEqual(normalize(JSON.parse(JSON.stringify(bare))).house.items, [], 'an emptied room stays empty');
+  assert.ok(applyEvent(START, { type: 'place', item: 'plant-leafy', x: 50, y: 20, room: 'bedroom' }), 'a built-in piece goes in any room it fits');
+  assert.equal(applyEvent(START, { type: 'place', item: 'wardrobe-plum', x: 50, y: 20 }), null, '...not in the others');
+  assert.equal(applyEvent(START, { type: 'buy', item: 'clock-oak' }), null, 'nothing to buy');
+  // they don't count towards MAX_PIECES: a full room still takes one back
+  const fullBare = applyEvent(full, { type: 'unplace', item: 'sofa-teal' });
+  assert.equal(countPieces(fullBare.house.items), MAX_PIECES);
+  assert.ok(applyEvent(fullBare, { type: 'place', item: 'sofa-teal', x: 80, y: 10 }), 'a built-in piece fits in a full room');
+
+  // migration: rooms saved before the built-in pieces get them once, where
+  // nothing of the player's used to hide them, and lose none of their pieces
+  const crowded = lb.slice(0, MAX_PIECES).map((id, k) => ({ item: id, x: 5 + k * 9, y: 50 }));
+  const pre = {
+    ...START,
+    owned: lb,
+    house: { wall: 'wall-cozy', floor: 'floor-oak', place: {}, items: crowded },
+    rooms: {
+      kitchen: { wall: 'wall-kitchen-tile', floor: 'floor-kitchen-checker', place: {}, items: [{ item: 'clock-wall', x: 70, y: 20 }] },
+      bedroom: { wall: 'wall-bedroom-blue', floor: 'floor-oak', place: { bed: 'bed-basic', nightstand: 'lamp-bedside' }, items: [] },
+    },
+  };
+  const post = normalize(pre);
+  assert.deepEqual(mine(post.house.items).map((p) => p.item), crowded.map((p) => p.item), 'a full room keeps all ten of its pieces');
+  assert.ok(builtins(post.house.items).length > 0, '...and gets the built-in pieces on top');
+  assert.deepEqual(builtins(post.rooms.kitchen.items), ['pendant-red', 'table-bistro'], 'the jar shelf stays hidden behind the clock on the right wall');
+  assert.deepEqual(post.rooms.bedroom.items, defaultItems('bedroom'), 'an empty room is furnished like a new one');
+  assert.ok(['living', 'kitchen', 'bedroom'].every((r) => roomOf(post, r).furnished === FURNISHED));
+  assert.equal(normalize(post), post, 'migrated once');
+  // old wallets with no items at all (named spots, or no rooms) are furnished too
+  assert.deepEqual(builtins(normalize({ ...START, house: { wall: 'wall-cozy', floor: 'floor-oak', place: { 'wall-left': 'poster-band' } }, rooms: undefined }).house.items), ['clock-oak', 'shelf-trinkets', 'plant-leafy', 'lamp-floor', 'sofa-teal']);
+  assert.deepEqual(normalize({ coins: 5 }).rooms.kitchen.items, defaultItems('kitchen'));
+  // an old queued spot event replays on a migrated wallet: the clock goes up and the jar shelf gives way
+  const oldQueue = replay({ ...pre, coins: 5000, rooms: { ...pre.rooms, kitchen: { ...pre.rooms.kitchen, items: [] } } }, [{ type: 'buy', item: 'clock-cat' }, { type: 'decor', room: 'kitchen', spot: 'wall-right', item: 'clock-cat' }]);
+  assert.deepEqual(oldQueue.rooms.kitchen.items, [{ item: 'pendant-red', x: 66, y: 0 }, { item: 'table-bistro', x: 65.5, y: 10.4 }, { item: 'clock-cat', ...SPOT_AT['wall-right'] }]);
+  // ...but a built-in piece the player moved stays put
+  const movedJar = applyEvent(START, { type: 'place', room: 'kitchen', item: 'shelf-jars', x: 30, y: 30 });
+  assert.ok(at(applyEvent({ ...movedJar, coins: 5000, owned: ['clock-cat'] }, { type: 'decor', room: 'kitchen', spot: 'wall-right', item: 'clock-cat' }), 'kitchen', 'shelf-jars'));
+
+  // the bookshelves, clocks and decor for sale: priced, and not buy missions (the levels stay as they were)
+  const { BUY_TRACK } = await import('../src/economy/levels.js');
+  const forSale = HOUSE_ITEMS.filter((i) => i.track === false);
+  assert.ok(forSale.filter((i) => /^(shelf|bookcase)-/.test(i.id)).length >= 4, 'four bookshelves');
+  assert.ok(forSale.filter((i) => /^clock-/.test(i.id)).length >= 4, 'four clocks');
+  for (const i of forSale) {
+    assert.ok(i.price && (i.price.coins ? i.price.coins >= 300 && i.price.coins < 2000 : i.price.diamonds >= 6 && i.price.diamonds <= 14), `${i.id} price`);
+    assert.ok(!BUY_TRACK.some((b) => b.item === i.id), `${i.id} is not a buy mission`);
+  }
+  assert.equal(BUY_TRACK.length, 153);
+  assert.ok(forSale.every((i) => (i.price?.coins ?? 0) < 2000), 'none of them in the legendary chest');
+  const decorSrc = readFileSync(new URL('../src/house/art-decor.jsx', import.meta.url), 'utf8');
+  for (const i of [...forSale, ...HOUSE_ITEMS.filter((i) => i.builtin)]) assert.ok(new RegExp(`'${i.id}': \\{`).test(decorSrc), `${i.id} is drawn in art-decor.jsx`);
 }
 
 /* ---------- the coin chest: 5 taps, rarities, a little under its price ---------- */

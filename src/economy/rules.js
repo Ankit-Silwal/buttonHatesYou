@@ -1,5 +1,5 @@
 import { ITEM, REWARDS, DEFAULT_LOOK, GAME, STORY_REWARDS, RUN_LIMITS } from './catalog';
-import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, DRAINED, DRAINED_DIRT, FREE_FOOD, isBroke, roomOf, MAX_PIECES, FIXED_SPOTS, SPOT_AT, SPOT_BAND, bandOf, fitsRoom, clampAt } from './house';
+import { HOUSE_ITEM, DEFAULT_HOUSE, DEFAULT_ROOMS, ROOMS, SPOT, FOOD, WAKE_OPTION, POTION, DRAINED, DRAINED_DIRT, FREE_FOOD, isBroke, roomOf, MAX_PIECES, FIXED_SPOTS, SPOT_AT, SPOT_BAND, bandOf, fitsRoom, clampAt, countPieces, coveredSpots, DEFAULT_PIECES, FURNISHED, atHome } from './house';
 import { DEFAULT_NEEDS, PLAY_COST, PLAY_DIRT, FILTHY_AT, PLAY_MIN_HUNGER, needsAt, normalizeNeeds } from './needs';
 import { tierPayout } from './tiers';
 import { ACHIEVEMENT, EMPTY_STATS, levelOf, statsOf } from './achievements';
@@ -240,7 +240,8 @@ function applyLegacyReward(wallet, ev) {
                                        its band of `room` (see house.js), or move it
                                        there if it's already in; x and y are clamped
                                        to 0-100. One of each piece per room, at most
-                                       MAX_PIECES pieces
+                                       MAX_PIECES pieces (the rooms' built-in
+                                       pieces don't count, see house.js)
    { id, type: 'unplace', item, room? } took a free-placed piece out of the room
    Needs events carry `at`, when they happened (ms). Hunger and energy drift
    with the clock between events (see needs.js).
@@ -278,7 +279,7 @@ const pay = (wallet, price) => ({
 // Wallets saved before the house existed have no `house` or `needs`.
 export function normalize(w) {
   if (!w || typeof w !== 'object') return START;
-  if (w.house?.place && Array.isArray(w.house.items) && w.rooms?.kitchen?.place && Array.isArray(w.rooms.kitchen.items) && w.rooms.bedroom?.place && Array.isArray(w.rooms.bedroom.items) && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
+  if ([w.house, w.rooms?.kitchen, w.rooms?.bedroom].every((r) => r?.place && Array.isArray(r.items) && r.furnished === FURNISHED) && w.needs && w.equipped && Array.isArray(w.owned) && w.stats?.best && w.achieved && w.pantry) return w;
   return {
     ...START,
     ...w,
@@ -299,33 +300,43 @@ function houseOf(w) {
   const { bed, ...living } = { ...w.house?.place };
   const room = (id) => {
     const r = w.rooms?.[id];
-    return freeRoom(id, { ...DEFAULT_ROOMS[id], ...r, place: { ...DEFAULT_ROOMS[id].place, ...r?.place } });
+    return freeRoom(id, { ...DEFAULT_ROOMS[id], ...r, place: { ...DEFAULT_ROOMS[id].place, ...r?.place } }, r);
   };
   const rooms = { kitchen: room('kitchen'), bedroom: room('bedroom') };
   if (!w.rooms && bed && Object.hasOwn(HOUSE_ITEM, bed)) rooms.bedroom.place.bed = bed;
-  return { house: freeRoom('living', { ...DEFAULT_HOUSE, ...w.house, place: living }), rooms };
+  return { house: freeRoom('living', { ...DEFAULT_HOUSE, ...w.house, place: living }, w.house), rooms };
 }
 
 // Before furniture was free-placed every piece sat in a named spot: those
 // pieces move to where their spot was (SPOT_AT), so nobody loses anything.
 // `place` keeps only the fixed spots (the bed and the nightstand); `items`
 // is cleaned up (known pieces that fit the room, one of each, numbers
-// clamped, at most MAX_PIECES).
-function freeRoom(id, r) {
+// clamped, at most MAX_PIECES not counting the built-in ones).
+// A room saved before the built-in pieces existed (no `furnished`) gets
+// them where the room used to draw them, except where the player's
+// furniture used to hide them (`covers`); none of the player's pieces is
+// dropped. A room saved since keeps what it has: a built-in piece taken out
+// stays out. `saved` is the room as it was saved (undefined: a new room).
+function freeRoom(id, r, saved) {
   const place = {};
   const items = [];
   const add = (itemId, at) => {
     const item = own(HOUSE_ITEM, itemId);
     const pos = item && at && fitsRoom(item, id) && clampAt(bandOf(item), at.x, at.y);
-    if (pos && items.length < MAX_PIECES && !items.some((p) => p.item === item.id)) items.push({ item: item.id, ...pos });
+    if (pos && (item.builtin || countPieces(items) < MAX_PIECES) && !items.some((p) => p.item === item.id)) items.push({ item: item.id, ...pos });
   };
-  for (const p of Array.isArray(r.items) ? r.items : []) add(p?.item, p);
+  const old = !!saved && typeof saved === 'object' && saved.furnished !== FURNISHED;
+  for (const p of Array.isArray(old ? saved.items : r.items) ? (old ? saved.items : r.items) : []) add(p?.item, p);
   for (const [spot, item] of Object.entries(r.place ?? {})) {
     if (FIXED_SPOTS.includes(spot)) {
       if (ROOMS[id].spots.includes(spot)) place[spot] = item;
     } else add(item, SPOT_AT[spot]);
   }
-  return { ...r, place, items };
+  if (old) {
+    const hidden = coveredSpots(items);
+    for (const d of DEFAULT_PIECES[id]) if (!d.covers.some((s) => hidden.includes(s))) add(d.item, d);
+  }
+  return { ...r, place, items, furnished: FURNISHED };
 }
 
 // The wallet with one room replaced.
@@ -336,12 +347,14 @@ const putRoom = (wallet, id, next) => ({ ...wallet, ...(id === 'living' ? { hous
 function applyOldSpot(wallet, id, here, ev) {
   const at = SPOT_AT[ev.spot];
   const band = SPOT_BAND[ev.spot];
+  // (and the built-in piece that used to give way to whatever went there, if it hasn't moved)
+  const gives = (p) => atHome(id, p) && DEFAULT_PIECES[id].some((d) => d.item === p.item && d.covers.includes(ev.spot));
   let items = here.items.filter((p) => !(p.x === at.x && p.y === at.y && bandOf(HOUSE_ITEM[p.item]) === band));
   if (ev.item != null) {
     const item = own(HOUSE_ITEM, ev.item);
     if (!item || !item.spots.includes(ev.spot) || !fitsRoom(item, id) || !owns(wallet, item)) return null;
-    items = [...items.filter((p) => p.item !== item.id), { item: item.id, ...at }];
-    if (items.length > MAX_PIECES) return null;
+    items = [...items.filter((p) => p.item !== item.id && !gives(p)), { item: item.id, ...at }];
+    if (countPieces(items) > MAX_PIECES) return null;
   }
   return putRoom(wallet, id, { ...here, items });
 }
@@ -358,7 +371,7 @@ function applyPieceEvent(wallet, ev) {
   if (!at) return null;
   const piece = { item: item.id, ...at };
   const items = there ? here.items.map((p) => (p.item === item.id ? piece : p)) : [...here.items, piece];
-  if (items.length > MAX_PIECES) return null;
+  if (!item.builtin && countPieces(items) > MAX_PIECES) return null;
   return putRoom(wallet, id, { ...here, items });
 }
 

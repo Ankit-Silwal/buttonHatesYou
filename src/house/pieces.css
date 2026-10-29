@@ -113,4 +113,4 @@
 .hs-room .pz-band[data-band='floor'] { top: 66%; bottom: 3%; }
 .hs-room .pz-band[data-band='floor'] .pz-piece { z-index: 4; }
 .hs-room .pz-band[data-band='rug'] { top: 70%; bottom: 8%; }
-.hs-room .pz-piece:is([data-item='lights-fairy'], [data-item='string-lights']) { --pw: 100cqw; }
+.hs-room .pz-piece:is([data-item='lights-fairy'], [data-item='string-lights'], [data-item='lights-twinkle']) { --pw: 100cqw; }

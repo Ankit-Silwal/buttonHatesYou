@@ -225,7 +225,7 @@ export default function Room({ room = 'living', sky, sleepy, house, preview, equ
       {placed.map((s) => (
         <Piece key={s} spot={s} id={house.place[s]} preview={preview === s} onPick={onPick} />
       ))}
-      <Pieces items={house.items} preview={preview} edit={edit} />
+      <Pieces items={house.items} preview={preview} edit={edit} room={room} />
 
       <div className={`resident ${eating ? 'chomp' : ''}`} {...poke}>
         <i className="res-shadow" />
