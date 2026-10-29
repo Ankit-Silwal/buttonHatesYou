@@ -12,6 +12,7 @@ import NeedRings from '@/hub/NeedRings';
 import { ChestButton } from '@/achievements/HubPerks';
 import Welcome from '@/profile/Welcome';
 import { useMe } from '@/profile/me';
+import { voiceOf } from '@/avatar/voices';
 import { useUndressed, worn } from '@/profile/undress';
 import { readyCount } from '@/economy/achievements';
 import RoomScene, { skyOf } from '@/hub/RoomScene';
@@ -35,18 +36,6 @@ import { placePiece, unplacePiece } from '@/profile/store';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// A tap is a slap, as far as he's concerned.
-const POKES = [
-  ['Ow! Why would you do that?', 'sad'],
-  ['Hey. HEY. Hands off.', 'annoyed'],
-  ['That hurt. Physically and emotionally.', 'sad'],
-  ["Poke me one more time and I'm calling Kevin.", 'angry'],
-  ['This is a no-pressing zone.', 'angry'],
-  ['What did I ever do to you?', 'sad'],
-  ['I can hear you breathing.', 'scared'],
-];
-// Stroking him is allowed. Grudgingly.
-const PATS = ['Ohh… well, this is nice.', 'Okay. Okay. Keep going. Do not tell anyone.', 'Mmm. A little to the left.', 'Fine. You may continue being my friend.', 'This changes nothing. …Do it again.'];
 const SLAPS_TO_FALL = 6; // this many taps in SLAP_WINDOW_MS knocks him over
 const SLAP_WINDOW_MS = 3000;
 const FALL_MS = 2600;
@@ -111,15 +100,13 @@ const savePane = (i) => {
 
 function greeting({ user, wallet }, face, name) {
   if (face.dirty === 2) return ["Do you smell that? That's me. Bathroom. Please.", 'sad'];
-  if (face.mood === 'bored') return ["I'm hungry. And bored. Mostly hungry.", 'bored'];
+  if (face.mood === 'bored') return [wallet.equipped?.char && wallet.equipped.char !== 'char-bobby' ? pick(voiceOf(wallet.equipped).hungry) : "I'm hungry. And bored. Mostly hungry.", 'bored'];
   if (face.sleepy) return ['I did not sleep. Look at my eyes. LOOK at them.', 'tired'];
   if (wallet.coins >= 1000) return ["You're rich. Buy me something nice.", 'smug'];
-  if (name || user) return [`Oh no. ${name || user.name?.split(' ')[0]}'s back.`, 'annoyed'];
-  return ["Oh. A visitor. Please don't press anything.", 'calm'];
+  // otherwise, however the character he's playing says hello (avatar/voices.js)
+  return voiceOf(wallet.equipped).greet(name || user?.name?.split(' ')[0]);
 }
 
-// After he has copied you.
-const MIMIC_LINES = ['Ha. That is what you sound like.', 'I sound better. Admit it.', 'Say something smart next time.', 'Again? Fine. I have nothing better to do.'];
 
 // When he's neglected he says so instead of the usual poke lines.
 const MOANS = {
@@ -267,14 +254,15 @@ export default function Hub({ initial = 'home' }) {
     if (face.dirty && pokes.current % 3 === 1) return say(pick(MOANS.dirty), 'sad');
     if (face.mood === 'bored' && pokes.current % 3 === 2) return say(pick(MOANS.bored), 'bored');
     if (face.sleepy && pokes.current % 4 === 0) return say(pick(MOANS.sleepy), 'tired');
-    if (pokes.current % 4 === 0) return say(`Please don't slap me. You are a horrible person, ${who}.`, 'sad');
-    say(...pick(POKES));
+    const voice = voiceOf(wallet.equipped);
+    if (pokes.current % 4 === 0) return say(voice.slap(who), 'sad');
+    say(...pick(voice.pokes));
   }
 
   function pat() {
     if (fallen || needs.asleep) return;
     slaps.current = [];
-    say(pick(PATS), 'happy');
+    say(pick(voiceOf(wallet.equipped).pats), 'happy');
     setHearts((h) => h + 1);
   }
 
@@ -322,7 +310,7 @@ export default function Hub({ initial = 'home' }) {
     },
     onDone: () => {
       setTalking(false);
-      say(pick(MIMIC_LINES), 'smug');
+      say(pick(voiceOf(wallet.equipped).mimic), 'smug');
     },
   });
   const mimicWas = useRef('off');

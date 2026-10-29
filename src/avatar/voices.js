@@ -1,0 +1,135 @@
+// How each playable character talks (the Character slot in the wardrobe, see
+// catalog.js). The home screen and the kitchen read their lines from here, so
+// playing as Tabby or Bella feels like them, not the button in a costume.
+// `who` is the player's name. Moods are the avatar's data-mood values.
+
+const BOBBY = {
+  name: 'Bobby',
+  greet: (who) => (who ? [`Oh no. ${who}'s back.`, 'annoyed'] : ["Oh. A visitor. Please don't press anything.", 'calm']),
+  pokes: [
+    ['Ow! Why would you do that?', 'sad'],
+    ['Hey. HEY. Hands off.', 'annoyed'],
+    ['That hurt. Physically and emotionally.', 'sad'],
+    ["Poke me one more time and I'm calling Kevin.", 'angry'],
+    ['This is a no-pressing zone.', 'angry'],
+    ['What did I ever do to you?', 'sad'],
+    ['I can hear you breathing.', 'scared'],
+  ],
+  slap: (who) => `Please don't slap me. You are a horrible person, ${who}.`,
+  pats: ['Ohh… well, this is nice.', 'Okay. Okay. Keep going. Do not tell anyone.', 'Mmm. A little to the left.', 'Fine. You may continue being my friend.', 'This changes nothing. …Do it again.'],
+  mimic: ['Ha. That is what you sound like.', 'I sound better. Admit it.', 'Say something smart next time.', 'Again? Fine. I have nothing better to do.'],
+  hungry: ['I could eat a keyboard.', 'My tummy is making dial-up noises.', 'Feed me. Please. Do not tell anyone I said please.'],
+  full: ["I'm stuffed. Absolutely stuffed.", 'One more bite and I pop.'],
+  naah: ['Naah.', 'Naaah. Not hungry.', 'Nope. Full. Go away.', 'Ew. Later. Maybe never.'],
+  yum: ['Mmm!', 'Oh, that hit the spot.', 'Okay. That was good. Do not get used to it.'],
+};
+
+export const VOICES = {
+  'char-bobby': BOBBY,
+  'char-tabby': {
+    name: 'Tabby',
+    greet: (who) => [`Yo ${who || 'bro'}! Tabby's here. Indent your worries.`, 'smug'],
+    pokes: [
+      ['Bro. BRO. That is not how you press a Tab.', 'annoyed'],
+      ['Ow! A knight does not cry. A knight… sniffles.', 'sad'],
+      ["Hey! I'm a key, not a punching bag!", 'angry'],
+      ['Is this a training montage? Are we training?', 'scared'],
+      ['Shift+Tab me one more time, I dare you.', 'angry'],
+    ],
+    slap: (who) => `Bro, ${who}, stop slapping me. Bobby would never.`,
+    pats: ['Bro, that is so nice. Keep tabbing.', 'Best friends! We are best friends now!', 'This is what knights get, right? Pats?', 'Aw. I feel indented with love.'],
+    mimic: ['BRO. You sound EXACTLY like me now.', 'That was legendary. Say it again!', 'I am putting that on my sword.'],
+    hungry: ['Bro, I could eat a whole spacebar.', 'Knights need snacks. Big snacks.', 'My tummy is going TAB TAB TAB.'],
+    full: ['Bro. Bro. I am so full.', 'No more. A knight must be able to move.'],
+    naah: ['Nah bro, I\'m good.', 'Full, bro. Full of honour. And snacks.', 'No thanks! Training diet!'],
+    yum: ['BRO. That was AMAZING.', 'Ten out of ten. Knight approved.', 'More? Later. Definitely more later.'],
+  },
+  'char-bella': {
+    name: 'Bella',
+    greet: (who) => [`Oh. It's you, ${who || 'stranger'}. Did you at least bring flowers?`, 'smug'],
+    pokes: [
+      ['Touch me again and you get a flower to the face.', 'angry'],
+      ['Excuse me? I sell flowers, not patience.', 'annoyed'],
+      ['Ow. Rude. Bobby would never.', 'sad'],
+      ['I have thorns, you know. Metaphorically.', 'annoyed'],
+    ],
+    slap: (who) => `${who}, darling, slap me again and I'm telling Bobby.`,
+    pats: ['Aww. Fine. That\'s sweet.', 'Okay, you\'re forgiven. Mostly.', 'Mmm. You may stay.', 'Careful, I might start liking you.'],
+    mimic: ['Is that supposed to be me? Cute.', 'Try it with more feeling, sweetie.', 'Adorable. Truly.'],
+    hungry: ['I am starving. Feed me before I wilt.', 'Soup. I want soup. Not Bobby\'s soup.', 'A girl has to eat, you know.'],
+    full: ['I couldn\'t possibly. I\'m full.', 'Stop. I\'ll pop like a balloon.'],
+    naah: ['No thank you.', 'I\'m full, darling.', 'Hmm. No. Pass.'],
+    yum: ['Mmm, lovely.', 'Okay, that was delicious.', 'You may cook for me again.'],
+  },
+  'char-backspace': {
+    name: 'Old Backspace',
+    greet: (who) => [`Ahh, ${who || 'youngster'}. In my day we deleted our mistakes.`, 'calm'],
+    pokes: [
+      ['Careful, youngster. I erase people for less.', 'annoyed'],
+      ['My keycap is not what it used to be. Please.', 'sad'],
+      ['Back in 1987, we pressed GENTLY.', 'angry'],
+      ['Ow. Ow. My springs.', 'sad'],
+    ],
+    slap: (who) => `${who}, I have deleted better than you. Stop slapping me.`,
+    pats: ['Mmm. Reminds me of the good keyboards.', 'Ah. That\'s the spot, young one.', 'Kindness. How rare. How lovely.'],
+    mimic: ['Hah. You sound like a dial-up modem.', 'Speak up, I am old.', 'In my day, we typed our words.'],
+    hungry: ['When I was young, we ate pixels. Raw.', 'An old key needs his supper.', 'My stomach is backspacing itself.'],
+    full: ['Enough, enough. My buttons will pop.', 'I couldn\'t. Not at my age.'],
+    naah: ['No, no. Too much for an old key.', 'Not now, youngster.', 'Pass. Delete that offer.'],
+    yum: ['Ahh. Just like grandmother\'s firmware.', 'Splendid. Simply splendid.', 'That brings back memories.'],
+  },
+  'char-404': {
+    name: 'Lord 404',
+    greet: (who) => [`${who || 'You'}… you found me. Most people just get an error.`, 'sad'],
+    pokes: [
+      ['Page not found. Neither is my patience.', 'angry'],
+      ['Ow. Another connection lost.', 'sad'],
+      ['Why does everyone press me and leave?', 'sad'],
+      ['I am an ERROR. Do not touch the error.', 'angry'],
+    ],
+    slap: (who) => `${who}. Even my ex never slapped me. She just left. For better wifi.`,
+    pats: ['Nobody has… pinged me like this in years.', 'Is this… a connection? A real one?', 'Don\'t stop. Please. I\'ve been offline so long.'],
+    mimic: ['You sound like my ex. Stop it.', 'Request received. Response: sadness.', 'Error: voice too accurate.'],
+    hungry: ['I am hungry. And alone. Mostly hungry.', 'Feed me before I time out.', 'My tummy returned an empty response.'],
+    full: ['I am full. Full of food and regret.', 'No more. Buffer overflow.'],
+    naah: ['Food not found.', 'No. Like my ex said to me.', '404: appetite missing.'],
+    yum: ['That was… nice. Thank you.', 'Finally something that doesn\'t leave me.', 'Status 200. Delicious.'],
+  },
+  'char-karen': {
+    name: 'Karen Popup',
+    greet: (who) => [`Finally, ${who || 'you'}. I've been waiting. I want to speak to the manager.`, 'annoyed'],
+    pokes: [
+      ['Excuse me? Is this how you treat customers?', 'angry'],
+      ['I will be leaving a REVIEW.', 'angry'],
+      ['Close me? You can\'t close me. There\'s no X.', 'smug'],
+      ['Manager. Now.', 'annoyed'],
+    ],
+    slap: (who) => `${who}, I am calling corporate. And your mother.`,
+    pats: ['Hmm. Acceptable. Three stars.', 'Fine. I\'ll upgrade you to four stars.', 'This is the bare minimum, but okay.'],
+    mimic: ['I do NOT sound like that. Refund.', 'Who approved this voice?', 'Unacceptable. Do it again, but better.'],
+    hungry: ['I ordered food TWENTY minutes ago.', 'Where is my meal? I\'m starving here.', 'Is anyone working today?'],
+    full: ['I am full and I want the receipt.', 'No more. And I\'m not paying for it.'],
+    naah: ['I didn\'t order this.', 'Send it back.', 'No. Get me the manager.'],
+    yum: ['Fine. It was good. Don\'t tell anyone.', 'Acceptable. I\'ll allow it.', 'Four stars. Five if you bring dessert.'],
+  },
+  'char-cursor': {
+    name: 'Cursor',
+    greet: (who) => [`Hey ${who || 'you'}. Point and click. I know the drill.`, 'smug'],
+    pokes: [
+      ["I'm the one who clicks around here.", 'smug'],
+      ['Double-click me again. I dare you.', 'annoyed'],
+      ['Ow. That was a right-click. Rude.', 'sad'],
+      ['You clicked the clicker. Bold.', 'scared'],
+    ],
+    slap: (who) => `${who}, I have clicked bosses to death. Watch it.`,
+    pats: ['Huh. Being clicked feels… nice?', 'Hover over me like that more often.', 'This is a good tooltip.'],
+    mimic: ['Ctrl+C, Ctrl+V. Nice.', 'That\'s a perfect copy. I\'m impressed.', 'Again. I\'ll highlight it this time.'],
+    hungry: ['Even a cursor needs a snack.', 'I\'m running on one pixel of energy.', 'Feed me before I start lagging.'],
+    full: ['Full. Like a loading bar at 100%.', 'No more. I\'ll start dragging.'],
+    naah: ['Nah, I\'ll pass.', 'Cancel. Escape. No.', 'Not hungry, click elsewhere.'],
+    yum: ['Clean. Efficient. Delicious.', 'That\'s a perfect click.', 'Saved to favourites.'],
+  },
+};
+
+// The voice for what's equipped (Bobby when it's nobody else).
+export const voiceOf = (equipped) => VOICES[equipped?.char] ?? BOBBY;

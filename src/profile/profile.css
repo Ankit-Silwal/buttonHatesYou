@@ -257,3 +257,4 @@
 @media (prefers-reduced-motion: reduce) {
   .pf-switch, .pf-switch i { transition: none; }
 }
+.pf-as { margin: -8px 0 0; color: var(--btn-dark); font-weight: 700; font-size: 14px; }

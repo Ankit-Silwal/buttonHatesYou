@@ -8,14 +8,11 @@ import { feed } from '@/profile/store';
 import { faceOf } from '@/profile/needs';
 import { FOODS, FREE_FOOD, isBroke, roomOf } from '@/economy/house';
 import Hint from './Hint';
+import { voiceOf } from '@/avatar/voices';
 import PotionShelf from './PotionShelf';
 import { Sound } from '@/game/sound';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const HUNGRY = ['I could eat a keyboard.', 'My tummy is making dial-up noises.', 'Feed me. Please. Do not tell anyone I said please.'];
-const FULL = ["I'm stuffed. Absolutely stuffed.", 'One more bite and I pop.'];
-const NAAH = ['Naah.', 'Naaah. Not hungry.', 'Nope. Full. Go away.', 'Ew. Later. Maybe never.'];
-const YUM = ['Mmm!', 'Oh, that hit the spot.', 'Okay. That was good. Do not get used to it.'];
 const FULL_AT = 85; // above this he turns food down
 const DRAG_PX = 8; // moving this far turns a press into a drag
 
@@ -35,6 +32,7 @@ function naah() {
 // room; `onDecorate` and `onBuy` open the sheets.
 export default function FoodPane({ needs, wallet, active, sky, view, edit, quip, onDecorate, onBuy, onPotions }) {
   const face = faceOf(needs);
+  const voice = voiceOf(wallet.equipped); // who's talking (avatar/voices.js)
   const [eating, setEating] = useState(null); // { id, n }
   const [fx, setFx] = useState(null);
   const [line, setLine] = useState({ text: '', n: 0 });
@@ -59,7 +57,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, edit, quip,
   // A fresh remark each time this panel comes into view.
   useEffect(() => {
     if (!active) return;
-    say(needs.asleep ? 'Zzz…' : needs.hunger < 25 ? pick(HUNGRY) : needs.hunger > 92 ? pick(FULL) : broke && !begged ? 'No coins? Say it. Say "I’m poor."' : stock.length ? 'What is on the menu?' : 'The fridge is empty. Typical.');
+    say(needs.asleep ? 'Zzz…' : needs.hunger < 25 ? pick(voice.hungry) : needs.hunger > 92 ? pick(voice.full) : broke && !begged ? 'No coins? Say it. Say "I’m poor."' : stock.length ? 'What is on the menu?' : 'The fridge is empty. Typical.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
@@ -123,7 +121,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, edit, quip,
     if (full) {
       naah();
       moment('naah', 1300);
-      return say(pick(NAAH));
+      return say(pick(voice.naah));
     }
     say(pick(['Bring it here. To my mouth.', 'Closer. I am not coming to get it.', 'Food goes in the face. My face.']));
   }
@@ -133,7 +131,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, edit, quip,
     if (full) {
       naah();
       moment('naah', 1300);
-      return say(pick(NAAH));
+      return say(pick(voice.naah));
     }
     eat(f);
   }
@@ -150,7 +148,7 @@ export default function FoodPane({ needs, wallet, active, sky, view, edit, quip,
     timer.current = setTimeout(() => {
       setEating(null);
       moment('yum', 1800);
-      say(charity ? `Free food? For me? ...I still hate you. ${f.quip}` : pick([f.quip, f.quip, pick(YUM)]));
+      say(charity ? `Free food? For me? ...I still hate you. ${f.quip}` : pick([f.quip, f.quip, pick(voice.yum)]));
       if (f.fx) {
         setFx(f.fx);
         clearTimeout(fxTimer.current);
