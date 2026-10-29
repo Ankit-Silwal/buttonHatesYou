@@ -12,7 +12,7 @@ import { ITEM, GAME } from '@/economy/catalog';
 import { HOUSE_ITEM } from '@/economy/house';
 import { MAX_LEVEL, levelState, unlocksOf, levelsCleared } from '@/economy/levels';
 import { useProfile } from '@/profile/useProfile';
-import { levelUp } from '@/profile/store';
+import { levelUp, skipPlay } from '@/profile/store';
 import { focusItem } from './focus';
 import './levels.css';
 
@@ -60,6 +60,17 @@ export function Thumb({ kind, id, equipped, size = 44 }) {
 }
 
 // One mission: what to do, how far along, and a way to go and do it.
+// Finishing the play mission with diamonds instead (economy/levels.js skipCost).
+function SkipButton({ m }) {
+  const { wallet } = useProfile();
+  const short = wallet.diamonds < m.skip;
+  return (
+    <button type="button" className="lv-skip" onClick={() => skipPlay(m.level)} disabled={short} title={short ? `Needs ${m.skip} diamonds` : `Done for ${m.skip} diamonds`} aria-label={`Finish it for ${m.skip} diamonds`}>
+      <Icon glyph="💎" size={13} /> {m.skip}
+    </button>
+  );
+}
+
 export function Mission({ m, equipped, onGo }) {
   let icon;
   let title;
@@ -115,9 +126,12 @@ export function Mission({ m, equipped, onGo }) {
             <Icon glyph="✓" size={18} tint="#fff" />
           </span>
         ) : go.href ? (
-          <Link className="lv-go" href={go.href}>
-            Go
-          </Link>
+          <span className="lv-go-pair">
+            <Link className="lv-go" href={go.href}>
+              Go
+            </Link>
+            {m.skip && <SkipButton m={m} />}
+          </span>
         ) : (
           <button type="button" className="lv-go" onClick={() => onGo(go)}>
             Go

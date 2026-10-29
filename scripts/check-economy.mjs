@@ -730,6 +730,21 @@ console.log('outfit coin prices', Math.min(...coinPrices), '-', Math.max(...coin
   assert.equal(HOUSE_ITEMS.filter((i) => i.moving && i.price.coins && i.level).length, 3);
 }
 
+/* ---------- buying the play mission with diamonds (skipplay) ---------- */
+{
+  const { levelState, skipCost } = await import('../src/economy/levels.js');
+  const w = { ...normalize(START), diamonds: 5 };
+  const st = levelState(applyEvent(w, { type: 'stock', item: 'food-cookie' }) ?? w);
+  assert.equal(st.missions[0].kind, 'play');
+  assert.equal(applyEvent(w, { type: 'skipplay', level: 2 }), null, 'only the current level');
+  const skipped = applyEvent(w, { type: 'skipplay', level: 1 });
+  assert.equal(skipped.diamonds, 5 - skipCost(1));
+  assert.ok(levelState(skipped).missions[0].done, 'the play mission counts as done');
+  assert.equal(applyEvent(skipped, { type: 'skipplay', level: 1 }), null, 'not twice');
+  assert.equal(applyEvent({ ...w, diamonds: 0 }, { type: 'skipplay', level: 1 }), null, 'needs the diamonds');
+  assert.deepEqual([skipCost(1), skipCost(26), skipCost(200)], [1, 2, 8]);
+}
+
 /* ---------- what the new achievements count ---------- */
 {
   const T2 = Date.now();
