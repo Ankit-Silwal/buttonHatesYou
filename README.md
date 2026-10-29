@@ -99,6 +99,19 @@ than the previous one. `src/profile/needs.js` has the `useNeeds()` hook, and
 it starts. Profiles saved before the house existed get defaults
 (`normalize()` in rules.js).
 
+## The look (matches the Android app)
+
+The home screen's UI layer follows the Android app (`button-hates-you-android`,
+its own repo): one coins-over-diamonds chip and a three-bar needs chip on the
+left of the top bar, square Achievements and Daily chest chips on the right
+(`compact` props on `Wallet`, `EnergyChip` and `HubPerks`), a light dock with
+a soft indicator behind the active room, and flat buttons (Play and plain
+pills filled, the rest neutral). Styles are in `src/hub/flat.css`. Icons are
+drawn, not emoji: `src/components/Icon.jsx` (dock, buttons, chips) and
+`src/components/GameIcon.jsx` (each game's line icon on its own colour, used
+on the title cards). The **Games** panel is one grid of tiles; the star on a
+tile pins it to a Favorites row (kept in this browser, `bhy.favorites`).
+
 ## The home screen: five panels
 
 Swipe (or use the dock at the bottom, or the left/right arrow keys) between

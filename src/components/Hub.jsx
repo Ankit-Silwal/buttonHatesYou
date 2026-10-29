@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Account from './Account';
 import Wallet from './Wallet';
 import Wardrobe from './Wardrobe';
+import Icon from './Icon';
 import EnergyChip from '@/house/EnergyChip';
 import HubPerks from '@/achievements/HubPerks';
 import RoomScene, { skyOf } from '@/hub/RoomScene';
@@ -16,6 +17,7 @@ import BathPane from '@/hub/BathPane';
 import BuySheet from '@/hub/BuySheet';
 import WakeSheet from '@/hub/WakeSheet';
 import '@/hub/hub-panes.css';
+import '@/hub/flat.css';
 import { useNeeds, faceOf } from '@/profile/needs';
 import { roomOf } from '@/economy/house';
 
@@ -35,7 +37,7 @@ const POKES = [
 // The four panels, left to right. The button starts in the living room.
 const PANES = [
   { id: 'games', name: 'Games', icon: '🎮' },
-  { id: 'home', name: 'Living Room', icon: '🛋️' },
+  { id: 'home', name: 'Living Room', short: 'Living', icon: '🛋️' },
   { id: 'food', name: 'Kitchen', icon: '🍳' },
   { id: 'sleep', name: 'Bedroom', icon: '🛏️' },
   { id: 'bath', name: 'Bathroom', icon: '🛁' },
@@ -250,16 +252,16 @@ export default function Hub({ initial = 'home' }) {
             tray={
               <nav className="rs-pills" aria-label="Living room">
                 <button className="pill play" onClick={() => go(0)} style={{ '--i': 0 }}>
-                  <span className="ico">🎮</span> Play
+                  <Icon glyph="🎮" size={18} tint="currentColor" /> Play
                 </button>
                 <button className="pill alt" onClick={() => setPanel('wardrobe')} style={{ '--i': 1 }}>
-                  <span className="ico">👕</span> Wardrobe
+                  <Icon glyph="👕" size={18} tint="currentColor" /> Wardrobe
                 </button>
                 <Link className="pill story-btn" href="/story" style={{ '--i': 2 }}>
-                  <span className="ico">📖</span> Story
+                  <Icon glyph="📚" size={18} tint="currentColor" /> Story
                 </Link>
                 <button className="pill house-btn" onClick={() => openDecor('living')} style={{ '--i': 3 }}>
-                  <span className="ico">🛋️</span> Decorate
+                  <Icon glyph="🛋️" size={18} tint="currentColor" /> Decorate
                 </button>
               </nav>
             }
@@ -281,23 +283,25 @@ export default function Hub({ initial = 'home' }) {
 
       <header className="hub-top">
         <div className="hub-left">
-          <Wallet profile={profile} />
-          <EnergyChip go={go} />
+          <Wallet profile={profile} compact />
+          <EnergyChip go={go} compact />
         </div>
-        <Account user={user} ready={ready} />
+        <div className="hub-right">
+          <HubPerks compact />
+          <Account user={user} ready={ready} />
+        </div>
       </header>
-      {!panel && at === HOME && <HubPerks />}
 
       {!panel && (
         <nav className="dock" aria-label="Panels">
           {PANES.map((p, i) => {
             const alert = (p.id === 'food' && needs.hunger < 25) || (p.id === 'sleep' && needs.energy < 25 && !needs.asleep) || (p.id === 'bath' && needs.dirt >= 40);
             return (
-              <button key={p.id} className={`dock-btn ${at === i ? 'on' : ''} ${alert ? 'alert' : ''}`} aria-current={at === i ? 'page' : undefined} onClick={() => go(i)}>
+              <button key={p.id} className={`dock-btn ${at === i ? 'on' : ''} ${alert ? 'alert' : ''}`} aria-current={at === i ? 'page' : undefined} aria-label={p.name + (alert ? ', needs attention' : '')} onClick={() => go(i)}>
                 <span className="dock-ico" aria-hidden="true">
-                  {p.icon}
+                  <Icon glyph={p.icon} size={20} tint="currentColor" />
                 </span>
-                <span className="dock-name">{p.name}</span>
+                <span className="dock-name">{p.short ?? p.name}</span>
               </button>
             );
           })}
