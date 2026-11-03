@@ -27,7 +27,7 @@ export const FILTHY_AT = 75;
 // Playing also takes a full-enough tummy: below this he is too hungry to play.
 export const PLAY_MIN_HUNGER = 20;
 
-export const DEFAULT_NEEDS = Object.freeze({ hunger: 80, energy: 80, dirt: 0, asleep: false, at: 0 });
+export const DEFAULT_NEEDS = Object.freeze({ hunger: 100, energy: 100, dirt: 0, asleep: false, at: 0 });
 
 const H = 3_600_000;
 const clamp = (v) => Math.min(100, Math.max(0, v));
